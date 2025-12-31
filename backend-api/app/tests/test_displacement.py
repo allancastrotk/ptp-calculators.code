@@ -34,4 +34,4 @@ def test_displacement_baseline_diff_percent():
 def test_unit_conversions():
     cc = 528.4158843338032
     assert round(cc_to_liters(cc), 2) == 0.53
-    assert round(cc_to_cuin(cc), 2) == 32.24
+    assert round(cc_to_cuin(cc), 2) == 32.25
