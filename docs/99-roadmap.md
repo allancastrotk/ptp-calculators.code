@@ -46,3 +46,32 @@ TODO tecnico (proxima calculadora: RL)
 - Calculo e adimensional (unit_system nao altera).
 - Compatibilidade total com legado e arredondamentos.
 - Reutilizar core de validacao existente.
+
+Smoke test (manual) - RL (Browser -> Vercel only)
+- Endpoint publico (BFF): POST /api/v1/calc/rl
+- Confirmar que o browser nao acessa Render diretamente.
+- Exemplos de payload:
+
+Minimo:
+{
+  "unit_system": "metric",
+  "language": "pt_BR",
+  "inputs": { "stroke": 50.0, "rod_length": 100.0 }
+}
+
+Variando unit_system (RL ignora unidades):
+{
+  "unit_system": "imperial",
+  "language": "en_US",
+  "inputs": { "stroke": 1.969, "rod_length": 3.937 }
+}
+
+Estrutura esperada de resposta (sem valores exatos):
+{
+  "calculator": "rl",
+  "unit_system": "metric|imperial",
+  "normalized_inputs": { "stroke_mm": 0, "rod_length_mm": 0, "bore_mm": null },
+  "results": { "rl_ratio": 0, "rod_stroke_ratio": 0 },
+  "warnings": [],
+  "meta": { "version": "v1", "timestamp": "...", "source": "legacy-compatible" }
+}
