@@ -4,7 +4,7 @@ Defines the iframe embed model for powertunepro.com calculators and the recommen
 
 ## Overview
 
-All calculators are delivered as iframes embedded in powertunepro.com pages. The iframe content is a thin UI that talks to the backend API. The embed must be stable, consistent across calculators, and require minimal configuration.
+All calculators are delivered as iframes embedded in powertunepro.com pages. The iframe always points to Vercel. The host page does not call calculation APIs and only embeds the UI. The embed must be stable, consistent across calculators, and require minimal configuration.
 
 ## Recommended embed pattern
 
@@ -22,7 +22,7 @@ Alternative: pass language by query string, e.g. `?lang=pt_BR`, for environments
 
 When using `postMessage`:
 - Validate `event.origin` against the allowed host list.
-- Avoid `targetOrigin="*"` in production; use the exact host origin.
+- Never use `targetOrigin="*"`; always use the exact host origin.
 - Reject messages without the expected shape (e.g., missing `language`).
 
 ## Auto-resize strategy
@@ -33,3 +33,7 @@ Use a lightweight `postMessage` protocol to synchronize iframe height:
 - The host should validate origin before applying changes.
 
 This approach prevents scrollbars and keeps the embed aligned with the host layout without manual tuning.
+
+## Communication scope
+
+Host <-> iframe communication is limited to language handoff and auto-resize. No calculator API calls occur from the host.
