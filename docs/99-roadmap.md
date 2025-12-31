@@ -12,6 +12,7 @@ Status
 - Fase 2: RL calculator implemented (backend + BFF)
 - Fase 2: Sprocket calculator implemented (backend + BFF)
 - Fase 2: Tires calculator implemented (backend + BFF)
+- Fase 2 (Core gratuito + BFF): concluida
 - Proximo passo: Fase 2 (Implementacao): backend core + endpoints v1 + frontend integration
 
 Smoke test (manual) - Displacement (Browser -> Vercel -> Render)
