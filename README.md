@@ -14,3 +14,7 @@ Notes
 - Backend and frontend are intentionally minimal and kept separate.
 - Do NOT implement calculator logic, databases, or authentication at this stage.
 - Future steps will add calculator endpoints and UI components in separate iterations.
+
+Repository
+- This repository is already versioned with Git.
+- Codex is the technical executor for ongoing changes from this point forward.
