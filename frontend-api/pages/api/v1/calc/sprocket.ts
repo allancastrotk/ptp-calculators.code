@@ -1,0 +1,62 @@
+import type { NextApiRequest, NextApiResponse } from "next";
+
+const allowedOrigins = new Set([
+  "https://powertunepro.com",
+  "https://www.powertunepro.com",
+]);
+
+function applyCors(req: NextApiRequest, res: NextApiResponse) {
+  const origin = req.headers.origin;
+  if (origin && allowedOrigins.has(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
+  res.setHeader("Vary", "Origin");
+  res.setHeader("Access-Control-Allow-Methods", "POST,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+}
+
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  const origin = req.headers.origin;
+  if (origin && !allowedOrigins.has(origin)) {
+    return res.status(403).json({ error: "forbidden_origin" });
+  }
+
+  applyCors(req, res);
+
+  if (req.method === "OPTIONS") {
+    return res.status(204).end();
+  }
+
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "method_not_allowed" });
+  }
+
+  const renderBase = process.env.RENDER_API_BASE;
+  const internalKey = process.env.PTP_INTERNAL_KEY;
+  if (!renderBase || !internalKey) {
+    return res.status(500).json({ error: "server_misconfigured" });
+  }
+
+  const endpoint = `${renderBase.replace(/\/$/, "")}/v1/calc/sprocket`;
+
+  try {
+    const upstream = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-PTP-Internal-Key": internalKey,
+      },
+      body: JSON.stringify(req.body),
+    });
+
+    const body = await upstream.text();
+    res.status(upstream.status);
+    if (body) {
+      res.setHeader("Content-Type", "application/json");
+      return res.send(body);
+    }
+    return res.end();
+  } catch (error) {
+    return res.status(502).json({ error: "upstream_unavailable" });
+  }
+}
