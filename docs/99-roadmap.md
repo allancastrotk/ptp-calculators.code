@@ -11,6 +11,7 @@ Status
 - Fase 2 iniciada: Displacement backend + BFF concluidos
 - Fase 2: RL calculator implemented (backend + BFF)
 - Fase 2: Sprocket calculator implemented (backend + BFF)
+- Fase 2: Tires calculator implemented (backend + BFF)
 - Proximo passo: Fase 2 (Implementacao): backend core + endpoints v1 + frontend integration
 
 Smoke test (manual) - Displacement (Browser -> Vercel -> Render)
@@ -110,6 +111,41 @@ Estrutura esperada de resposta (sem valores exatos):
     "diff_chain_length_absolute": null,
     "diff_center_distance_percent": null,
     "diff_center_distance_absolute": null
+  },
+  "warnings": [],
+  "meta": { "version": "v1", "timestamp": "...", "source": "legacy-compatible" }
+}
+
+Smoke test (manual) - Tires (Browser -> Vercel only)
+- Endpoint publico (BFF): POST /api/v1/calc/tires
+- Confirmar que o browser nao acessa Render diretamente.
+- Exemplo de payload:
+{
+  "unit_system": "metric",
+  "language": "pt_BR",
+  "inputs": { "vehicle_type": "Car", "rim_in": 17, "width_mm": 190, "aspect_percent": 55 }
+}
+
+Estrutura esperada de resposta (sem valores exatos):
+{
+  "calculator": "tires",
+  "unit_system": "metric|imperial",
+  "normalized_inputs": {
+    "vehicle_type": "Car",
+    "rim_in": 0,
+    "width_mm": 0,
+    "aspect_percent": 0,
+    "flotation": null,
+    "rim_width_in": null,
+    "baseline": null
+  },
+  "results": {
+    "diameter": 0,
+    "width": 0,
+    "diff_diameter": null,
+    "diff_diameter_percent": null,
+    "diff_width": null,
+    "diff_width_percent": null
   },
   "warnings": [],
   "meta": { "version": "v1", "timestamp": "...", "source": "legacy-compatible" }
