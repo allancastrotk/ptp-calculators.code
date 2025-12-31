@@ -161,3 +161,13 @@ Resultados recomendados:
 - O objetivo e manter resultados matematicos identicos ao legado.
 - Tolerancias e arredondamentos devem ser preservados.
 - Mudancas de comportamento devem gerar nova versao (v2).
+
+## Access Control and Trust Boundaries
+
+Normativo:
+- A API do Render e PRIVATE e INTERNAL-ONLY.
+- O Render deve aceitar requisicoes apenas do Vercel (server-to-server).
+- Render NAO deve ser chamado diretamente por browsers.
+- CORS nao e considerado mecanismo de seguranca suficiente.
+- Autenticacao entre Vercel e Render deve usar header secreto e, opcionalmente, assinatura HMAC com timestamp.
+- Qualquer uso externo da API do Render e considerado fora de escopo e nao suportado.
