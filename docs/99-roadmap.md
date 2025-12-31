@@ -9,6 +9,7 @@ Status
   - i18n strategy
   - embed model
 - Fase 2 iniciada: Displacement backend + BFF concluidos
+- Fase 2: RL calculator implemented (backend + BFF)
 - Proximo passo: Fase 2 (Implementacao): backend core + endpoints v1 + frontend integration
 
 Smoke test (manual) - Displacement (Browser -> Vercel -> Render)
