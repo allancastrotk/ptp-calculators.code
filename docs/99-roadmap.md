@@ -8,4 +8,5 @@ Status
   - API contract v1
   - i18n strategy
   - embed model
+- Fase 2 iniciada: Displacement backend + BFF concluidos
 - Proximo passo: Fase 2 (Implementacao): backend core + endpoints v1 + frontend integration
