@@ -10,6 +10,11 @@ from app.calculators.sprocket import (
     calculate_ratio,
     chain_pitch_to_mm,
 )
+from app.calculators.tires import (
+    calculate_assembly_width_mm,
+    calculate_diameter_mm,
+    parse_flotation,
+)
 from app.core.security import require_internal_key
 from app.core.units import cc_to_cuin, cc_to_liters, inches_to_mm, mm_to_inches
 from app.schemas.common import ErrorResponse
@@ -26,6 +31,7 @@ from app.schemas.sprocket import (
     SprocketNormalizedInputs,
     SprocketResults,
 )
+from app.schemas.tires import TiresRequest, TiresResponse, TiresNormalizedInputs, TiresResults
 
 app = FastAPI(title="PowerTunePro Calculators - Backend")
 
@@ -288,6 +294,145 @@ def calc_sprocket(payload: SprocketRequest):
 
     return SprocketResponse(
         calculator="sprocket",
+        unit_system="imperial" if resolved_unit_system == "imperial" else "metric",
+        normalized_inputs=normalized_inputs,
+        results=results,
+        warnings=warnings,
+    )
+
+
+@app.post(
+    "/v1/calc/tires",
+    response_model=TiresResponse,
+    dependencies=[Depends(require_internal_key)],
+)
+def calc_tires(payload: TiresRequest):
+    warnings: list[str] = []
+    resolved_unit_system = payload.unit_system
+    if payload.unit_system == "auto":
+        resolved_unit_system = "metric"
+        warnings.append("unit_system set to auto; assuming metric inputs.")
+
+    inputs = payload.inputs
+    errors = []
+
+    if inputs.flotation and inputs.vehicle_type != "Utility":
+        errors.append({"field": "inputs.flotation", "reason": "flotation allowed only for Utility"})
+
+    if inputs.flotation:
+        parsed = parse_flotation(inputs.flotation)
+        if not parsed:
+            errors.append({"field": "inputs.flotation", "reason": "invalid flotation format"})
+
+    if inputs.rim_width_in is not None and inputs.rim_width_in <= 0:
+        errors.append({"field": "inputs.rim_width_in", "reason": "must be greater than zero"})
+
+    if errors:
+        response = ErrorResponse(
+            error_code="validation_error",
+            message="Invalid request payload.",
+            field_errors=errors,
+        )
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=response.model_dump())
+
+    if inputs.flotation:
+        overall_in, width_in, _rim_in = parse_flotation(inputs.flotation)  # type: ignore[misc]
+        diameter_mm = inches_to_mm(overall_in)
+        width_mm = inches_to_mm(width_in)
+    else:
+        diameter_mm = calculate_diameter_mm(inputs.rim_in, inputs.width_mm, inputs.aspect_percent)  # type: ignore[arg-type]
+        width_mm = inputs.width_mm  # type: ignore[assignment]
+
+    assembly_width_mm = calculate_assembly_width_mm(width_mm, inputs.rim_width_in)
+
+    diff_diameter = None
+    diff_diameter_percent = None
+    diff_width = None
+    diff_width_percent = None
+    baseline_normalized = None
+    if inputs.baseline:
+        base_inputs = inputs.baseline
+        base_errors = []
+        if base_inputs.flotation and base_inputs.vehicle_type != "Utility":
+            base_errors.append(
+                {"field": "inputs.baseline.flotation", "reason": "flotation allowed only for Utility"}
+            )
+        if base_inputs.flotation:
+            base_parsed = parse_flotation(base_inputs.flotation)
+            if not base_parsed:
+                base_errors.append({"field": "inputs.baseline.flotation", "reason": "invalid flotation format"})
+
+        if base_errors:
+            response = ErrorResponse(
+                error_code="validation_error",
+                message="Invalid request payload.",
+                field_errors=base_errors,
+            )
+            return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=response.model_dump())
+
+        if base_inputs.flotation:
+            overall_in, width_in, _rim_in = parse_flotation(base_inputs.flotation)  # type: ignore[misc]
+            baseline_diameter_mm = inches_to_mm(overall_in)
+            baseline_width_mm = inches_to_mm(width_in)
+        else:
+            baseline_diameter_mm = calculate_diameter_mm(
+                base_inputs.rim_in, base_inputs.width_mm, base_inputs.aspect_percent  # type: ignore[arg-type]
+            )
+            baseline_width_mm = base_inputs.width_mm  # type: ignore[assignment]
+
+        baseline_assembly_width_mm = calculate_assembly_width_mm(
+            baseline_width_mm, base_inputs.rim_width_in
+        )
+
+        diff_diameter = diameter_mm - baseline_diameter_mm
+        diff_diameter_percent = diff_diameter / baseline_diameter_mm * 100.0
+        diff_width = assembly_width_mm - baseline_assembly_width_mm
+        diff_width_percent = diff_width / baseline_assembly_width_mm * 100.0
+
+        baseline_normalized = TiresNormalizedInputs(
+            vehicle_type=base_inputs.vehicle_type,
+            rim_in=base_inputs.rim_in,
+            width_mm=base_inputs.width_mm,
+            aspect_percent=base_inputs.aspect_percent,
+            flotation=base_inputs.flotation,
+            rim_width_in=base_inputs.rim_width_in,
+            baseline=None,
+        )
+
+    if resolved_unit_system == "imperial":
+        diameter_out = round(mm_to_inches(diameter_mm), 2)
+        width_out = round(mm_to_inches(assembly_width_mm), 2)
+        diff_diameter_out = round(mm_to_inches(diff_diameter), 2) if diff_diameter is not None else None
+        diff_width_out = round(mm_to_inches(diff_width), 2) if diff_width is not None else None
+    else:
+        diameter_out = round(diameter_mm, 2)
+        width_out = round(assembly_width_mm, 2)
+        diff_diameter_out = round(diff_diameter, 2) if diff_diameter is not None else None
+        diff_width_out = round(diff_width, 2) if diff_width is not None else None
+
+    results = TiresResults(
+        diameter=diameter_out,
+        width=width_out,
+        diff_diameter=diff_diameter_out,
+        diff_diameter_percent=round(diff_diameter_percent, 2)
+        if diff_diameter_percent is not None
+        else None,
+        diff_width=diff_width_out,
+        diff_width_percent=round(diff_width_percent, 2) if diff_width_percent is not None else None,
+    )
+
+    normalized_inputs = TiresNormalizedInputs(
+        vehicle_type=inputs.vehicle_type,
+        rim_in=inputs.rim_in,
+        width_mm=inputs.width_mm,
+        aspect_percent=inputs.aspect_percent,
+        flotation=inputs.flotation,
+        rim_width_in=inputs.rim_width_in,
+        baseline=baseline_normalized,
+    )
+
+    return TiresResponse(
+        calculator="tires",
         unit_system="imperial" if resolved_unit_system == "imperial" else "metric",
         normalized_inputs=normalized_inputs,
         results=results,
