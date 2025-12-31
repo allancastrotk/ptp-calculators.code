@@ -3,6 +3,12 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from app.calculators.displacement import classify_geometry, calculate_displacement_cc
+from app.calculators.rl import (
+    calculate_displacement_cc as calculate_rl_displacement_cc,
+    calculate_rl_ratio,
+    calculate_rod_stroke_ratio,
+    classify_smoothness,
+)
 from app.core.security import require_internal_key
 from app.core.units import cc_to_cuin, cc_to_liters, inches_to_mm
 from app.schemas.common import ErrorResponse
@@ -12,6 +18,7 @@ from app.schemas.displacement import (
     DisplacementNormalizedInputs,
     DisplacementResults,
 )
+from app.schemas.rl import RLRequest, RLResponse, RLNormalizedInputs, RLResults
 
 app = FastAPI(title="PowerTunePro Calculators - Backend")
 
@@ -88,6 +95,92 @@ def calc_displacement(payload: DisplacementRequest):
 
     return DisplacementResponse(
         calculator="displacement",
+        unit_system="imperial" if resolved_unit_system == "imperial" else "metric",
+        normalized_inputs=normalized_inputs,
+        results=results,
+        warnings=warnings,
+    )
+
+
+@app.post(
+    "/v1/calc/rl",
+    response_model=RLResponse,
+    dependencies=[Depends(require_internal_key)],
+)
+def calc_rl(payload: RLRequest):
+    warnings: list[str] = []
+    resolved_unit_system = payload.unit_system
+    if payload.unit_system == "auto":
+        resolved_unit_system = "metric"
+        warnings.append("unit_system set to auto; assuming metric inputs.")
+
+    bore = payload.inputs.bore
+    stroke = payload.inputs.stroke
+    rod_length = payload.inputs.rod_length
+    baseline = payload.inputs.baseline
+
+    if resolved_unit_system == "imperial":
+        bore_mm = inches_to_mm(bore)
+        stroke_mm = inches_to_mm(stroke)
+        rod_length_mm = inches_to_mm(rod_length)
+    else:
+        bore_mm = bore
+        stroke_mm = stroke
+        rod_length_mm = rod_length
+
+    rl_ratio = calculate_rl_ratio(stroke_mm, rod_length_mm)
+    rod_stroke_ratio = calculate_rod_stroke_ratio(stroke_mm, rod_length_mm)
+    displacement_cc_raw = calculate_rl_displacement_cc(bore_mm, stroke_mm)
+    geometry = classify_geometry(bore_mm, stroke_mm)
+    smoothness = classify_smoothness(rl_ratio)
+
+    diff_percent_rl = None
+    diff_percent_displacement = None
+    baseline_normalized = None
+    if baseline is not None:
+        if resolved_unit_system == "imperial":
+            baseline_bore_mm = inches_to_mm(baseline.bore)
+            baseline_stroke_mm = inches_to_mm(baseline.stroke)
+            baseline_rod_mm = inches_to_mm(baseline.rod_length)
+        else:
+            baseline_bore_mm = baseline.bore
+            baseline_stroke_mm = baseline.stroke
+            baseline_rod_mm = baseline.rod_length
+
+        baseline_rl = calculate_rl_ratio(baseline_stroke_mm, baseline_rod_mm)
+        baseline_disp = calculate_rl_displacement_cc(baseline_bore_mm, baseline_stroke_mm)
+
+        diff_percent_rl = (rl_ratio - baseline_rl) / baseline_rl * 100.0
+        diff_percent_displacement = (displacement_cc_raw - baseline_disp) / baseline_disp * 100.0
+
+        baseline_normalized = RLNormalizedInputs(
+            bore_mm=baseline_bore_mm,
+            stroke_mm=baseline_stroke_mm,
+            rod_length_mm=baseline_rod_mm,
+            baseline=None,
+        )
+
+    results = RLResults(
+        rl_ratio=round(rl_ratio, 2),
+        rod_stroke_ratio=round(rod_stroke_ratio, 2),
+        displacement_cc=round(displacement_cc_raw, 2),
+        geometry=geometry,
+        smoothness=smoothness,
+        diff_percent_rl=round(diff_percent_rl, 2) if diff_percent_rl is not None else None,
+        diff_percent_displacement=round(diff_percent_displacement, 2)
+        if diff_percent_displacement is not None
+        else None,
+    )
+
+    normalized_inputs = RLNormalizedInputs(
+        bore_mm=bore_mm,
+        stroke_mm=stroke_mm,
+        rod_length_mm=rod_length_mm,
+        baseline=baseline_normalized,
+    )
+
+    return RLResponse(
+        calculator="rl",
         unit_system="imperial" if resolved_unit_system == "imperial" else "metric",
         normalized_inputs=normalized_inputs,
         results=results,
