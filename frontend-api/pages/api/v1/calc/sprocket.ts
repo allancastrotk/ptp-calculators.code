@@ -1,13 +1,10 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
-const allowedOrigins = new Set([
-  "https://powertunepro.com",
-  "https://www.powertunepro.com",
-]);
+import { isAllowedHost, isAllowedOrigin } from "../../../lib/origin";
 
 function applyCors(req: NextApiRequest, res: NextApiResponse) {
   const origin = req.headers.origin;
-  if (origin && allowedOrigins.has(origin)) {
+  if (origin && isAllowedOrigin(origin)) {
     res.setHeader("Access-Control-Allow-Origin", origin);
   }
   res.setHeader("Vary", "Origin");
@@ -17,7 +14,13 @@ function applyCors(req: NextApiRequest, res: NextApiResponse) {
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const origin = req.headers.origin;
-  if (origin && !allowedOrigins.has(origin)) {
+  if (origin) {
+    if (!isAllowedOrigin(origin)) {
+      console.warn(`blocked origin: ${origin}`);
+      return res.status(403).json({ error: "forbidden_origin" });
+    }
+  } else if (!isAllowedHost(req.headers.host)) {
+    console.warn("blocked origin: <missing>");
     return res.status(403).json({ error: "forbidden_origin" });
   }
 
