@@ -17,6 +17,8 @@ Notes
 
 Deployment and access model: Render is internal-only and accepts requests only from Vercel (BFF), the site embeds the Vercel UI via iframe, and the four calculators are permanently free.
 
+UI routes (Vercel): /displacement, /rl, /sprocket, /tires. BFF routes: /api/v1/calc/* (browser -> Vercel only). Embed guidance: see docs/05-embed-model.md.
+
 Repository
 - This repository is already versioned with Git.
 - Codex is the technical executor for ongoing changes from this point forward.
