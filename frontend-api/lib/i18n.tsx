@@ -20,6 +20,11 @@ const dictionaries: Record<Language, Record<string, string>> = {
     sprocket: "Sprocket Ratio",
     tires: "Tire and Rim",
     placeholder: "UI will be wired next",
+    calculate: "Calculate",
+    boreLabel: "Bore",
+    strokeLabel: "Stroke",
+    cylindersLabel: "Cylinders",
+    baselineLabel: "Baseline cc (optional)",
   },
   pt_BR: {
     appTitle: "PowerTunePro Calculators",
@@ -33,6 +38,11 @@ const dictionaries: Record<Language, Record<string, string>> = {
     sprocket: "Relacao Coroa-Pinhao",
     tires: "Aro e Pneu",
     placeholder: "UI sera conectada em breve",
+    calculate: "Calcular",
+    boreLabel: "Diametro",
+    strokeLabel: "Curso",
+    cylindersLabel: "Cilindros",
+    baselineLabel: "Base cc (opcional)",
   },
   es_ES: {
     appTitle: "PowerTunePro Calculators",
@@ -46,6 +56,11 @@ const dictionaries: Record<Language, Record<string, string>> = {
     sprocket: "Relacion Corona-Pinon",
     tires: "Llanta y Neumatico",
     placeholder: "La UI se conectara pronto",
+    calculate: "Calcular",
+    boreLabel: "Diametro",
+    strokeLabel: "Carrera",
+    cylindersLabel: "Cilindros",
+    baselineLabel: "Base cc (opcional)",
   },
 };
 
