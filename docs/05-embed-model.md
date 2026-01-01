@@ -38,3 +38,114 @@ This approach prevents scrollbars and keeps the embed aligned with the host layo
 
 Host <-> iframe communication is limited to language handoff and auto-resize. No calculator API calls occur from the host.
 \n## Host examples\n\nLanguage handoff (on iframe load):\n`js\niframe.addEventListener('load', () => {\n  iframe.contentWindow.postMessage({ language: 'pt_BR' }, 'https://vercel.example.com');\n});\n`\n\nAuto-resize listener:\n`js\nwindow.addEventListener('message', (event) => {\n  if (event.origin !== 'https://vercel.example.com') return;\n  if (event.data?.type === 'ptp:resize') {\n    iframe.style.height = ${event.data.height}px;\n  }\n});\n`\n\nLanguage ACK (optional):\n`js\nwindow.addEventListener('message', (event) => {\n  if (event.origin !== 'https://vercel.example.com') return;\n  if (event.data?.type === 'ptp:lang:ack') {\n    // optional: confirm applied language\n  }\n});\n`\n
+## Production snippets
+
+The host must allowlist only the Vercel UI domain and never call Render directly. Replace https://vercel.example.com with the real Vercel domain.
+
+Displacement
+```html
+<iframe
+  id="ptp-displacement"
+  src="https://vercel.example.com/displacement?lang=pt_BR"
+  width="100%"
+  style="border:0;"
+  loading="lazy"
+  referrerpolicy="no-referrer"
+></iframe>
+<script>
+  const iframe = document.getElementById('ptp-displacement');
+  iframe.addEventListener('load', () => {
+    iframe.contentWindow.postMessage({ language: 'pt_BR' }, 'https://vercel.example.com');
+  });
+  window.addEventListener('message', (event) => {
+    if (event.origin !== 'https://vercel.example.com') return;
+    if (event.data?.type === 'ptp:resize') {
+      iframe.style.height = `${event.data.height}px`;
+    }
+    if (event.data?.type === 'ptp:lang:ack') {
+      // optional: confirm applied language
+    }
+  });
+</script>
+```
+
+RL
+```html
+<iframe
+  id="ptp-rl"
+  src="https://vercel.example.com/rl?lang=pt_BR"
+  width="100%"
+  style="border:0;"
+  loading="lazy"
+  referrerpolicy="no-referrer"
+></iframe>
+<script>
+  const iframe = document.getElementById('ptp-rl');
+  iframe.addEventListener('load', () => {
+    iframe.contentWindow.postMessage({ language: 'pt_BR' }, 'https://vercel.example.com');
+  });
+  window.addEventListener('message', (event) => {
+    if (event.origin !== 'https://vercel.example.com') return;
+    if (event.data?.type === 'ptp:resize') {
+      iframe.style.height = `${event.data.height}px`;
+    }
+    if (event.data?.type === 'ptp:lang:ack') {
+      // optional: confirm applied language
+    }
+  });
+</script>
+```
+
+Sprocket
+```html
+<iframe
+  id="ptp-sprocket"
+  src="https://vercel.example.com/sprocket?lang=pt_BR"
+  width="100%"
+  style="border:0;"
+  loading="lazy"
+  referrerpolicy="no-referrer"
+></iframe>
+<script>
+  const iframe = document.getElementById('ptp-sprocket');
+  iframe.addEventListener('load', () => {
+    iframe.contentWindow.postMessage({ language: 'pt_BR' }, 'https://vercel.example.com');
+  });
+  window.addEventListener('message', (event) => {
+    if (event.origin !== 'https://vercel.example.com') return;
+    if (event.data?.type === 'ptp:resize') {
+      iframe.style.height = `${event.data.height}px`;
+    }
+    if (event.data?.type === 'ptp:lang:ack') {
+      // optional: confirm applied language
+    }
+  });
+</script>
+```
+
+Tires
+```html
+<iframe
+  id="ptp-tires"
+  src="https://vercel.example.com/tires?lang=pt_BR"
+  width="100%"
+  style="border:0;"
+  loading="lazy"
+  referrerpolicy="no-referrer"
+></iframe>
+<script>
+  const iframe = document.getElementById('ptp-tires');
+  iframe.addEventListener('load', () => {
+    iframe.contentWindow.postMessage({ language: 'pt_BR' }, 'https://vercel.example.com');
+  });
+  window.addEventListener('message', (event) => {
+    if (event.origin !== 'https://vercel.example.com') return;
+    if (event.data?.type === 'ptp:resize') {
+      iframe.style.height = `${event.data.height}px`;
+    }
+    if (event.data?.type === 'ptp:lang:ack') {
+      // optional: confirm applied language
+    }
+  });
+</script>
+```
