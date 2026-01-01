@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { isAllowedHost, isAllowedOrigin } from "../../../lib/origin";
+import { isAllowedHost, isAllowedOrigin } from "@/lib/origin";
 
 function applyCors(req: NextApiRequest, res: NextApiResponse) {
   const origin = req.headers.origin;
@@ -16,11 +16,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const origin = req.headers.origin;
   if (origin) {
     if (!isAllowedOrigin(origin)) {
-      console.warn(`blocked origin: ${origin}`);
+      console.warn(`blocked origin: ${origin} host: ${req.headers.host || "<missing>"}`);
       return res.status(403).json({ error: "forbidden_origin" });
     }
   } else if (!isAllowedHost(req.headers.host)) {
-    console.warn("blocked origin: <missing>");
+    console.warn(`blocked origin: <missing> host: ${req.headers.host || "<missing>"}`);
     return res.status(403).json({ error: "forbidden_origin" });
   }
 
