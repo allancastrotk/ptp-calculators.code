@@ -100,11 +100,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
   },
 };
 
-const LanguageContext = createContext<{
-  language: Language;
-  setLanguage: (lang: Language) => void;
-  t: (key: string) => string;
-} | null>(null);
+const LanguageContext = createContext<{\n  language: Language;\n  setLanguage: (lang: Language) => void;\n  t: (key: string) => string;\n} | null>(null);
 
 function resolveLanguage(value?: string | null): Language {
   if (value === "pt_BR" || value === "en_US" || value === "es_ES") {
@@ -116,26 +112,7 @@ function resolveLanguage(value?: string | null): Language {
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguage] = useState<Language>("en_US");
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const params = new URLSearchParams(window.location.search);
-    const initial = resolveLanguage(params.get("lang"));
-    setLanguage(initial);
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const handler = (event: MessageEvent) => {
-      if (!allowedOrigins.has(event.origin)) return;
-      const next = resolveLanguage((event.data as { language?: string })?.language);
-      if (next !== language) {
-        setLanguage(next);
-      }
-    };
-    window.addEventListener("message", handler);
-    return () => window.removeEventListener("message", handler);
-  }, [language]);
-
+  
   const value = useMemo(() => {
     const dict = dictionaries[language];
     return {

@@ -37,3 +37,4 @@ This approach prevents scrollbars and keeps the embed aligned with the host layo
 ## Communication scope
 
 Host <-> iframe communication is limited to language handoff and auto-resize. No calculator API calls occur from the host.
+\n## Host examples\n\nLanguage handoff (on iframe load):\n`js\niframe.addEventListener('load', () => {\n  iframe.contentWindow.postMessage({ language: 'pt_BR' }, 'https://vercel.example.com');\n});\n`\n\nAuto-resize listener:\n`js\nwindow.addEventListener('message', (event) => {\n  if (event.origin !== 'https://vercel.example.com') return;\n  if (event.data?.type === 'ptp:resize') {\n    iframe.style.height = ${event.data.height}px;\n  }\n});\n`\n\nLanguage ACK (optional):\n`js\nwindow.addEventListener('message', (event) => {\n  if (event.origin !== 'https://vercel.example.com') return;\n  if (event.data?.type === 'ptp:lang:ack') {\n    // optional: confirm applied language\n  }\n});\n`\n
