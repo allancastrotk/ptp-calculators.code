@@ -1,5 +1,6 @@
 {
   "folders": [
+    { "path": "." },
     { "path": "backend-api" },
     { "path": "frontend-api" }
   ],
