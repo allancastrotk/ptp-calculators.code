@@ -9,3 +9,9 @@ Trust boundaries and allowed flow:
 - Prohibited: Browser -> Render.
 - Prohibited: Third-party sites -> Vercel API.
 - The site only embeds the Vercel UI and does not call calculation APIs directly.
+
+Allowed origins for BFF:
+- https://powertunepro.com
+- https://www.powertunepro.com
+- https://ptp-calculators.vercel.app
+- http://localhost:3000
