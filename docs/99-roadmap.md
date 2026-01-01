@@ -13,7 +13,9 @@ Status
 - Fase 2: Sprocket calculator implemented (backend + BFF)
 - Fase 2: Tires calculator implemented (backend + BFF)
 - Fase 2 (Core gratuito + BFF): concluida
+- Fase 3: UI funcional para calculadoras gratuitas concluida (sem alinhamento visual final).
 - Proximo passo: Fase 2 (Implementacao): backend core + endpoints v1 + frontend integration
+- Proximos passos: UI embed via iframe (host snippets) e inicio do alinhamento visual (tokens/cores) em fase posterior.
 
 Smoke test (manual) - Displacement (Browser -> Vercel -> Render)
 - Endpoint publico (BFF): POST /api/v1/calc/displacement
