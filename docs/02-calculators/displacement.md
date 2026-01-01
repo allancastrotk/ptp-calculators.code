@@ -67,6 +67,9 @@ Comportamento do ponto de vista do usuario:
 - O usuario precisa clicar em "Calcular" para obter resultados.
 - A comparacao do modo "new" depende de ter executado a versao "original" antes (mesmo browser/localStorage).
 
+Implementacao atual:
+- A comparacao Original vs New e feita no frontend (estado local + sessionStorage por aba).
+- Nao ha persistencia server-side no backend ou no BFF.
 ## 6) Observacoes de legado
 
 Compatibilidade obrigatoria:
