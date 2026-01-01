@@ -44,7 +44,12 @@ export default function TiresPage() {
     const nextErrors: Record<string, string> = {};
     if (!rimIn) nextErrors.rim_in = t("required");
     if (!vehicleType) nextErrors.vehicle_type = t("required");
-    if (!useFlotation) {\n      if (!widthMm) nextErrors.width_mm = t("required");\n      if (!aspectPercent) nextErrors.aspect_percent = t("required");\n    } else {\n      if (!flotation.trim()) nextErrors.flotation = t("required");\n    }
+    if (!useFlotation) {
+      if (!widthMm) nextErrors.width_mm = t("required");
+      if (!aspectPercent) nextErrors.aspect_percent = t("required");
+    } else {
+      if (!flotation.trim()) nextErrors.flotation = t("required");
+    }
 
     if (Object.keys(nextErrors).length > 0) {
       setFieldErrors(nextErrors);

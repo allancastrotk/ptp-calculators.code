@@ -81,7 +81,7 @@ export function useEmbedBridge(setLanguage: (lang: Language) => void) {
       return () => observer.disconnect();
     }
 
-    const interval = window.setInterval(emit, 500);
-    return () => window.clearInterval(interval);
+    const interval = globalThis.setInterval(emit, 500);
+    return () => globalThis.clearInterval(interval);
   }, []);
 }

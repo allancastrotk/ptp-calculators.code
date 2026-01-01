@@ -1,11 +1,12 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import React, { createContext, useContext, useMemo, useState } from "react";
 
 export type Language = "pt_BR" | "en_US" | "es_ES";
 
-const allowedOrigins = new Set([
-  "https://powertunepro.com",
-  "https://www.powertunepro.com",
-]);
+export type I18nContextValue = {
+  language: Language;
+  setLanguage: (lang: Language) => void;
+  t: (key: string) => string;
+};
 
 const dictionaries: Record<Language, Record<string, string>> = {
   en_US: {
@@ -100,20 +101,12 @@ const dictionaries: Record<Language, Record<string, string>> = {
   },
 };
 
-const LanguageContext = createContext<{\n  language: Language;\n  setLanguage: (lang: Language) => void;\n  t: (key: string) => string;\n} | null>(null);
-
-function resolveLanguage(value?: string | null): Language {
-  if (value === "pt_BR" || value === "en_US" || value === "es_ES") {
-    return value;
-  }
-  return "en_US";
-}
+const LanguageContext = createContext<I18nContextValue | null>(null);
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguage] = useState<Language>("en_US");
 
-  
-  const value = useMemo(() => {
+  const value = useMemo<I18nContextValue>(() => {
     const dict = dictionaries[language];
     return {
       language,
@@ -125,7 +118,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
 }
 
-export function useI18n() {
+export function useI18n(): I18nContextValue {
   const ctx = useContext(LanguageContext);
   if (!ctx) {
     throw new Error("useI18n must be used within LanguageProvider");

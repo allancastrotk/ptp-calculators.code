@@ -31,13 +31,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: "method_not_allowed" });
   }
 
-  const renderBase = process.env.RENDER_API_BASE;
+  const renderBase = process.env.RENDER_API_BASE || "";
   const internalKey = process.env.PTP_INTERNAL_KEY;
   if (!renderBase || !internalKey) {
     return res.status(500).json({ error: "server_misconfigured" });
   }
 
-  const endpoint = `${renderBase.replace(/\\/$/, "")}/v1/calc/rl`;
+  const endpoint = renderBase.replace(/\/$/, "") + "/v1/calc/rl";
 
   try {
     const upstream = await fetch(endpoint, {
