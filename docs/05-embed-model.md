@@ -75,6 +75,7 @@ Testing directly on Vercel uses origin https://ptp-calculators.vercel.app and mu
 ## Production snippets (widgets)
 
 O padrao correto para embed e sempre usar widgets separados (Original + New). As paginas `/displacement`, `/rl`, `/sprocket` e `/tires` continuam existindo para uso standalone, mas nao devem ser usadas em embed.
+O script canonico do host esta documentado em `docs/11-host-bridge-script.md`.
 
 O host deve allowlistar apenas o dominio da UI do Vercel e nunca chamar o Render diretamente. Use https://ptp-calculators.vercel.app como dominio da UI.
 
