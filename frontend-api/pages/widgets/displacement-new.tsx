@@ -525,14 +525,6 @@ export default function DisplacementNewWidget() {
               error={fieldErrors.cylinders}
             />
           </div>
-          <div className="ptp-actions ptp-actions--between ptp-actions--spaced">
-            <div className="ptp-actions__left">
-              <CompressionToggleButton
-                value={compressionEnabled}
-                onChange={setCompressionEnabled}
-              />
-            </div>
-          </div>
           {compressionEnabled ? (
             <>
               <div className="ptp-divider">
@@ -641,13 +633,19 @@ export default function DisplacementNewWidget() {
           ) : null}
           <div className="ptp-actions ptp-actions--between ptp-actions--spaced">
             <div className="ptp-actions__left">
+              <CompressionToggleButton
+                value={compressionEnabled}
+                onChange={setCompressionEnabled}
+              />
               {!baseline && !result ? (
                 <span className="ptp-actions__hint">{t("compareHintWidget")}</span>
               ) : null}
             </div>
-            <Button type="button" onClick={handleSubmit} disabled={loading}>
-              {loading ? t("loading") : t("calculate")}
-            </Button>
+            <div className="ptp-actions__right">
+              <Button type="button" onClick={handleSubmit} disabled={loading}>
+                {loading ? t("loading") : t("calculate")}
+              </Button>
+            </div>
           </div>
           {loading ? <StatusPanel message={t("warmupMessage")} /> : null}
           {warmupNotice ? (

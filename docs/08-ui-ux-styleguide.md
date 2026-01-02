@@ -61,6 +61,8 @@ Ele serve como referencia tecnica para manter consistencia visual e evitar perda
 - Resultados ficam dentro do mesmo card do formulario.
 - Painel de comparacao aparece somente quando ha dados.
 - Labels de resultados traduzidas por i18n.
+- Separadores usam `ptp-divider` com texto em caixa alta e duas linhas horizontais,
+  com acento blueprint [#285A82] em gradiente sutil.
 
 ## Espacamento e alinhamento
 

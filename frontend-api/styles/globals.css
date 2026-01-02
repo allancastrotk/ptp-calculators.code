@@ -193,6 +193,12 @@ body.ptp-embed .ptp-subtitle {
   min-height: 32px;
 }
 
+.ptp-actions__right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .ptp-actions__hint {
   position: absolute;
   left: 0;
@@ -386,6 +392,8 @@ body.ptp-embed .ptp-subtitle {
   font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  width: 100%;
+  align-self: stretch;
 }
 
 .ptp-divider::before,

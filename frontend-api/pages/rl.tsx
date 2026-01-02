@@ -637,14 +637,6 @@ export default function RLPage() {
               error={fieldErrorsOriginal.rod_length}
             />
           </div>
-          <div className="ptp-actions ptp-actions--between ptp-actions--spaced">
-            <div className="ptp-actions__left">
-              <CompressionToggleButton
-                value={originalCompressionEnabled}
-                onChange={setOriginalCompressionEnabled}
-              />
-            </div>
-          </div>
           {originalCompressionEnabled ? (
             <>
               <div className="ptp-divider">
@@ -751,10 +743,18 @@ export default function RLPage() {
               </div>
             </>
           ) : null}
-          <div className="ptp-actions">
-            <Button type="button" onClick={handleOriginalSubmit} disabled={loadingOriginal}>
-              {loadingOriginal ? t("loading") : t("calculate")}
-            </Button>
+          <div className="ptp-actions ptp-actions--between ptp-actions--spaced">
+            <div className="ptp-actions__left">
+              <CompressionToggleButton
+                value={originalCompressionEnabled}
+                onChange={setOriginalCompressionEnabled}
+              />
+            </div>
+            <div className="ptp-actions__right">
+              <Button type="button" onClick={handleOriginalSubmit} disabled={loadingOriginal}>
+                {loadingOriginal ? t("loading") : t("calculate")}
+              </Button>
+            </div>
           </div>
           {loadingOriginal ? <StatusPanel message={t("warmupMessage")} /> : null}
           {originalResult ? (
@@ -798,14 +798,6 @@ export default function RLPage() {
               inputMode="decimal"
               error={fieldErrorsNew.rod_length}
             />
-          </div>
-          <div className="ptp-actions ptp-actions--between ptp-actions--spaced">
-            <div className="ptp-actions__left">
-              <CompressionToggleButton
-                value={newCompressionEnabled}
-                onChange={setNewCompressionEnabled}
-              />
-            </div>
           </div>
           {newCompressionEnabled ? (
             <>
@@ -915,13 +907,19 @@ export default function RLPage() {
           ) : null}
           <div className="ptp-actions ptp-actions--between ptp-actions--spaced">
             <div className="ptp-actions__left">
+              <CompressionToggleButton
+                value={newCompressionEnabled}
+                onChange={setNewCompressionEnabled}
+              />
               {!originalResult && !newResult ? (
                 <span className="ptp-actions__hint">{t("compareHint")}</span>
               ) : null}
             </div>
-            <Button type="button" onClick={handleNewSubmit} disabled={loadingNew}>
-              {loadingNew ? t("loading") : t("calculate")}
-            </Button>
+            <div className="ptp-actions__right">
+              <Button type="button" onClick={handleNewSubmit} disabled={loadingNew}>
+                {loadingNew ? t("loading") : t("calculate")}
+              </Button>
+            </div>
           </div>
           {loadingNew ? <StatusPanel message={t("warmupMessage")} /> : null}
           {newResult ? (

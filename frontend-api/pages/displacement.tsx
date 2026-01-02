@@ -598,14 +598,6 @@ export default function DisplacementPage() {
               error={fieldErrorsOriginal.baseline_cc}
             />
           </div>
-          <div className="ptp-actions ptp-actions--between ptp-actions--spaced">
-            <div className="ptp-actions__left">
-              <CompressionToggleButton
-                value={originalCompressionEnabled}
-                onChange={setOriginalCompressionEnabled}
-              />
-            </div>
-          </div>
           {originalCompressionEnabled ? (
             <>
               <div className="ptp-divider">
@@ -712,13 +704,21 @@ export default function DisplacementPage() {
               </div>
             </>
           ) : null}
-          <div className="ptp-actions">
-            <Button type="button" onClick={handleOriginalSubmit} disabled={loadingOriginal}>
-              {loadingOriginal ? t("loading") : t("calculate")}
-            </Button>
-            <Button type="button" variant="secondary" onClick={handleClear}>
-              {t("clear")}
-            </Button>
+          <div className="ptp-actions ptp-actions--between ptp-actions--spaced">
+            <div className="ptp-actions__left">
+              <CompressionToggleButton
+                value={originalCompressionEnabled}
+                onChange={setOriginalCompressionEnabled}
+              />
+            </div>
+            <div className="ptp-actions__right">
+              <Button type="button" onClick={handleOriginalSubmit} disabled={loadingOriginal}>
+                {loadingOriginal ? t("loading") : t("calculate")}
+              </Button>
+              <Button type="button" variant="secondary" onClick={handleClear}>
+                {t("clear")}
+              </Button>
+            </div>
           </div>
           {loadingOriginal ? <StatusPanel message={t("warmupMessage")} /> : null}
           {originalResult ? (
@@ -764,14 +764,6 @@ export default function DisplacementPage() {
               inputMode="numeric"
               error={fieldErrorsNew.cylinders}
             />
-          </div>
-          <div className="ptp-actions ptp-actions--between ptp-actions--spaced">
-            <div className="ptp-actions__left">
-              <CompressionToggleButton
-                value={newCompressionEnabled}
-                onChange={setNewCompressionEnabled}
-              />
-            </div>
           </div>
           {newCompressionEnabled ? (
             <>
@@ -881,13 +873,19 @@ export default function DisplacementPage() {
           ) : null}
           <div className="ptp-actions ptp-actions--between ptp-actions--spaced">
             <div className="ptp-actions__left">
+              <CompressionToggleButton
+                value={newCompressionEnabled}
+                onChange={setNewCompressionEnabled}
+              />
               {!originalResult && !newResult ? (
                 <span className="ptp-actions__hint">{t("compareHint")}</span>
               ) : null}
             </div>
-            <Button type="button" onClick={handleNewSubmit} disabled={loadingNew}>
-              {loadingNew ? t("loading") : t("calculate")}
-            </Button>
+            <div className="ptp-actions__right">
+              <Button type="button" onClick={handleNewSubmit} disabled={loadingNew}>
+                {loadingNew ? t("loading") : t("calculate")}
+              </Button>
+            </div>
           </div>
           {loadingNew ? <StatusPanel message={t("warmupMessage")} /> : null}
           {newResult ? (
