@@ -8,6 +8,8 @@ import { InputField } from "../../components/InputField";
 import { Layout } from "../../components/Layout";
 import { LoadingState } from "../../components/LoadingState";
 import { ResultPanel } from "../../components/ResultPanel";
+import { UnitSystem } from "../../components/UnitSystemSwitch";
+import { UnitToggleButton } from "../../components/UnitToggleButton";
 import { postJson, ApiError } from "../../lib/api";
 import { formatNumericComparison, formatTextComparison } from "../../lib/comparison";
 import { useI18n } from "../../lib/i18n";
@@ -66,6 +68,7 @@ export default function RlNewWidget() {
   const [bore, setBore] = useState("");
   const [stroke, setStroke] = useState("");
   const [rodLength, setRodLength] = useState("");
+  const [unitSystem, setUnitSystem] = useState<UnitSystem>("metric");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [retryHint, setRetryHint] = useState<string | null>(null);
@@ -76,6 +79,7 @@ export default function RlNewWidget() {
   const abortRef = useRef<AbortController | null>(null);
 
   const toNumber = (value: string) => Number(value.replace(",", "."));
+  const unitLabel = unitSystem === "imperial" ? "in" : "mm";
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -138,7 +142,7 @@ export default function RlNewWidget() {
 
     try {
       const payload = {
-        unit_system: "metric",
+        unit_system: unitSystem,
         inputs: {
           bore: toNumber(bore),
           stroke: toNumber(stroke),
@@ -258,14 +262,15 @@ export default function RlNewWidget() {
         <Card className="ptp-stack">
           <div className="ptp-section-header">
             <div className="ptp-section-title">{t("newSection")}</div>
+            <UnitToggleButton value={unitSystem} onChange={setUnitSystem} />
           </div>
           {error ? <ErrorBanner message={error} /> : null}
           {retryHint ? <div className="ptp-field__helper">{retryHint}</div> : null}
           <div className="grid">
             <InputField
               label={t("boreLabel")}
-              unitLabel="mm"
-              placeholder="64.0"
+              unitLabel={unitLabel}
+              placeholder={unitSystem === "imperial" ? "2.52" : "64.0"}
               value={bore}
               onChange={setBore}
               inputMode="decimal"
@@ -273,8 +278,8 @@ export default function RlNewWidget() {
             />
             <InputField
               label={t("strokeLabel")}
-              unitLabel="mm"
-              placeholder="54.0"
+              unitLabel={unitLabel}
+              placeholder={unitSystem === "imperial" ? "2.13" : "54.0"}
               value={stroke}
               onChange={setStroke}
               inputMode="decimal"
@@ -282,8 +287,8 @@ export default function RlNewWidget() {
             />
             <InputField
               label={t("rodLengthLabel")}
-              unitLabel="mm"
-              placeholder="105.0"
+              unitLabel={unitLabel}
+              placeholder={unitSystem === "imperial" ? "4.13" : "105.0"}
               value={rodLength}
               onChange={setRodLength}
               inputMode="decimal"
