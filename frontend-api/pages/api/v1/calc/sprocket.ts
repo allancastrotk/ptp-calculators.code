@@ -36,6 +36,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const renderBase = process.env.RENDER_API_BASE || "";
   const internalKey = process.env.PTP_INTERNAL_KEY;
+  const internalKeyPresent = Boolean(internalKey);
+  console.info("internal key present: " + internalKeyPresent);
   if (!renderBase || !internalKey) {
     return res.status(500).json({ error: "server_misconfigured" });
   }
