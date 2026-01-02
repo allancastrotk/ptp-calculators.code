@@ -185,6 +185,23 @@ body.ptp-embed .ptp-subtitle {
   margin-top: 36px;
 }
 
+.ptp-actions__left {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 32px;
+}
+
+.ptp-actions__hint {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  font-size: 12px;
+  color: var(--ptp-muted);
+  text-align: right;
+  white-space: nowrap;
+}
+
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));

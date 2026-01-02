@@ -427,19 +427,22 @@ export default function TiresNewWidget() {
             />
           </div>
           <div className="ptp-actions ptp-actions--between ptp-actions--spaced">
-            {!baseline && !result ? (
-              <div className="ptp-field__helper">{t("compareHintWidget")}</div>
-            ) : hasFlotation(inputs.vehicleType) ? (
-              <MeasureToggleButton
-                value={inputs.flotationEnabled}
-                onChange={toggleMeasure}
-                label={t("measureLabel")}
-                metricLabel={t("measureMetricLabel")}
-                flotationLabel={t("measureFlotationLabel")}
-              />
-            ) : (
-              <span />
-            )}
+            <div className="ptp-actions__left">
+              {hasFlotation(inputs.vehicleType) ? (
+                <MeasureToggleButton
+                  value={inputs.flotationEnabled}
+                  onChange={toggleMeasure}
+                  label={t("measureLabel")}
+                  metricLabel={t("measureMetricLabel")}
+                  flotationLabel={t("measureFlotationLabel")}
+                />
+              ) : (
+                <span />
+              )}
+              {!baseline && !result ? (
+                <span className="ptp-actions__hint">{t("compareHintWidget")}</span>
+              ) : null}
+            </div>
             <Button type="button" onClick={handleSubmit} disabled={loading}>
               {loading ? t("loading") : t("calculate")}
             </Button>
