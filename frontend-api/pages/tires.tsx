@@ -9,6 +9,7 @@ import { LoadingState } from "../components/LoadingState";
 import { ResultPanel } from "../components/ResultPanel";
 import { SelectField } from "../components/SelectField";
 import { postJson, ApiError } from "../lib/api";
+import { formatNumericComparison } from "../lib/comparison";
 import { useI18n } from "../lib/i18n";
 import { TIRES_DB, VEHICLE_TYPES, VehicleType, getRimData, getWidthEntry } from "../lib/tiresDb";
 
@@ -44,7 +45,7 @@ const createEmptyInputs = (): TireInputs => ({
 });
 
 export default function TiresPage() {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const [originalInputs, setOriginalInputs] = useState<TireInputs>(createEmptyInputs);
   const [newInputs, setNewInputs] = useState<TireInputs>(createEmptyInputs);
   const [loadingOriginal, setLoadingOriginal] = useState(false);
@@ -58,6 +59,9 @@ export default function TiresPage() {
   const abortOriginalRef = useRef<AbortController | null>(null);
   const abortNewRef = useRef<AbortController | null>(null);
 
+  const isEnglish = language === "en_US";
+  const unitSystem = isEnglish ? "imperial" : "metric";
+  const unitLabel = isEnglish ? "in" : "mm";
   const toNumber = (value: string) => Number(value.replace(",", "."));
 
   const buildOptions = (vehicleType: VehicleType | "") => {
@@ -145,7 +149,7 @@ export default function TiresPage() {
     setLoadingOriginal(true);
     try {
       const payload = {
-        unit_system: "metric",
+        unit_system: unitSystem,
         inputs: {
           vehicle_type: originalInputs.vehicleType,
           rim_in: toNumber(originalInputs.rim),
@@ -194,7 +198,7 @@ export default function TiresPage() {
     setLoadingNew(true);
     try {
       const payload = {
-        unit_system: "metric",
+        unit_system: unitSystem,
         inputs: {
           vehicle_type: newInputs.vehicleType,
           rim_in: toNumber(newInputs.rim),
@@ -243,35 +247,54 @@ export default function TiresPage() {
   const buildResultsList = (result: TiresResponse | null) => {
     if (!result) return [];
     return [
-      { label: t("tiresDiameterLabel"), value: result.results.diameter.toFixed(2) },
-      { label: t("tiresWidthLabel"), value: result.results.width.toFixed(2) },
+      {
+        label: t("tiresDiameterLabel"),
+        value: `${result.results.diameter.toFixed(2)} ${unitLabel}`,
+      },
+      { label: t("tiresWidthLabel"), value: `${result.results.width.toFixed(2)} ${unitLabel}` },
     ];
   };
 
-  const buildComparisonItems = (result: TiresResponse | null) => {
-    if (!result) return [];
-    const items = [];
-    if (result.results.diff_diameter !== undefined && result.results.diff_diameter !== null) {
-      items.push({
-        label: t("tiresDiffDiameterLabel"),
-        value: `${result.results.diff_diameter.toFixed(2)} (${result.results.diff_diameter_percent?.toFixed(2)}%)`,
-      });
-    }
-    if (result.results.diff_width !== undefined && result.results.diff_width !== null) {
-      items.push({
-        label: t("tiresDiffWidthLabel"),
-        value: `${result.results.diff_width.toFixed(2)} (${result.results.diff_width_percent?.toFixed(2)}%)`,
-      });
-    }
-    return items;
+  const buildComparisonItems = (newResultValue: TiresResponse | null) => {
+    if (!originalResult || !newResultValue) return [];
+    const labels = {
+      original: t("originalValueLabel"),
+      newValue: t("newValueLabel"),
+      diff: t("diffValueLabel"),
+      diffPercent: t("diffPercentLabel"),
+      na: t("notApplicableLabel"),
+    };
+    return [
+      {
+        label: t("tiresDiameterLabel"),
+        value: formatNumericComparison(
+          originalResult.results.diameter,
+          newResultValue.results.diameter,
+          unitLabel,
+          labels
+        ),
+      },
+      {
+        label: t("tiresWidthLabel"),
+        value: formatNumericComparison(
+          originalResult.results.width,
+          newResultValue.results.width,
+          unitLabel,
+          labels
+        ),
+      },
+    ];
   };
 
   const originalResultsList = useMemo(
     () => buildResultsList(originalResult),
-    [originalResult]
+    [originalResult, unitLabel]
   );
-  const newResultsList = useMemo(() => buildResultsList(newResult), [newResult]);
-  const comparisonItems = useMemo(() => buildComparisonItems(newResult), [newResult]);
+  const newResultsList = useMemo(() => buildResultsList(newResult), [newResult, unitLabel]);
+  const comparisonItems = useMemo(
+    () => buildComparisonItems(newResult),
+    [newResult, originalResult, unitLabel, t]
+  );
 
   const originalOptions = buildOptions(originalInputs.vehicleType);
   const newOptions = buildOptions(newInputs.vehicleType);
@@ -377,7 +400,7 @@ export default function TiresPage() {
           </div>
           <div className="ptp-actions">
             <Button type="button" onClick={handleOriginalSubmit} disabled={loadingOriginal}>
-              {loadingOriginal ? t("loading") : t("calculateOriginal")}
+              {loadingOriginal ? t("loading") : t("calculate")}
             </Button>
           </div>
           {loadingOriginal ? <LoadingState /> : null}
@@ -482,7 +505,7 @@ export default function TiresPage() {
           {!originalResult ? <div className="ptp-field__helper">{t("compareHint")}</div> : null}
           <div className="ptp-actions">
             <Button type="button" onClick={handleNewSubmit} disabled={loadingNew}>
-              {loadingNew ? t("loading") : t("calculateNew")}
+              {loadingNew ? t("loading") : t("calculate")}
             </Button>
           </div>
           {loadingNew ? <LoadingState /> : null}
