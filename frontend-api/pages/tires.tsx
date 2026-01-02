@@ -85,7 +85,7 @@ export default function TiresPage() {
   };
 
   const getFlotation = (vehicleType: VehicleType | "", rim: string) => {
-    if (vehicleType !== "Utility" || !rim) return [];
+    if (vehicleType !== "LightTruck" || !rim) return [];
     const options: string[] = [];
     const rimData = getRimData(vehicleType, rim);
     (rimData?.widths || []).forEach((width: string) => {
@@ -332,7 +332,7 @@ export default function TiresPage() {
                 />
               </>
             ) : null}
-            {originalInputs.vehicleType === "Utility" ? (
+            {originalInputs.vehicleType === "LightTruck" ? (
               <label className="ptp-field">
                 <span className="ptp-field__label">{t("flotationLabel")}</span>
                 <input
@@ -436,7 +436,7 @@ export default function TiresPage() {
                 />
               </>
             ) : null}
-            {newInputs.vehicleType === "Utility" ? (
+            {newInputs.vehicleType === "LightTruck" ? (
               <label className="ptp-field">
                 <span className="ptp-field__label">{t("flotationLabel")}</span>
                 <input

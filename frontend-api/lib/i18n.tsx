@@ -93,7 +93,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
     flotationLabel: "Flotation size (optional)",
     Car: "Car",
     Motorcycle: "Motorcycle",
-    Utility: "Utility",
+    LightTruck: "Light Truck",
+    TruckCommercial: "Truck (Commercial)",
     required: "Required",
   },
   pt_BR: {
@@ -180,7 +181,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
     flotationLabel: "Medida flotation (opcional)",
     Car: "Carro",
     Motorcycle: "Moto",
-    Utility: "Utilitario",
+    LightTruck: "SUV/Picape/Van",
+    TruckCommercial: "Caminhao Comercial",
     required: "Obrigatorio",
   },
   es_ES: {
@@ -267,7 +269,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
     flotationLabel: "Medida flotation (opcional)",
     Car: "Carro",
     Motorcycle: "Moto",
-    Utility: "Utilitario",
+    LightTruck: "SUV/Pickup/Van",
+    TruckCommercial: "Camion Comercial",
     required: "Requerido",
   },
 };

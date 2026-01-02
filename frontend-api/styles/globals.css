@@ -67,7 +67,7 @@ body.ptp-embed .ptp-shell {
   --ptp-primary-contrast: #24160e;
   --ptp-focus: rgba(199, 120, 58, 0.35);
   --ptp-shadow: 0 14px 32px rgba(0, 0, 0, 0.35);
-  --ptp-blueprint: #344a57;
+  --ptp-blueprint: #285A82;
   --ptp-metric: #6da0c7;
 }
 
@@ -137,7 +137,7 @@ body.ptp-embed .ptp-subtitle {
 
 .ptp-variant-pilot .ptp-card,
 .ptp-variant-pilot .card {
-  background: linear-gradient(135deg, rgba(40, 90, 130, 0.3), rgba(5, 6, 10, 0.85)),
+  background: linear-gradient(135deg, #285A824D, #0B0F1AE6),
     var(--ptp-surface);
 }
 
