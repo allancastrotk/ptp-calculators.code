@@ -90,6 +90,10 @@ export default function TiresOriginalWidget() {
 
   const unitLabel = unitSystem === "imperial" ? "in" : "mm";
   const toNumber = (value: string) => Number(value.replace(",", "."));
+  const convertValue = (value: number, from?: "metric" | "imperial") => {
+    if (!from || from === unitSystem) return value;
+    return from === "metric" ? value / 25.4 : value * 25.4;
+  };
   const hasFlotation = (vehicleType: VehicleType | "") =>
     vehicleType === "LightTruck" || vehicleType === "Kart" || vehicleType === "Kartcross";
 
@@ -227,12 +231,15 @@ export default function TiresOriginalWidget() {
 
   const resultsList = useMemo((): ResultItem[] => {
     if (!result) return [];
+    const baseUnit = result.unit_system;
+    const diameterOut = convertValue(result.results.diameter, baseUnit);
+    const widthOut = convertValue(result.results.width, baseUnit);
     const items = [
       {
         label: t("tiresDiameterLabel"),
-        value: `${result.results.diameter.toFixed(2)} ${unitLabel}`,
+        value: `${diameterOut.toFixed(2)} ${unitLabel}`,
       },
-      { label: t("tiresWidthLabel"), value: `${result.results.width.toFixed(2)} ${unitLabel}` },
+      { label: t("tiresWidthLabel"), value: `${widthOut.toFixed(2)} ${unitLabel}` },
     ];
 
     if (!inputs.flotationEnabled && inputs.width && inputs.rimWidth) {

@@ -15,6 +15,7 @@ import { useI18n } from "../lib/i18n";
 import { TIRES_DB, VEHICLE_TYPES, VehicleType, getRimData, getWidthEntry } from "../lib/tiresDb";
 
 type TiresResponse = {
+  unit_system?: "metric" | "imperial";
   results: {
     diameter: number;
     width: number;
@@ -65,6 +66,10 @@ export default function TiresPage() {
 
   const unitLabel = unitSystem === "imperial" ? "in" : "mm";
   const toNumber = (value: string) => Number(value.replace(",", "."));
+  const convertValue = (value: number, from?: "metric" | "imperial") => {
+    if (!from || from === unitSystem) return value;
+    return from === "metric" ? value / 25.4 : value * 25.4;
+  };
 
   const buildOptions = (vehicleType: VehicleType | "") => {
     if (!vehicleType) return { rims: [], widths: [], aspects: [], flotation: [] };
@@ -248,12 +253,15 @@ export default function TiresPage() {
 
   const buildResultsList = (result: TiresResponse | null, inputs: TireInputs) => {
     if (!result) return [];
+    const baseUnit = result.unit_system;
+    const diameterOut = convertValue(result.results.diameter, baseUnit);
+    const widthOut = convertValue(result.results.width, baseUnit);
     const items = [
       {
         label: t("tiresDiameterLabel"),
-        value: `${result.results.diameter.toFixed(2)} ${unitLabel}`,
+        value: `${diameterOut.toFixed(2)} ${unitLabel}`,
       },
-      { label: t("tiresWidthLabel"), value: `${result.results.width.toFixed(2)} ${unitLabel}` },
+      { label: t("tiresWidthLabel"), value: `${widthOut.toFixed(2)} ${unitLabel}` },
     ];
 
     if (!inputs.flotationEnabled && inputs.width && inputs.rimWidth) {
@@ -296,21 +304,24 @@ export default function TiresPage() {
       percent === null ? t("notApplicableLabel") : `${percent.toFixed(2)}%`;
     return (
       <span className={`ptp-diff-value--${state}`}>
-        {t("differenceLabel")}: {diff.toFixed(2)} {unitLabel} [{percentText}]
+        {diff.toFixed(2)} {unitLabel} [{percentText}]
       </span>
     );
   };
 
   const buildComparisonItems = (newResultValue: TiresResponse | null) => {
     if (!originalResult || !newResultValue) return [];
-    const diameterDiff = newResultValue.results.diameter - originalResult.results.diameter;
-    const diameterPercent = originalResult.results.diameter
-      ? (diameterDiff / originalResult.results.diameter) * 100
-      : null;
-    const widthDiff = newResultValue.results.width - originalResult.results.width;
-    const widthPercent = originalResult.results.width
-      ? (widthDiff / originalResult.results.width) * 100
-      : null;
+    const newUnit = newResultValue.unit_system;
+    const originalUnit = originalResult.unit_system;
+    const originalDiameter = convertValue(originalResult.results.diameter, originalUnit);
+    const newDiameter = convertValue(newResultValue.results.diameter, newUnit);
+    const originalWidth = convertValue(originalResult.results.width, originalUnit);
+    const newWidth = convertValue(newResultValue.results.width, newUnit);
+
+    const diameterDiff = newDiameter - originalDiameter;
+    const widthDiff = newWidth - originalWidth;
+    const diameterPercent = originalDiameter ? (diameterDiff / originalDiameter) * 100 : null;
+    const widthPercent = originalWidth ? (widthDiff / originalWidth) * 100 : null;
     return [
       {
         label: renderDiffLabel(t("tiresDiameterLabel"), diameterDiff),

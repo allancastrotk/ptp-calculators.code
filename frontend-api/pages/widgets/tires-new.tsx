@@ -92,6 +92,10 @@ export default function TiresNewWidget() {
 
   const unitLabel = unitSystem === "imperial" ? "in" : "mm";
   const toNumber = (value: string) => Number(value.replace(",", "."));
+  const convertValue = (value: number, from?: "metric" | "imperial") => {
+    if (!from || from === unitSystem) return value;
+    return from === "metric" ? value / 25.4 : value * 25.4;
+  };
   const hasFlotation = (vehicleType: VehicleType | "") =>
     vehicleType === "LightTruck" || vehicleType === "Kart" || vehicleType === "Kartcross";
 
@@ -238,12 +242,15 @@ export default function TiresNewWidget() {
 
   const resultsList = useMemo((): ResultItem[] => {
     if (!result) return [];
+    const baseUnit = result.unit_system;
+    const diameterOut = convertValue(result.results.diameter, baseUnit);
+    const widthOut = convertValue(result.results.width, baseUnit);
     const items = [
       {
         label: t("tiresDiameterLabel"),
-        value: `${result.results.diameter.toFixed(2)} ${unitLabel}`,
+        value: `${diameterOut.toFixed(2)} ${unitLabel}`,
       },
-      { label: t("tiresWidthLabel"), value: `${result.results.width.toFixed(2)} ${unitLabel}` },
+      { label: t("tiresWidthLabel"), value: `${widthOut.toFixed(2)} ${unitLabel}` },
     ];
 
     if (!inputs.flotationEnabled && inputs.width && inputs.rimWidth) {
@@ -286,20 +293,27 @@ export default function TiresNewWidget() {
       percent === null ? t("notApplicableLabel") : `${percent.toFixed(2)}%`;
     return (
       <span className={`ptp-diff-value--${state}`}>
-        {t("differenceLabel")}: {diff.toFixed(2)} {unitLabel} [{percentText}]
+        {diff.toFixed(2)} {unitLabel} [{percentText}]
       </span>
     );
   };
 
   const comparisonItems = useMemo((): ResultItem[] => {
     if (!baseline || !result) return [];
-    const diameterDiff = result.results.diameter - baseline.results.diameter;
-    const diameterPercent = baseline.results.diameter
-      ? (diameterDiff / baseline.results.diameter) * 100
+    const baselineUnit = baseline.unit_system;
+    const resultUnit = result.unit_system;
+    const baselineDiameter = convertValue(baseline.results.diameter, baselineUnit);
+    const resultDiameter = convertValue(result.results.diameter, resultUnit);
+    const baselineWidth = convertValue(baseline.results.width, baselineUnit);
+    const resultWidth = convertValue(result.results.width, resultUnit);
+
+    const diameterDiff = resultDiameter - baselineDiameter;
+    const diameterPercent = baselineDiameter
+      ? (diameterDiff / baselineDiameter) * 100
       : null;
-    const widthDiff = result.results.width - baseline.results.width;
-    const widthPercent = baseline.results.width
-      ? (widthDiff / baseline.results.width) * 100
+    const widthDiff = resultWidth - baselineWidth;
+    const widthPercent = baselineWidth
+      ? (widthDiff / baselineWidth) * 100
       : null;
     return [
       {
