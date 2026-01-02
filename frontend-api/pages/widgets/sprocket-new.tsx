@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import type { ReactNode } from "react";
 import { useRouter } from "next/router";
 
 import { Button } from "../../components/Button";
@@ -9,8 +10,9 @@ import { Layout } from "../../components/Layout";
 import { ResultPanel } from "../../components/ResultPanel";
 import { StatusPanel } from "../../components/StatusPanel";
 import { SelectField } from "../../components/SelectField";
+import { UnitSystem } from "../../components/UnitSystemSwitch";
+import { UnitToggleButton } from "../../components/UnitToggleButton";
 import { postJson, ApiError } from "../../lib/api";
-import { formatNumericComparison } from "../../lib/comparison";
 import { useI18n } from "../../lib/i18n";
 
 type SprocketResponse = {
@@ -28,12 +30,18 @@ type SprocketResponse = {
     chain_length_in?: number | null;
     center_distance_mm?: number | null;
     center_distance_in?: number | null;
+    diff_ratio_percent?: number | null;
+    diff_ratio_absolute?: number | null;
+    diff_chain_length_percent?: number | null;
+    diff_chain_length_absolute?: number | null;
+    diff_center_distance_percent?: number | null;
+    diff_center_distance_absolute?: number | null;
   };
   warnings?: string[];
   meta: { version: string; timestamp: string; source: string };
 };
 
-type ResultItem = { label: string; value: string };
+type ResultItem = { label: ReactNode; value: ReactNode };
 
 type BaselineMessage = {
   type: "ptp:calc:sprocket:baseline";
@@ -59,13 +67,14 @@ function sleep(ms: number) {
 }
 
 export default function SprocketNewWidget() {
-  const { t, language } = useI18n();
+  const { t } = useI18n();
   const router = useRouter();
   const pageId = useMemo(() => {
     const value = router.query.pageId;
     return typeof value === "string" && value.trim() ? value : undefined;
   }, [router.query.pageId]);
 
+  const [unitSystem, setUnitSystem] = useState<UnitSystem>("metric");
   const [sprocket, setSprocket] = useState("");
   const [crown, setCrown] = useState("");
   const [pitch, setPitch] = useState("");
@@ -79,8 +88,7 @@ export default function SprocketNewWidget() {
   const [baseline, setBaseline] = useState<SprocketResponse | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
-  const isEnglish = language === "en_US";
-  const lengthUnit = isEnglish ? "in" : "cm";
+  const lengthUnit = unitSystem === "imperial" ? "in" : "mm";
 
   const toNumber = (value: string) => Number(value.replace(",", "."));
 
@@ -101,10 +109,43 @@ export default function SprocketNewWidget() {
 
   const formatLength = (mmValue?: number | null, inValue?: number | null) => {
     if (mmValue === undefined || mmValue === null) return "-";
-    if (isEnglish) {
+    if (unitSystem === "imperial") {
       return `${(inValue ?? mmValue / 25.4).toFixed(2)} ${lengthUnit}`;
     }
-    return `${(mmValue / 10).toFixed(2)} ${lengthUnit}`;
+    return `${mmValue.toFixed(2)} ${lengthUnit}`;
+  };
+
+  const renderDiffLabel = (label: string, diff: number) => {
+    let state = "no-change";
+    let icon = "";
+    if (diff > 0) {
+      state = "increase";
+      icon = "";
+    } else if (diff < 0) {
+      state = "decrease";
+      icon = "";
+    }
+    return (
+      <span className="ptp-result__label-row">
+        {t("deltaDiffLabel")} {label}
+        <span className={`ptp-diff-icon ptp-diff-icon--${state}`}>{icon}</span>
+      </span>
+    );
+  };
+
+  const renderDiffValue = (diff: number, percent: number | null, unit: string) => {
+    let state = "no-change";
+    if (diff > 0) state = "increase";
+    if (diff < 0) state = "decrease";
+    const percentText =
+      percent === null ? t("notApplicableLabel") : `${percent.toFixed(2)}%`;
+    const unitSuffix = unit ? ` ${unit}` : "";
+    return (
+      <span className={`ptp-diff-value--${state}`}>
+        {diff.toFixed(2)}
+        {unitSuffix} [{percentText}]
+      </span>
+    );
   };
 
   const postWithRetry = async (payload: unknown, signal: AbortSignal) => {
@@ -155,7 +196,7 @@ export default function SprocketNewWidget() {
     setLoading(true);
     try {
       const payload = {
-        unit_system: "metric",
+        unit_system: unitSystem,
         inputs: {
           sprocket_teeth: toNumber(sprocket),
           crown_teeth: toNumber(crown),
@@ -199,67 +240,50 @@ export default function SprocketNewWidget() {
         value: formatLength(result.results.center_distance_mm, result.results.center_distance_in),
       },
     ];
-  }, [result, t]);
+  }, [result, t, unitSystem]);
 
   const comparisonItems = useMemo((): ResultItem[] => {
     if (!baseline || !result) return [];
-    const labels = {
-      original: t("originalValueLabel"),
-      newValue: t("newValueLabel"),
-      diff: t("diffValueLabel"),
-      diffPercent: t("diffPercentLabel"),
-      na: t("notApplicableLabel"),
-    };
-
-    const originalChain = baseline.results.chain_length_mm
-      ? isEnglish
-        ? baseline.results.chain_length_mm / 25.4
-        : baseline.results.chain_length_mm / 10
-      : null;
-    const newChain = result.results.chain_length_mm
-      ? isEnglish
-        ? result.results.chain_length_mm / 25.4
-        : result.results.chain_length_mm / 10
-      : null;
-    const originalCenter = baseline.results.center_distance_mm
-      ? isEnglish
-        ? baseline.results.center_distance_mm / 25.4
-        : baseline.results.center_distance_mm / 10
-      : null;
-    const newCenter = result.results.center_distance_mm
-      ? isEnglish
-        ? result.results.center_distance_mm / 25.4
-        : result.results.center_distance_mm / 10
-      : null;
-
-    const emptyComparison = `${labels.original}: ${labels.na} | ${labels.newValue}: ${labels.na} | ${labels.diff}: ${labels.na} | ${labels.diffPercent}: ${labels.na}`;
+    const ratioDiff = result.results.diff_ratio_absolute ?? 0;
+    const ratioPercent = result.results.diff_ratio_percent ?? null;
+    const chainDiffRaw = result.results.diff_chain_length_absolute ?? null;
+    const chainPercent = result.results.diff_chain_length_percent ?? null;
+    const centerDiffRaw = result.results.diff_center_distance_absolute ?? null;
+    const centerPercent = result.results.diff_center_distance_percent ?? null;
+    const chainDiff =
+      chainDiffRaw === null
+        ? null
+        : unitSystem === "imperial"
+          ? chainDiffRaw / 25.4
+          : chainDiffRaw;
+    const centerDiff =
+      centerDiffRaw === null
+        ? null
+        : unitSystem === "imperial"
+          ? centerDiffRaw / 25.4
+          : centerDiffRaw;
 
     return [
       {
-        label: t("sprocketRatioLabel"),
-        value: formatNumericComparison(
-          baseline.results.ratio,
-          result.results.ratio,
-          null,
-          labels
-        ),
+        label: renderDiffLabel(t("sprocketRatioLabel"), ratioDiff),
+        value: renderDiffValue(ratioDiff, ratioPercent, ""),
       },
       {
-        label: t("chainLengthLabel"),
+        label: renderDiffLabel(t("chainLengthLabel"), chainDiff ?? 0),
         value:
-          originalChain !== null && newChain !== null
-            ? formatNumericComparison(originalChain, newChain, lengthUnit, labels)
-            : emptyComparison,
+          chainDiff === null
+            ? t("notApplicableLabel")
+            : renderDiffValue(chainDiff, chainPercent, lengthUnit),
       },
       {
-        label: t("centerDistanceLabel"),
+        label: renderDiffLabel(t("centerDistanceLabel"), centerDiff ?? 0),
         value:
-          originalCenter !== null && newCenter !== null
-            ? formatNumericComparison(originalCenter, newCenter, lengthUnit, labels)
-            : emptyComparison,
+          centerDiff === null
+            ? t("notApplicableLabel")
+            : renderDiffValue(centerDiff, centerPercent, lengthUnit),
       },
     ];
-  }, [baseline, isEnglish, lengthUnit, result, t]);
+  }, [baseline, lengthUnit, result, t, unitSystem]);
 
   return (
     <Layout title={t("sprocket")} hideHeader hideFooter variant="pilot">
@@ -271,7 +295,8 @@ export default function SprocketNewWidget() {
         )}
         <Card className="ptp-stack">
           <div className="ptp-section-header">
-            <div className="ptp-section-title">{t("newSection")}</div>
+            <div className="ptp-section-title">{t("newAssemblySection")}</div>
+            <UnitToggleButton value={unitSystem} onChange={setUnitSystem} />
           </div>
           {error ? <ErrorBanner message={error} /> : null}
           {retryHint ? <div className="ptp-field__helper">{retryHint}</div> : null}
@@ -317,9 +342,11 @@ export default function SprocketNewWidget() {
           </div>
           {loading ? <StatusPanel message={t("warmupMessage")} /> : null}
           {warmupNotice ? <div className="ptp-card">{warmupNotice}</div> : null}
-          {result ? <ResultPanel title={t("newResultsTitle")} items={resultsList} /> : null}
+          {result ? (
+            <ResultPanel title={t("newAssemblyResultsTitle")} items={resultsList} />
+          ) : null}
           {comparisonItems.length > 0 ? (
-            <ResultPanel title={t("comparisonNewTitle")} items={comparisonItems} />
+            <ResultPanel title={t("comparisonAssemblyTitle")} items={comparisonItems} />
           ) : null}
         </Card>
       </div>

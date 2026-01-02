@@ -9,6 +9,8 @@ import { Layout } from "../../components/Layout";
 import { ResultPanel } from "../../components/ResultPanel";
 import { StatusPanel } from "../../components/StatusPanel";
 import { SelectField } from "../../components/SelectField";
+import { UnitSystem } from "../../components/UnitSystemSwitch";
+import { UnitToggleButton } from "../../components/UnitToggleButton";
 import { postJson, ApiError } from "../../lib/api";
 import { postEmbedMessage } from "../../lib/embed";
 import { useI18n } from "../../lib/i18n";
@@ -58,13 +60,14 @@ function sleep(ms: number) {
 }
 
 export default function SprocketOriginalWidget() {
-  const { t, language } = useI18n();
+  const { t } = useI18n();
   const router = useRouter();
   const pageId = useMemo(() => {
     const value = router.query.pageId;
     return typeof value === "string" && value.trim() ? value : undefined;
   }, [router.query.pageId]);
 
+  const [unitSystem, setUnitSystem] = useState<UnitSystem>("metric");
   const [sprocket, setSprocket] = useState("");
   const [crown, setCrown] = useState("");
   const [pitch, setPitch] = useState("");
@@ -77,17 +80,16 @@ export default function SprocketOriginalWidget() {
   const [result, setResult] = useState<SprocketResponse | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
-  const isEnglish = language === "en_US";
-  const lengthUnit = isEnglish ? "in" : "cm";
+  const lengthUnit = unitSystem === "imperial" ? "in" : "mm";
 
   const toNumber = (value: string) => Number(value.replace(",", "."));
 
   const formatLength = (mmValue?: number | null, inValue?: number | null) => {
     if (mmValue === undefined || mmValue === null) return "-";
-    if (isEnglish) {
+    if (unitSystem === "imperial") {
       return `${(inValue ?? mmValue / 25.4).toFixed(2)} ${lengthUnit}`;
     }
-    return `${(mmValue / 10).toFixed(2)} ${lengthUnit}`;
+    return `${mmValue.toFixed(2)} ${lengthUnit}`;
   };
 
   const postWithRetry = async (payload: unknown, signal: AbortSignal) => {
@@ -138,7 +140,7 @@ export default function SprocketOriginalWidget() {
     setLoading(true);
     try {
       const payload = {
-        unit_system: "metric",
+        unit_system: unitSystem,
         inputs: {
           sprocket_teeth: toNumber(sprocket),
           crown_teeth: toNumber(crown),
@@ -188,14 +190,15 @@ export default function SprocketOriginalWidget() {
         value: formatLength(result.results.center_distance_mm, result.results.center_distance_in),
       },
     ];
-  }, [result, t]);
+  }, [result, t, unitSystem]);
 
   return (
     <Layout title={t("sprocket")} hideHeader hideFooter variant="pilot">
       <div className="ptp-stack">
         <Card className="ptp-stack">
           <div className="ptp-section-header">
-            <div className="ptp-section-title">{t("originalSection")}</div>
+            <div className="ptp-section-title">{t("originalAssemblySection")}</div>
+            <UnitToggleButton value={unitSystem} onChange={setUnitSystem} />
           </div>
           {error ? <ErrorBanner message={error} /> : null}
           {retryHint ? <div className="ptp-field__helper">{retryHint}</div> : null}
@@ -240,7 +243,9 @@ export default function SprocketOriginalWidget() {
           </div>
           {loading ? <StatusPanel message={t("warmupMessage")} /> : null}
           {warmupNotice ? <div className="ptp-card">{warmupNotice}</div> : null}
-          {result ? <ResultPanel title={t("originalResultsTitle")} items={resultsList} /> : null}
+          {result ? (
+            <ResultPanel title={t("originalAssemblyResultsTitle")} items={resultsList} />
+          ) : null}
         </Card>
       </div>
     </Layout>
