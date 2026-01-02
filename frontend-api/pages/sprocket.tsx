@@ -5,8 +5,8 @@ import { Card } from "../components/Card";
 import { ErrorBanner } from "../components/ErrorBanner";
 import { InputField } from "../components/InputField";
 import { Layout } from "../components/Layout";
-import { LoadingState } from "../components/LoadingState";
 import { ResultPanel } from "../components/ResultPanel";
+import { StatusPanel } from "../components/StatusPanel";
 import { SelectField } from "../components/SelectField";
 import { postJson, ApiError } from "../lib/api";
 import { formatNumericComparison } from "../lib/comparison";
@@ -307,7 +307,7 @@ export default function SprocketPage() {
               {loadingOriginal ? t("loading") : t("calculate")}
             </Button>
           </div>
-          {loadingOriginal ? <LoadingState /> : null}
+          {loadingOriginal ? <StatusPanel message={t("warmupMessage")} /> : null}
           {originalResult ? (
             <ResultPanel title={t("originalResultsTitle")} items={originalResultsList} />
           ) : null}
@@ -357,7 +357,7 @@ export default function SprocketPage() {
               {loadingNew ? t("loading") : t("calculate")}
             </Button>
           </div>
-          {loadingNew ? <LoadingState /> : null}
+          {loadingNew ? <StatusPanel message={t("warmupMessage")} /> : null}
           {newResult ? <ResultPanel title={t("newResultsTitle")} items={newResultsList} /> : null}
           {comparisonItems.length > 0 ? (
             <ResultPanel title={t("comparisonNewTitle")} items={comparisonItems} />

@@ -6,8 +6,8 @@ import { Card } from "../../components/Card";
 import { ErrorBanner } from "../../components/ErrorBanner";
 import { InputField } from "../../components/InputField";
 import { Layout } from "../../components/Layout";
-import { LoadingState } from "../../components/LoadingState";
 import { ResultPanel } from "../../components/ResultPanel";
+import { StatusPanel } from "../../components/StatusPanel";
 import { SelectField } from "../../components/SelectField";
 import { postJson, ApiError } from "../../lib/api";
 import { formatNumericComparison } from "../../lib/comparison";
@@ -315,7 +315,7 @@ export default function SprocketNewWidget() {
               {loading ? t("loading") : t("calculate")}
             </Button>
           </div>
-          {loading ? <LoadingState /> : null}
+          {loading ? <StatusPanel message={t("warmupMessage")} /> : null}
           {warmupNotice ? <div className="ptp-card">{warmupNotice}</div> : null}
           {result ? <ResultPanel title={t("newResultsTitle")} items={resultsList} /> : null}
           {comparisonItems.length > 0 ? (
