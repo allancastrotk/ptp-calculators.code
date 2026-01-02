@@ -181,10 +181,10 @@ export default function DisplacementNewWidget() {
   const resultsList = useMemo((): ResultItem[] => {
     if (!result) return [];
     return [
-      { label: "Displacement (cc)", value: result.results.displacement_cc.toFixed(2) },
-      { label: "Displacement (L)", value: result.results.displacement_l.toFixed(2) },
-      { label: "Displacement (cu in)", value: result.results.displacement_ci.toFixed(2) },
-      { label: "Geometry", value: result.results.geometry },
+      { label: t("displacementCcLabel"), value: result.results.displacement_cc.toFixed(2) },
+      { label: t("displacementLLabel"), value: result.results.displacement_l.toFixed(2) },
+      { label: t("displacementCiLabel"), value: result.results.displacement_ci.toFixed(2) },
+      { label: t("geometryLabel"), value: result.results.geometry },
     ];
   }, [result]);
 
@@ -196,7 +196,7 @@ export default function DisplacementNewWidget() {
     const diffPercent = (diffCc / originalCc) * 100;
     return [
       {
-        label: "Diff vs Original (%)",
+        label: t("diffVsOriginalLabel"),
         value: `${diffCc.toFixed(2)} cc (${diffPercent.toFixed(2)}%)`,
       },
     ];
