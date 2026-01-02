@@ -201,6 +201,8 @@ body.ptp-embed .ptp-subtitle {
   font-size: 12px;
   color: var(--ptp-muted);
   text-align: right;
+  display: block;
+  width: 100%;
   white-space: nowrap;
 }
 
