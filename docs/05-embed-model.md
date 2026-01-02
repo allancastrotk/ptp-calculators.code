@@ -254,3 +254,4 @@ Use two separate iframes when you want Original and New on the same host page. T
   });
 </script>
 ```
+Nota: o `pageId` e recomendado para evitar colisao quando houver multiplos pares de widgets na mesma pagina. Sem `pageId`, os widgets ainda funcionam, mas a comparacao entre Original e New nao e habilitada.
