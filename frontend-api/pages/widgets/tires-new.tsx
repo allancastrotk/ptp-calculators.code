@@ -10,6 +10,7 @@ import { LoadingState } from "../../components/LoadingState";
 import { ResultPanel } from "../../components/ResultPanel";
 import { SelectField } from "../../components/SelectField";
 import { postJson, ApiError } from "../../lib/api";
+import { formatNumericComparison } from "../../lib/comparison";
 import { useI18n } from "../../lib/i18n";
 import { TIRES_DB, VEHICLE_TYPES, VehicleType, getRimData, getWidthEntry } from "../../lib/tiresDb";
 
@@ -70,7 +71,7 @@ function sleep(ms: number) {
 }
 
 export default function TiresNewWidget() {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const router = useRouter();
   const pageId = useMemo(() => {
     const value = router.query.pageId;
@@ -87,6 +88,9 @@ export default function TiresNewWidget() {
   const [baseline, setBaseline] = useState<TiresResponse | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
+  const isEnglish = language === "en_US";
+  const unitSystem = isEnglish ? "imperial" : "metric";
+  const unitLabel = isEnglish ? "in" : "mm";
   const toNumber = (value: string) => Number(value.replace(",", "."));
   const hasFlotation = (vehicleType: VehicleType | "") =>
     vehicleType === "LightTruck" || vehicleType === "Kart" || vehicleType === "Kartcross";
@@ -199,7 +203,7 @@ export default function TiresNewWidget() {
     setLoading(true);
     try {
       const payload = {
-        unit_system: "metric",
+        unit_system: unitSystem,
         inputs: {
           vehicle_type: inputs.vehicleType,
           rim_in: toNumber(inputs.rim),
@@ -235,32 +239,44 @@ export default function TiresNewWidget() {
   const resultsList = useMemo((): ResultItem[] => {
     if (!result) return [];
     return [
-      { label: t("diameterLabel"), value: result.results.diameter.toFixed(2) },
-      { label: t("widthLabel"), value: result.results.width.toFixed(2) },
+      {
+        label: t("tiresDiameterLabel"),
+        value: `${result.results.diameter.toFixed(2)} ${unitLabel}`,
+      },
+      { label: t("tiresWidthLabel"), value: `${result.results.width.toFixed(2)} ${unitLabel}` },
     ];
-  }, [result, t]);
+  }, [result, t, unitLabel]);
 
   const comparisonItems = useMemo((): ResultItem[] => {
     if (!baseline || !result) return [];
-    const items: ResultItem[] = [];
-    if (baseline.results.diameter) {
-      const diff = result.results.diameter - baseline.results.diameter;
-      const percent = (diff / baseline.results.diameter) * 100;
-      items.push({
-        label: t("diameterDiffLabel"),
-        value: `${diff.toFixed(2)} (${percent.toFixed(2)}%)`,
-      });
-    }
-    if (baseline.results.width) {
-      const diff = result.results.width - baseline.results.width;
-      const percent = (diff / baseline.results.width) * 100;
-      items.push({
-        label: t("widthDiffLabel"),
-        value: `${diff.toFixed(2)} (${percent.toFixed(2)}%)`,
-      });
-    }
-    return items;
-  }, [baseline, result, t]);
+    const labels = {
+      original: t("originalValueLabel"),
+      newValue: t("newValueLabel"),
+      diff: t("diffValueLabel"),
+      diffPercent: t("diffPercentLabel"),
+      na: t("notApplicableLabel"),
+    };
+    return [
+      {
+        label: t("tiresDiameterLabel"),
+        value: formatNumericComparison(
+          baseline.results.diameter,
+          result.results.diameter,
+          unitLabel,
+          labels
+        ),
+      },
+      {
+        label: t("tiresWidthLabel"),
+        value: formatNumericComparison(
+          baseline.results.width,
+          result.results.width,
+          unitLabel,
+          labels
+        ),
+      },
+    ];
+  }, [baseline, result, t, unitLabel]);
 
   const options = buildOptions(inputs.vehicleType);
 
@@ -368,7 +384,7 @@ export default function TiresNewWidget() {
           <div className="ptp-actions ptp-actions--between ptp-actions--spaced">
             {!baseline && !result ? <div className="ptp-field__helper">{t("compareHintWidget")}</div> : <span />}
             <Button type="button" onClick={handleSubmit} disabled={loading}>
-              {loading ? t("loading") : t("calculateNew")}
+              {loading ? t("loading") : t("calculate")}
             </Button>
           </div>
           {loading ? <LoadingState /> : null}

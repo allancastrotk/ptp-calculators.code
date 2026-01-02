@@ -8,9 +8,8 @@ import { InputField } from "../../components/InputField";
 import { Layout } from "../../components/Layout";
 import { LoadingState } from "../../components/LoadingState";
 import { ResultPanel } from "../../components/ResultPanel";
-import { UnitSystem } from "../../components/UnitSystemSwitch";
-import { UnitToggleButton } from "../../components/UnitToggleButton";
 import { postJson, ApiError } from "../../lib/api";
+import { formatNumericComparison, formatTextComparison } from "../../lib/comparison";
 import { useI18n } from "../../lib/i18n";
 
 type RLResponse = {
@@ -64,7 +63,6 @@ export default function RlNewWidget() {
     return typeof value === "string" && value.trim() ? value : undefined;
   }, [router.query.pageId]);
 
-  const [unitSystem, setUnitSystem] = useState<UnitSystem>("metric");
   const [bore, setBore] = useState("");
   const [stroke, setStroke] = useState("");
   const [rodLength, setRodLength] = useState("");
@@ -140,7 +138,7 @@ export default function RlNewWidget() {
 
     try {
       const payload = {
-        unit_system: unitSystem,
+        unit_system: "metric",
         inputs: {
           bore: toNumber(bore),
           stroke: toNumber(stroke),
@@ -195,18 +193,58 @@ export default function RlNewWidget() {
 
   const comparisonItems = useMemo((): ResultItem[] => {
     if (!baseline || !result) return [];
-    const items: ResultItem[] = [];
-    if (baseline.results.rl_ratio) {
-      const diff = result.results.rl_ratio - baseline.results.rl_ratio;
-      const percent = (diff / baseline.results.rl_ratio) * 100;
-      items.push({ label: t("diffRlLabel"), value: `${percent.toFixed(2)}%` });
-    }
-    if (baseline.results.displacement_cc) {
-      const diff = result.results.displacement_cc - baseline.results.displacement_cc;
-      const percent = (diff / baseline.results.displacement_cc) * 100;
-      items.push({ label: t("diffDisplacementLabel"), value: `${percent.toFixed(2)}%` });
-    }
-    return items;
+    const labels = {
+      original: t("originalValueLabel"),
+      newValue: t("newValueLabel"),
+      diff: t("diffValueLabel"),
+      diffPercent: t("diffPercentLabel"),
+      na: t("notApplicableLabel"),
+    };
+    return [
+      {
+        label: t("rlRatioLabel"),
+        value: formatNumericComparison(
+          baseline.results.rl_ratio,
+          result.results.rl_ratio,
+          null,
+          labels
+        ),
+      },
+      {
+        label: t("rodStrokeLabel"),
+        value: formatNumericComparison(
+          baseline.results.rod_stroke_ratio,
+          result.results.rod_stroke_ratio,
+          null,
+          labels
+        ),
+      },
+      {
+        label: t("displacementCcLabel"),
+        value: formatNumericComparison(
+          baseline.results.displacement_cc,
+          result.results.displacement_cc,
+          "cc",
+          labels
+        ),
+      },
+      {
+        label: t("geometryLabel"),
+        value: formatTextComparison(
+          formatGeometry(baseline.results.geometry),
+          formatGeometry(result.results.geometry),
+          labels
+        ),
+      },
+      {
+        label: t("smoothnessLabel"),
+        value: formatTextComparison(
+          formatSmoothness(baseline.results.smoothness),
+          formatSmoothness(result.results.smoothness),
+          labels
+        ),
+      },
+    ];
   }, [baseline, result, t]);
 
   return (
@@ -220,15 +258,14 @@ export default function RlNewWidget() {
         <Card className="ptp-stack">
           <div className="ptp-section-header">
             <div className="ptp-section-title">{t("newSection")}</div>
-            <UnitToggleButton value={unitSystem} onChange={setUnitSystem} />
           </div>
           {error ? <ErrorBanner message={error} /> : null}
           {retryHint ? <div className="ptp-field__helper">{retryHint}</div> : null}
           <div className="grid">
             <InputField
               label={t("boreLabel")}
-              unitLabel={unitSystem === "imperial" ? "in" : "mm"}
-              placeholder={unitSystem === "imperial" ? "2.52" : "64.0"}
+              unitLabel="mm"
+              placeholder="64.0"
               value={bore}
               onChange={setBore}
               inputMode="decimal"
@@ -236,8 +273,8 @@ export default function RlNewWidget() {
             />
             <InputField
               label={t("strokeLabel")}
-              unitLabel={unitSystem === "imperial" ? "in" : "mm"}
-              placeholder={unitSystem === "imperial" ? "2.13" : "54.0"}
+              unitLabel="mm"
+              placeholder="54.0"
               value={stroke}
               onChange={setStroke}
               inputMode="decimal"
@@ -245,8 +282,8 @@ export default function RlNewWidget() {
             />
             <InputField
               label={t("rodLengthLabel")}
-              unitLabel={unitSystem === "imperial" ? "in" : "mm"}
-              placeholder={unitSystem === "imperial" ? "4.13" : "105.0"}
+              unitLabel="mm"
+              placeholder="105.0"
               value={rodLength}
               onChange={setRodLength}
               inputMode="decimal"
@@ -256,7 +293,7 @@ export default function RlNewWidget() {
           <div className="ptp-actions ptp-actions--between ptp-actions--spaced">
             {!baseline && !result ? <div className="ptp-field__helper">{t("compareHintWidget")}</div> : <span />}
             <Button type="button" onClick={handleSubmit} disabled={loading}>
-              {loading ? t("loading") : t("calculateNew")}
+              {loading ? t("loading") : t("calculate")}
             </Button>
           </div>
           {loading ? <LoadingState /> : null}

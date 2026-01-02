@@ -10,6 +10,7 @@ import { LoadingState } from "../../components/LoadingState";
 import { ResultPanel } from "../../components/ResultPanel";
 import { SelectField } from "../../components/SelectField";
 import { postJson, ApiError } from "../../lib/api";
+import { formatNumericComparison } from "../../lib/comparison";
 import { useI18n } from "../../lib/i18n";
 
 type SprocketResponse = {
@@ -104,12 +105,6 @@ export default function SprocketNewWidget() {
       return `${(inValue ?? mmValue / 25.4).toFixed(2)} ${lengthUnit}`;
     }
     return `${(mmValue / 10).toFixed(2)} ${lengthUnit}`;
-  };
-
-  const formatDelta = (percent: number, absolute: number, unit?: string) => {
-    const sign = absolute >= 0 ? "+" : "";
-    const absoluteValue = unit ? `${sign}${absolute.toFixed(2)} ${unit}` : `${sign}${absolute.toFixed(2)}`;
-    return `${percent.toFixed(2)}% (${absoluteValue})`;
   };
 
   const postWithRetry = async (payload: unknown, signal: AbortSignal) => {
@@ -208,35 +203,62 @@ export default function SprocketNewWidget() {
 
   const comparisonItems = useMemo((): ResultItem[] => {
     if (!baseline || !result) return [];
-    const items: ResultItem[] = [];
+    const labels = {
+      original: t("originalValueLabel"),
+      newValue: t("newValueLabel"),
+      diff: t("diffValueLabel"),
+      diffPercent: t("diffPercentLabel"),
+      na: t("notApplicableLabel"),
+    };
 
-    if (baseline.results.ratio) {
-      const diff = result.results.ratio - baseline.results.ratio;
-      const percent = (diff / baseline.results.ratio) * 100;
-      items.push({ label: t("sprocketDiffPercentLabel"), value: formatDelta(percent, diff) });
-    }
+    const originalChain = baseline.results.chain_length_mm
+      ? isEnglish
+        ? baseline.results.chain_length_mm / 25.4
+        : baseline.results.chain_length_mm / 10
+      : null;
+    const newChain = result.results.chain_length_mm
+      ? isEnglish
+        ? result.results.chain_length_mm / 25.4
+        : result.results.chain_length_mm / 10
+      : null;
+    const originalCenter = baseline.results.center_distance_mm
+      ? isEnglish
+        ? baseline.results.center_distance_mm / 25.4
+        : baseline.results.center_distance_mm / 10
+      : null;
+    const newCenter = result.results.center_distance_mm
+      ? isEnglish
+        ? result.results.center_distance_mm / 25.4
+        : result.results.center_distance_mm / 10
+      : null;
 
-    if (baseline.results.chain_length_mm && result.results.chain_length_mm) {
-      const diff = result.results.chain_length_mm - baseline.results.chain_length_mm;
-      const percent = (diff / baseline.results.chain_length_mm) * 100;
-      const displayValue = isEnglish ? diff / 25.4 : diff / 10;
-      items.push({
-        label: t("chainLengthDiffLabel"),
-        value: formatDelta(percent, displayValue, lengthUnit),
-      });
-    }
+    const emptyComparison = `${labels.original}: ${labels.na} | ${labels.newValue}: ${labels.na} | ${labels.diff}: ${labels.na} | ${labels.diffPercent}: ${labels.na}`;
 
-    if (baseline.results.center_distance_mm && result.results.center_distance_mm) {
-      const diff = result.results.center_distance_mm - baseline.results.center_distance_mm;
-      const percent = (diff / baseline.results.center_distance_mm) * 100;
-      const displayValue = isEnglish ? diff / 25.4 : diff / 10;
-      items.push({
-        label: t("centerDistanceDiffLabel"),
-        value: formatDelta(percent, displayValue, lengthUnit),
-      });
-    }
-
-    return items;
+    return [
+      {
+        label: t("sprocketRatioLabel"),
+        value: formatNumericComparison(
+          baseline.results.ratio,
+          result.results.ratio,
+          null,
+          labels
+        ),
+      },
+      {
+        label: t("chainLengthLabel"),
+        value:
+          originalChain !== null && newChain !== null
+            ? formatNumericComparison(originalChain, newChain, lengthUnit, labels)
+            : emptyComparison,
+      },
+      {
+        label: t("centerDistanceLabel"),
+        value:
+          originalCenter !== null && newCenter !== null
+            ? formatNumericComparison(originalCenter, newCenter, lengthUnit, labels)
+            : emptyComparison,
+      },
+    ];
   }, [baseline, isEnglish, lengthUnit, result, t]);
 
   return (
@@ -290,7 +312,7 @@ export default function SprocketNewWidget() {
           <div className="ptp-actions ptp-actions--between ptp-actions--spaced">
             {!baseline && !result ? <div className="ptp-field__helper">{t("compareHintWidget")}</div> : <span />}
             <Button type="button" onClick={handleSubmit} disabled={loading}>
-              {loading ? t("loading") : t("calculateNew")}
+              {loading ? t("loading") : t("calculate")}
             </Button>
           </div>
           {loading ? <LoadingState /> : null}

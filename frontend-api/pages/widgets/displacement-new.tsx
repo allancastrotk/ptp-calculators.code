@@ -11,6 +11,7 @@ import { ResultPanel } from "../../components/ResultPanel";
 import { UnitSystem } from "../../components/UnitSystemSwitch";
 import { UnitToggleButton } from "../../components/UnitToggleButton";
 import { postJson, ApiError } from "../../lib/api";
+import { formatNumericComparison, formatTextComparison } from "../../lib/comparison";
 import { useI18n } from "../../lib/i18n";
 
 type DisplacementResponse = {
@@ -190,17 +191,47 @@ export default function DisplacementNewWidget() {
 
   const comparisonItems = useMemo((): ResultItem[] => {
     if (!baseline || !result) return [];
-    const originalCc = baseline.results.displacement_cc;
-    if (!originalCc) return [];
-    const diffCc = result.results.displacement_cc - originalCc;
-    const diffPercent = (diffCc / originalCc) * 100;
+    const labels = {
+      original: t("originalValueLabel"),
+      newValue: t("newValueLabel"),
+      diff: t("diffValueLabel"),
+      diffPercent: t("diffPercentLabel"),
+      na: t("notApplicableLabel"),
+    };
     return [
       {
-        label: t("diffVsOriginalLabel"),
-        value: `${diffCc.toFixed(2)} cc (${diffPercent.toFixed(2)}%)`,
+        label: t("displacementCcLabel"),
+        value: formatNumericComparison(
+          baseline.results.displacement_cc,
+          result.results.displacement_cc,
+          "cc",
+          labels
+        ),
+      },
+      {
+        label: t("displacementLLabel"),
+        value: formatNumericComparison(
+          baseline.results.displacement_l,
+          result.results.displacement_l,
+          "L",
+          labels
+        ),
+      },
+      {
+        label: t("displacementCiLabel"),
+        value: formatNumericComparison(
+          baseline.results.displacement_ci,
+          result.results.displacement_ci,
+          "cu in",
+          labels
+        ),
+      },
+      {
+        label: t("geometryLabel"),
+        value: formatTextComparison(baseline.results.geometry, result.results.geometry, labels),
       },
     ];
-  }, [baseline, result]);
+  }, [baseline, result, t]);
 
   return (
     <Layout title={t("displacement")} hideHeader hideFooter variant="pilot">
@@ -252,7 +283,7 @@ export default function DisplacementNewWidget() {
               <span />
             )}
             <Button type="button" onClick={handleSubmit} disabled={loading}>
-              {loading ? t("loading") : t("calculateNew")}
+              {loading ? t("loading") : t("calculate")}
             </Button>
           </div>
           {loading ? <LoadingState /> : null}

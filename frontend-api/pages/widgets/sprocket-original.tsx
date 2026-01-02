@@ -235,7 +235,7 @@ export default function SprocketOriginalWidget() {
           </div>
           <div className="ptp-actions ptp-actions--spaced">
             <Button type="button" onClick={handleSubmit} disabled={loading}>
-              {loading ? t("loading") : t("calculateOriginal")}
+              {loading ? t("loading") : t("calculate")}
             </Button>
           </div>
           {loading ? <LoadingState /> : null}

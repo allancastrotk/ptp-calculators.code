@@ -69,7 +69,7 @@ function sleep(ms: number) {
 }
 
 export default function TiresOriginalWidget() {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const router = useRouter();
   const pageId = useMemo(() => {
     const value = router.query.pageId;
@@ -85,6 +85,9 @@ export default function TiresOriginalWidget() {
   const [result, setResult] = useState<TiresResponse | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
+  const isEnglish = language === "en_US";
+  const unitSystem = isEnglish ? "imperial" : "metric";
+  const unitLabel = isEnglish ? "in" : "mm";
   const toNumber = (value: string) => Number(value.replace(",", "."));
   const hasFlotation = (vehicleType: VehicleType | "") =>
     vehicleType === "LightTruck" || vehicleType === "Kart" || vehicleType === "Kartcross";
@@ -182,7 +185,7 @@ export default function TiresOriginalWidget() {
     setLoading(true);
     try {
       const payload = {
-        unit_system: "metric",
+        unit_system: unitSystem,
         inputs: {
           vehicle_type: inputs.vehicleType,
           rim_in: toNumber(inputs.rim),
@@ -224,10 +227,13 @@ export default function TiresOriginalWidget() {
   const resultsList = useMemo((): ResultItem[] => {
     if (!result) return [];
     return [
-      { label: t("diameterLabel"), value: result.results.diameter.toFixed(2) },
-      { label: t("widthLabel"), value: result.results.width.toFixed(2) },
+      {
+        label: t("tiresDiameterLabel"),
+        value: `${result.results.diameter.toFixed(2)} ${unitLabel}`,
+      },
+      { label: t("tiresWidthLabel"), value: `${result.results.width.toFixed(2)} ${unitLabel}` },
     ];
-  }, [result, t]);
+  }, [result, t, unitLabel]);
 
   const options = buildOptions(inputs.vehicleType);
 
@@ -329,7 +335,7 @@ export default function TiresOriginalWidget() {
           </div>
           <div className="ptp-actions ptp-actions--spaced">
             <Button type="button" onClick={handleSubmit} disabled={loading}>
-              {loading ? t("loading") : t("calculateOriginal")}
+              {loading ? t("loading") : t("calculate")}
             </Button>
           </div>
           {loading ? <LoadingState /> : null}

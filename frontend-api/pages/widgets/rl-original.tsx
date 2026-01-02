@@ -8,8 +8,6 @@ import { InputField } from "../../components/InputField";
 import { Layout } from "../../components/Layout";
 import { LoadingState } from "../../components/LoadingState";
 import { ResultPanel } from "../../components/ResultPanel";
-import { UnitSystem } from "../../components/UnitSystemSwitch";
-import { UnitToggleButton } from "../../components/UnitToggleButton";
 import { postJson, ApiError } from "../../lib/api";
 import { postEmbedMessage } from "../../lib/embed";
 import { useI18n } from "../../lib/i18n";
@@ -63,7 +61,6 @@ export default function RlOriginalWidget() {
     return typeof value === "string" && value.trim() ? value : undefined;
   }, [router.query.pageId]);
 
-  const [unitSystem, setUnitSystem] = useState<UnitSystem>("metric");
   const [bore, setBore] = useState("");
   const [stroke, setStroke] = useState("");
   const [rodLength, setRodLength] = useState("");
@@ -123,7 +120,7 @@ export default function RlOriginalWidget() {
 
     try {
       const payload = {
-        unit_system: unitSystem,
+        unit_system: "metric",
         inputs: {
           bore: toNumber(bore),
           stroke: toNumber(stroke),
@@ -188,15 +185,14 @@ export default function RlOriginalWidget() {
         <Card className="ptp-stack">
           <div className="ptp-section-header">
             <div className="ptp-section-title">{t("originalSection")}</div>
-            <UnitToggleButton value={unitSystem} onChange={setUnitSystem} />
           </div>
           {error ? <ErrorBanner message={error} /> : null}
           {retryHint ? <div className="ptp-field__helper">{retryHint}</div> : null}
           <div className="grid">
             <InputField
               label={t("boreLabel")}
-              unitLabel={unitSystem === "imperial" ? "in" : "mm"}
-              placeholder={unitSystem === "imperial" ? "2.28" : "58.0"}
+              unitLabel="mm"
+              placeholder="58.0"
               value={bore}
               onChange={setBore}
               inputMode="decimal"
@@ -204,8 +200,8 @@ export default function RlOriginalWidget() {
             />
             <InputField
               label={t("strokeLabel")}
-              unitLabel={unitSystem === "imperial" ? "in" : "mm"}
-              placeholder={unitSystem === "imperial" ? "1.97" : "50.0"}
+              unitLabel="mm"
+              placeholder="50.0"
               value={stroke}
               onChange={setStroke}
               inputMode="decimal"
@@ -213,8 +209,8 @@ export default function RlOriginalWidget() {
             />
             <InputField
               label={t("rodLengthLabel")}
-              unitLabel={unitSystem === "imperial" ? "in" : "mm"}
-              placeholder={unitSystem === "imperial" ? "3.94" : "100.0"}
+              unitLabel="mm"
+              placeholder="100.0"
               value={rodLength}
               onChange={setRodLength}
               inputMode="decimal"
@@ -223,7 +219,7 @@ export default function RlOriginalWidget() {
           </div>
           <div className="ptp-actions ptp-actions--spaced">
             <Button type="button" onClick={handleSubmit} disabled={loading}>
-              {loading ? t("loading") : t("calculateOriginal")}
+              {loading ? t("loading") : t("calculate")}
             </Button>
           </div>
           {loading ? <LoadingState /> : null}

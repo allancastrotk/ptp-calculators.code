@@ -7,9 +7,8 @@ import { InputField } from "../components/InputField";
 import { Layout } from "../components/Layout";
 import { LoadingState } from "../components/LoadingState";
 import { ResultPanel } from "../components/ResultPanel";
-import { UnitSystem } from "../components/UnitSystemSwitch";
-import { UnitToggleButton } from "../components/UnitToggleButton";
 import { postJson, ApiError } from "../lib/api";
+import { formatNumericComparison, formatTextComparison } from "../lib/comparison";
 import { useI18n } from "../lib/i18n";
 
 type RLResponse = {
@@ -26,7 +25,6 @@ type RLResponse = {
 
 export default function RLPage() {
   const { t } = useI18n();
-  const [unitSystem, setUnitSystem] = useState<UnitSystem>("metric");
   const [originalBore, setOriginalBore] = useState("");
   const [originalStroke, setOriginalStroke] = useState("");
   const [originalRod, setOriginalRod] = useState("");
@@ -68,7 +66,7 @@ export default function RLPage() {
     setLoadingOriginal(true);
     try {
       const payload = {
-        unit_system: unitSystem,
+        unit_system: "metric",
         inputs: {
           bore: toNumber(originalBore),
           stroke: toNumber(originalStroke),
@@ -121,7 +119,7 @@ export default function RLPage() {
     setLoadingNew(true);
     try {
       const payload = {
-        unit_system: unitSystem,
+        unit_system: "metric",
         inputs: {
           bore: toNumber(newBore),
           stroke: toNumber(newStroke),
@@ -189,25 +187,60 @@ export default function RLPage() {
   const newResultsList = useMemo(() => buildResults(newResult), [newResult]);
 
   const comparisonItems = useMemo(() => {
-    if (!newResult) return [];
-    const items = [];
-    if (newResult.results.diff_rl_percent !== undefined && newResult.results.diff_rl_percent !== null) {
-      items.push({
-        label: t("diffRlLabel"),
-        value: `${newResult.results.diff_rl_percent.toFixed(2)}%`,
-      });
-    }
-    if (
-      newResult.results.diff_displacement_percent !== undefined &&
-      newResult.results.diff_displacement_percent !== null
-    ) {
-      items.push({
-        label: t("diffDisplacementLabel"),
-        value: `${newResult.results.diff_displacement_percent.toFixed(2)}%`,
-      });
-    }
-    return items;
-  }, [newResult, t]);
+    if (!originalResult || !newResult) return [];
+    const labels = {
+      original: t("originalValueLabel"),
+      newValue: t("newValueLabel"),
+      diff: t("diffValueLabel"),
+      diffPercent: t("diffPercentLabel"),
+      na: t("notApplicableLabel"),
+    };
+    return [
+      {
+        label: t("rlRatioLabel"),
+        value: formatNumericComparison(
+          originalResult.results.rl_ratio,
+          newResult.results.rl_ratio,
+          null,
+          labels
+        ),
+      },
+      {
+        label: t("rodStrokeLabel"),
+        value: formatNumericComparison(
+          originalResult.results.rod_stroke_ratio,
+          newResult.results.rod_stroke_ratio,
+          null,
+          labels
+        ),
+      },
+      {
+        label: t("displacementCcLabel"),
+        value: formatNumericComparison(
+          originalResult.results.displacement_cc,
+          newResult.results.displacement_cc,
+          "cc",
+          labels
+        ),
+      },
+      {
+        label: t("geometryLabel"),
+        value: formatTextComparison(
+          formatGeometry(originalResult.results.geometry),
+          formatGeometry(newResult.results.geometry),
+          labels
+        ),
+      },
+      {
+        label: t("smoothnessLabel"),
+        value: formatTextComparison(
+          formatSmoothness(originalResult.results.smoothness),
+          formatSmoothness(newResult.results.smoothness),
+          labels
+        ),
+      },
+    ];
+  }, [newResult, originalResult, t]);
 
   return (
     <Layout title={t("rl")} subtitle={t("unitLocked")} variant="pilot" hideHeader hideFooter>
@@ -215,14 +248,13 @@ export default function RLPage() {
         <Card className="ptp-stack">
           <div className="ptp-section-header">
             <div className="ptp-section-title">{t("originalSection")}</div>
-            <UnitToggleButton value={unitSystem} onChange={setUnitSystem} />
           </div>
           {errorOriginal ? <ErrorBanner message={errorOriginal} /> : null}
           <div className="grid">
             <InputField
               label={t("boreLabel")}
-              unitLabel={unitSystem === "imperial" ? "in" : "mm"}
-              placeholder={unitSystem === "imperial" ? "2.28" : "58.0"}
+              unitLabel="mm"
+              placeholder="58.0"
               value={originalBore}
               onChange={setOriginalBore}
               inputMode="decimal"
@@ -230,8 +262,8 @@ export default function RLPage() {
             />
             <InputField
               label={t("strokeLabel")}
-              unitLabel={unitSystem === "imperial" ? "in" : "mm"}
-              placeholder={unitSystem === "imperial" ? "1.97" : "50.0"}
+              unitLabel="mm"
+              placeholder="50.0"
               value={originalStroke}
               onChange={setOriginalStroke}
               inputMode="decimal"
@@ -239,8 +271,8 @@ export default function RLPage() {
             />
             <InputField
               label={t("rodLengthLabel")}
-              unitLabel={unitSystem === "imperial" ? "in" : "mm"}
-              placeholder={unitSystem === "imperial" ? "3.94" : "100.0"}
+              unitLabel="mm"
+              placeholder="100.0"
               value={originalRod}
               onChange={setOriginalRod}
               inputMode="decimal"
@@ -249,7 +281,7 @@ export default function RLPage() {
           </div>
           <div className="ptp-actions">
             <Button type="button" onClick={handleOriginalSubmit} disabled={loadingOriginal}>
-              {loadingOriginal ? t("loading") : t("calculateOriginal")}
+              {loadingOriginal ? t("loading") : t("calculate")}
             </Button>
           </div>
           {loadingOriginal ? <LoadingState /> : null}
@@ -265,8 +297,8 @@ export default function RLPage() {
           <div className="grid">
             <InputField
               label={t("boreLabel")}
-              unitLabel={unitSystem === "imperial" ? "in" : "mm"}
-              placeholder={unitSystem === "imperial" ? "2.52" : "64.0"}
+              unitLabel="mm"
+              placeholder="64.0"
               value={newBore}
               onChange={setNewBore}
               inputMode="decimal"
@@ -274,8 +306,8 @@ export default function RLPage() {
             />
             <InputField
               label={t("strokeLabel")}
-              unitLabel={unitSystem === "imperial" ? "in" : "mm"}
-              placeholder={unitSystem === "imperial" ? "2.13" : "54.0"}
+              unitLabel="mm"
+              placeholder="54.0"
               value={newStroke}
               onChange={setNewStroke}
               inputMode="decimal"
@@ -283,8 +315,8 @@ export default function RLPage() {
             />
             <InputField
               label={t("rodLengthLabel")}
-              unitLabel={unitSystem === "imperial" ? "in" : "mm"}
-              placeholder={unitSystem === "imperial" ? "4.13" : "105.0"}
+              unitLabel="mm"
+              placeholder="105.0"
               value={newRod}
               onChange={setNewRod}
               inputMode="decimal"
@@ -294,7 +326,7 @@ export default function RLPage() {
           {!originalResult ? <div className="ptp-field__helper">{t("compareHint")}</div> : null}
           <div className="ptp-actions">
             <Button type="button" onClick={handleNewSubmit} disabled={loadingNew}>
-              {loadingNew ? t("loading") : t("calculateNew")}
+              {loadingNew ? t("loading") : t("calculate")}
             </Button>
           </div>
           {loadingNew ? <LoadingState /> : null}

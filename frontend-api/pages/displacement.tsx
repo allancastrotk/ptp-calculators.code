@@ -9,6 +9,7 @@ import { LoadingState } from "../components/LoadingState";
 import { ResultPanel } from "../components/ResultPanel";
 import { UnitSystem } from "../components/UnitSystemSwitch";
 import { postJson, ApiError } from "../lib/api";
+import { formatNumericComparison, formatTextComparison } from "../lib/comparison";
 import { useI18n } from "../lib/i18n";
 
 type DisplacementResponse = {
@@ -189,17 +190,51 @@ export default function DisplacementPage() {
 
   const comparisonItems = useMemo((): ResultItem[] => {
     if (!originalResult || !newResult) return [];
-    const originalCc = originalResult.results.displacement_cc;
-    if (!originalCc) return [];
-    const diffCc = newResult.results.displacement_cc - originalCc;
-    const diffPercent = (diffCc / originalCc) * 100;
+    const labels = {
+      original: t("originalValueLabel"),
+      newValue: t("newValueLabel"),
+      diff: t("diffValueLabel"),
+      diffPercent: t("diffPercentLabel"),
+      na: t("notApplicableLabel"),
+    };
     return [
       {
-        label: t("diffVsOriginalLabel"),
-        value: `${diffCc.toFixed(2)} cc (${diffPercent.toFixed(2)}%)`,
+        label: t("displacementCcLabel"),
+        value: formatNumericComparison(
+          originalResult.results.displacement_cc,
+          newResult.results.displacement_cc,
+          "cc",
+          labels
+        ),
+      },
+      {
+        label: t("displacementLLabel"),
+        value: formatNumericComparison(
+          originalResult.results.displacement_l,
+          newResult.results.displacement_l,
+          "L",
+          labels
+        ),
+      },
+      {
+        label: t("displacementCiLabel"),
+        value: formatNumericComparison(
+          originalResult.results.displacement_ci,
+          newResult.results.displacement_ci,
+          "cu in",
+          labels
+        ),
+      },
+      {
+        label: t("geometryLabel"),
+        value: formatTextComparison(
+          originalResult.results.geometry,
+          newResult.results.geometry,
+          labels
+        ),
       },
     ];
-  }, [originalResult, newResult]);
+  }, [originalResult, newResult, t]);
 
   const handleClear = () => {
     setOriginalResult(null);
@@ -258,7 +293,7 @@ export default function DisplacementPage() {
           </div>
           <div className="ptp-actions">
             <Button type="button" onClick={handleOriginalSubmit} disabled={loadingOriginal}>
-              {loadingOriginal ? t("loading") : t("calculateOriginal")}
+              {loadingOriginal ? t("loading") : t("calculate")}
             </Button>
             <Button type="button" variant="secondary" onClick={handleClear}>
               {t("clear")}
@@ -315,7 +350,7 @@ export default function DisplacementPage() {
           {!originalResult ? <div className="ptp-field__helper">{t("compareHint")}</div> : null}
           <div className="ptp-actions">
             <Button type="button" onClick={handleNewSubmit} disabled={loadingNew}>
-              {loadingNew ? t("loading") : t("calculateNew")}
+              {loadingNew ? t("loading") : t("calculate")}
             </Button>
           </div>
           {loadingNew ? <LoadingState /> : null}

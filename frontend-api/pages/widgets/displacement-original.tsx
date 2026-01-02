@@ -242,7 +242,7 @@ export default function DisplacementOriginalWidget() {
           </div>
           <div className="ptp-actions">
             <Button type="button" onClick={handleSubmit} disabled={loading}>
-              {loading ? t("loading") : t("calculateOriginal")}
+              {loading ? t("loading") : t("calculate")}
             </Button>
           </div>
           {loading ? <LoadingState /> : null}
