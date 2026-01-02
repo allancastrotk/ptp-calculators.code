@@ -73,7 +73,7 @@ body.ptp-embed .ptp-shell {
 
 .ptp-variant-pilot .ptp-card,
 .ptp-variant-pilot .card {
-  background: transparent;
+  background: var(--ptp-surface);
 }
 
 .ptp-container {

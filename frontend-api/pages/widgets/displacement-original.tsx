@@ -176,6 +176,19 @@ export default function DisplacementOriginalWidget() {
     ];
   }, [result]);
 
+  const comparisonItems = useMemo((): ResultItem[] => {
+    if (!result) return [];
+    if (result.results.diff_percent === undefined || result.results.diff_percent === null) {
+      return [];
+    }
+    return [
+      {
+        label: "Diff (%)",
+        value: `${result.results.diff_percent.toFixed(2)}%`,
+      },
+    ];
+  }, [result]);
+
   return (
     <Layout title={t("displacement")} hideHeader hideFooter variant="pilot">
       <div className="ptp-stack">
@@ -236,6 +249,9 @@ export default function DisplacementOriginalWidget() {
             </div>
           ) : null}
           {result ? <ResultPanel title={t("originalResultsTitle")} items={resultsList} /> : null}
+          {comparisonItems.length > 0 ? (
+            <ResultPanel title={t("comparisonTitle")} items={comparisonItems} />
+          ) : null}
         </Card>
       </div>
     </Layout>
