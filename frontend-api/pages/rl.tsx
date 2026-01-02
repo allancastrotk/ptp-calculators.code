@@ -698,7 +698,7 @@ export default function RLPage() {
                   inputMode="decimal"
                   error={fieldErrorsOriginal["compression.piston_volume"]}
                 />
-                <div className="ptp-divider">
+                <div className="ptp-divider ptp-grid-divider">
                   <span>{t("compressionTwoStrokeSectionTitle")}</span>
                 </div>
                 <InputField
@@ -863,7 +863,7 @@ export default function RLPage() {
                   inputMode="decimal"
                   error={fieldErrorsNew["compression.piston_volume"]}
                 />
-                <div className="ptp-divider">
+                <div className="ptp-divider ptp-grid-divider">
                   <span>{t("compressionTwoStrokeSectionTitle")}</span>
                 </div>
                 <InputField

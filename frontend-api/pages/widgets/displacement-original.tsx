@@ -484,7 +484,7 @@ export default function DisplacementOriginalWidget() {
                   inputMode="decimal"
                   error={fieldErrors["compression.piston_volume"]}
                 />
-                <div className="ptp-divider">
+                <div className="ptp-divider ptp-grid-divider">
                   <span>{t("compressionTwoStrokeSectionTitle")}</span>
                 </div>
                 <InputField

@@ -217,6 +217,10 @@ body.ptp-embed .ptp-subtitle {
   gap: 16px;
 }
 
+.ptp-grid-divider {
+  grid-column: 1 / -1;
+}
+
 .ptp-field {
   display: flex;
   flex-direction: column;
