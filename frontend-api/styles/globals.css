@@ -241,6 +241,7 @@ body.ptp-embed .ptp-subtitle {
 .ptp-button:hover,
 .button:hover {
   transform: translateY(-1px);
+  filter: brightness(1.08);
 }
 
 .ptp-button:disabled,
@@ -253,6 +254,11 @@ body.ptp-embed .ptp-subtitle {
 .ptp-button--primary {
   background: var(--ptp-primary);
   color: var(--ptp-primary-contrast);
+}
+
+.ptp-button--primary:hover,
+.button:hover {
+  box-shadow: 0 0 0 3px var(--ptp-focus);
 }
 
 .ptp-button--secondary {
