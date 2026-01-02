@@ -10,6 +10,8 @@ from app.schemas.tires import TiresInputs, TiresResults
 def test_flotation_parse_valid():
     parsed = parse_flotation("31x10.5R15")
     assert parsed == (31.0, 10.5, 15.0)
+    parsed_dash = parse_flotation("10x4.50-5")
+    assert parsed_dash == (10.0, 4.5, 5.0)
 
 
 def test_flotation_parse_invalid():
@@ -91,6 +93,38 @@ def test_tires_valid_categories(client):
                 "aspect_percent": 75,
             },
         },
+        {
+            "unit_system": "metric",
+            "inputs": {
+                "vehicle_type": "Kart",
+                "rim_in": 5,
+                "flotation": "10x4.50-5",
+            },
+        },
+        {
+            "unit_system": "metric",
+            "inputs": {
+                "vehicle_type": "Kart",
+                "rim_in": 5,
+                "flotation": "11x7.10-5",
+            },
+        },
+        {
+            "unit_system": "metric",
+            "inputs": {
+                "vehicle_type": "Kartcross",
+                "rim_in": 8,
+                "flotation": "18x9.5-8",
+            },
+        },
+        {
+            "unit_system": "metric",
+            "inputs": {
+                "vehicle_type": "Kartcross",
+                "rim_in": 10,
+                "flotation": "22x11-10",
+            },
+        },
     ]
     for payload in payloads:
         response = client.post("/v1/calc/tires", json=payload, headers=headers)
@@ -124,6 +158,22 @@ def test_tires_invalid_combinations(client):
                 "vehicle_type": "LightTruck",
                 "rim_in": 17,
                 "flotation": "31x10.5R15",
+            },
+        },
+        {
+            "unit_system": "metric",
+            "inputs": {
+                "vehicle_type": "Kart",
+                "rim_in": 6,
+                "flotation": "22x11-10",
+            },
+        },
+        {
+            "unit_system": "metric",
+            "inputs": {
+                "vehicle_type": "Kartcross",
+                "rim_in": 7,
+                "flotation": "10x4.50-5",
             },
         },
     ]
