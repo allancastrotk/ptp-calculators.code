@@ -169,6 +169,6 @@ Normativo:
 - O Render deve aceitar requisicoes apenas do Vercel (server-to-server).
 - Render NAO deve ser chamado diretamente por browsers.
 - CORS nao e considerado mecanismo de seguranca suficiente.
-- Autenticacao entre Vercel e Render deve usar header secreto e, opcionalmente, assinatura HMAC com timestamp.
+- Autenticacao entre Vercel e Render deve usar header secreto (X-PTP-Internal-Key) e pode aceitar Authorization: Bearer <key> como fallback; assinatura HMAC com timestamp e opcional.
 - O BFF permite apenas origens allowlisted (site, Vercel UI, localhost de desenvolvimento).
 - Qualquer uso externo da API do Render e considerado fora de escopo e nao suportado.

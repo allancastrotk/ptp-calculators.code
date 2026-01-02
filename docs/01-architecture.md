@@ -14,4 +14,4 @@ Allowed origins for BFF:
 - https://powertunepro.com
 - https://www.powertunepro.com
 - https://ptp-calculators.vercel.app
-- http://localhost:3000
+- http://localhost:3000\nAutenticacao interna:\n- O BFF envia X-PTP-Internal-Key e Authorization: Bearer <key> como fallback (server-to-server).\n
