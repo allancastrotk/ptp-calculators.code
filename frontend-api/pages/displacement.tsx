@@ -659,6 +659,9 @@ export default function DisplacementPage() {
                   inputMode="decimal"
                   error={fieldErrorsOriginal["compression.piston_volume"]}
                 />
+                <div className="ptp-divider">
+                  <span>{t("compressionTwoStrokeSectionTitle")}</span>
+                </div>
                 <InputField
                   label={t("exhaustPortHeightLabel")}
                   unitLabel={lengthUnit}
@@ -826,6 +829,9 @@ export default function DisplacementPage() {
                   inputMode="decimal"
                   error={fieldErrorsNew["compression.piston_volume"]}
                 />
+                <div className="ptp-divider">
+                  <span>{t("compressionTwoStrokeSectionTitle")}</span>
+                </div>
                 <InputField
                   label={t("exhaustPortHeightLabel")}
                   unitLabel={lengthUnit}

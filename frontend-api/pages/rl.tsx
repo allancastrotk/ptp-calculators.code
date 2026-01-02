@@ -698,6 +698,9 @@ export default function RLPage() {
                   inputMode="decimal"
                   error={fieldErrorsOriginal["compression.piston_volume"]}
                 />
+                <div className="ptp-divider">
+                  <span>{t("compressionTwoStrokeSectionTitle")}</span>
+                </div>
                 <InputField
                   label={t("exhaustPortHeightLabel")}
                   unitLabel={unitLabel}
@@ -860,6 +863,9 @@ export default function RLPage() {
                   inputMode="decimal"
                   error={fieldErrorsNew["compression.piston_volume"]}
                 />
+                <div className="ptp-divider">
+                  <span>{t("compressionTwoStrokeSectionTitle")}</span>
+                </div>
                 <InputField
                   label={t("exhaustPortHeightLabel")}
                   unitLabel={unitLabel}

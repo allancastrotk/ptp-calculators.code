@@ -484,6 +484,9 @@ export default function DisplacementOriginalWidget() {
                   inputMode="decimal"
                   error={fieldErrors["compression.piston_volume"]}
                 />
+                <div className="ptp-divider">
+                  <span>{t("compressionTwoStrokeSectionTitle")}</span>
+                </div>
                 <InputField
                   label={t("exhaustPortHeightLabel")}
                   unitLabel={lengthUnit}

@@ -457,6 +457,9 @@ export default function RlOriginalWidget() {
                   inputMode="decimal"
                   error={fieldErrors["compression.piston_volume"]}
                 />
+                <div className="ptp-divider">
+                  <span>{t("compressionTwoStrokeSectionTitle")}</span>
+                </div>
                 <InputField
                   label={t("exhaustPortHeightLabel")}
                   unitLabel={unitLabel}
