@@ -10,7 +10,7 @@ import { ResultPanel } from "../components/ResultPanel";
 import { SelectField } from "../components/SelectField";
 import { postJson, ApiError } from "../lib/api";
 import { useI18n } from "../lib/i18n";
-import { TIRES_DB, VEHICLE_TYPES, VehicleType } from "../lib/tiresDb";
+import { TIRES_DB, VEHICLE_TYPES, VehicleType, getRimData } from "../lib/tiresDb";
 
 type TiresResponse = {
   results: {
@@ -73,22 +73,22 @@ export default function TiresPage() {
 
   const getWidths = (vehicleType: VehicleType | "", rim: string) => {
     if (!vehicleType || !rim) return [];
-    const vehicle = TIRES_DB[vehicleType];
-    return vehicle[rim]?.widths || [];
+    const rimData = getRimData(vehicleType, rim);
+    return rimData?.widths || [];
   };
 
   const getAspects = (vehicleType: VehicleType | "", rim: string, width: string) => {
     if (!vehicleType || !rim || !width) return [];
-    const vehicle = TIRES_DB[vehicleType];
-    return vehicle[rim]?.[width]?.aspects?.map((aspect: number) => String(aspect)) || [];
+    const rimData = getRimData(vehicleType, rim);
+    return rimData?.[width]?.aspects?.map((aspect: number) => String(aspect)) || [];
   };
 
   const getFlotation = (vehicleType: VehicleType | "", rim: string) => {
     if (vehicleType !== "Utility" || !rim) return [];
-    const vehicle = TIRES_DB[vehicleType];
     const options: string[] = [];
-    (vehicle[rim]?.widths || []).forEach((width: string) => {
-      const flotation = vehicle[rim]?.[width]?.flotation || [];
+    const rimData = getRimData(vehicleType, rim);
+    (rimData?.widths || []).forEach((width: string) => {
+      const flotation = rimData?.[width]?.flotation || [];
       options.push(...flotation);
     });
     return Array.from(new Set(options));

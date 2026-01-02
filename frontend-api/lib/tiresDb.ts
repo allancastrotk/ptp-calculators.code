@@ -135,3 +135,11 @@ export const TIRES_DB: Record<VehicleType, VehicleData> = {
 };
 
 export const VEHICLE_TYPES: VehicleType[] = ["Car", "Motorcycle", "Utility"];
+
+export function getRimData(vehicleType: VehicleType, rim: string): RimData | undefined {
+  const vehicle = TIRES_DB[vehicleType];
+  const data = vehicle[rim];
+  if (!data || Array.isArray(data)) return undefined;
+  if ("widths" in data) return data as RimData;
+  return undefined;
+}
