@@ -71,10 +71,6 @@ body.ptp-embed .ptp-shell {
   --ptp-metric: #6da0c7;
 }
 
-.ptp-variant-pilot .ptp-card,
-.ptp-variant-pilot .card {
-  background: linear-gradient(135deg, rgba(52, 74, 87, 0.06), rgba(0, 0, 0, 0.1));
-}
 
 .ptp-container {
   width: 100%;
@@ -137,6 +133,11 @@ body.ptp-embed .ptp-subtitle {
   border-radius: var(--ptp-radius);
   padding: 20px;
   box-shadow: var(--ptp-shadow);
+}
+
+.ptp-variant-pilot .ptp-card,
+.ptp-variant-pilot .card {
+  background: linear-gradient(135deg, rgba(52, 74, 87, 0.06), rgba(0, 0, 0, 0.1));
 }
 
 .ptp-card__title {
