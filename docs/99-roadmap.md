@@ -8,14 +8,10 @@ Status
   - API contract v1
   - i18n strategy
   - embed model
-- Fase 2 iniciada: Displacement backend + BFF concluidos
-- Fase 2: RL calculator implemented (backend + BFF)
-- Fase 2: Sprocket calculator implemented (backend + BFF)
-- Fase 2: Tires calculator implemented (backend + BFF)
 - Fase 2 (Core gratuito + BFF): concluida
-- Fase 3: UI funcional para calculadoras gratuitas concluida (sem alinhamento visual final).
-- Proximo passo: Fase 2 (Implementacao): backend core + endpoints v1 + frontend integration
-- Proximos passos: UI embed via iframe (host snippets) e inicio do alinhamento visual (tokens/cores) em fase posterior.
+- Fase 3 (UI funcional): concluida (sem alinhamento visual final)
+- Free Calculators - Migration Closed
+- Proximos passos: Integracao no site via iframe (host snippets) e alinhamento visual final (tokens/cores).
 
 Smoke test (manual) - Displacement (Browser -> Vercel -> Render)
 - Endpoint publico (BFF): POST /api/v1/calc/displacement
@@ -61,21 +57,21 @@ Minimo:
 {
   "unit_system": "metric",
   "language": "pt_BR",
-  "inputs": { "stroke": 50.0, "rod_length": 100.0 }
+  "inputs": { "bore": 58.0, "stroke": 50.0, "rod_length": 100.0 }
 }
 
 Variando unit_system (RL ignora unidades):
 {
   "unit_system": "imperial",
   "language": "en_US",
-  "inputs": { "stroke": 1.969, "rod_length": 3.937 }
+  "inputs": { "bore": 2.283, "stroke": 1.969, "rod_length": 3.937 }
 }
 
 Estrutura esperada de resposta (sem valores exatos):
 {
   "calculator": "rl",
   "unit_system": "metric|imperial",
-  "normalized_inputs": { "stroke_mm": 0, "rod_length_mm": 0, "bore_mm": null },
+  "normalized_inputs": { "bore_mm": 0, "stroke_mm": 0, "rod_length_mm": 0 },
   "results": { "rl_ratio": 0, "rod_stroke_ratio": 0 },
   "warnings": [],
   "meta": { "version": "v1", "timestamp": "...", "source": "legacy-compatible" }
