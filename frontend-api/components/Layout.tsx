@@ -24,17 +24,19 @@ export function Layout({
       <Head>
         <title>{title}</title>
       </Head>
-      <main>
-        <div className="container">
-          <header className="header">
-            <div className="title">{title}</div>
-            <div className="subtitle">{subtitle || t("appTitle")}</div>
+      <main className="ptp-shell">
+        <div className="ptp-container">
+          <header className="ptp-header">
+            <div>
+              <div className="ptp-title">{title}</div>
+              <div className="ptp-subtitle">{subtitle || t("appTitle")}</div>
+            </div>
             {unitSystem && onUnitChange ? (
               <UnitSystemSwitch value={unitSystem} onChange={onUnitChange} />
             ) : null}
           </header>
-          <section className="card">{children}</section>
-          <footer className="footer">{t("footer")}</footer>
+          <section className="ptp-content">{children}</section>
+          <footer className="ptp-footer">{t("footer")}</footer>
         </div>
       </main>
     </>

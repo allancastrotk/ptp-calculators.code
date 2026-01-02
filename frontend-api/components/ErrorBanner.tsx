@@ -1,5 +1,7 @@
 import React from "react";
 
+import { Alert } from "./Alert";
+
 export function ErrorBanner({ message }: { message: string }) {
-  return <div className="error">{message}</div>;
+  return <Alert message={message} tone="error" />;
 }

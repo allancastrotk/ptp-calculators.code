@@ -24,25 +24,20 @@ export function InputField({
   inputMode?: InputMode;
 }) {
   return (
-    <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-      <span style={{ fontWeight: 600 }}>
-        {label} {unitLabel ? <span className="subtitle">({unitLabel})</span> : null}
+    <label className="ptp-field">
+      <span className="ptp-field__label">
+        {label} {unitLabel ? <span className="ptp-field__unit">({unitLabel})</span> : null}
       </span>
       <input
+        className="ptp-input"
         type={type}
         inputMode={inputMode}
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
-        style={{
-          padding: "10px 12px",
-          borderRadius: 10,
-          border: "1px solid var(--border)",
-          fontSize: 14,
-        }}
       />
-      {helper ? <span className="subtitle">{helper}</span> : null}
-      {error ? <span style={{ color: "var(--error)", fontSize: 12 }}>{error}</span> : null}
+      {helper ? <span className="ptp-field__helper">{helper}</span> : null}
+      {error ? <span className="ptp-field__error">{error}</span> : null}
     </label>
   );
 }
