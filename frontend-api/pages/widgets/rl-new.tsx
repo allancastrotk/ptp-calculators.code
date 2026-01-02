@@ -6,12 +6,11 @@ import { Card } from "../../components/Card";
 import { ErrorBanner } from "../../components/ErrorBanner";
 import { InputField } from "../../components/InputField";
 import { Layout } from "../../components/Layout";
-import { LoadingState } from "../../components/LoadingState";
 import { ResultPanel } from "../../components/ResultPanel";
+import { StatusPanel } from "../../components/StatusPanel";
 import { UnitSystem } from "../../components/UnitSystemSwitch";
 import { UnitToggleButton } from "../../components/UnitToggleButton";
 import { postJson, ApiError } from "../../lib/api";
-import { formatNumericComparison, formatTextComparison } from "../../lib/comparison";
 import { useI18n } from "../../lib/i18n";
 
 type RLResponse = {
@@ -33,7 +32,7 @@ type RLResponse = {
   meta: { version: string; timestamp: string; source: string };
 };
 
-type ResultItem = { label: string; value: string };
+type ResultItem = { label: React.ReactNode; value: React.ReactNode };
 
 type BaselineMessage = {
   type: "ptp:calc:rl:baseline";
@@ -75,11 +74,36 @@ export default function RlNewWidget() {
   const [warmupNotice, setWarmupNotice] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [result, setResult] = useState<RLResponse | null>(null);
+  const [resultUnit, setResultUnit] = useState<"metric" | "imperial" | null>(null);
   const [baseline, setBaseline] = useState<RLResponse | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
   const toNumber = (value: string) => Number(value.replace(",", "."));
   const unitLabel = unitSystem === "imperial" ? "in" : "mm";
+  const displacementUnit = unitSystem === "imperial" ? "cu in" : "cc";
+  const convertLength = (value: number, from: UnitSystem, to: UnitSystem) =>
+    from === to ? value : from === "metric" ? value / 25.4 : value * 25.4;
+  const convertDisplacement = (value: number, from: UnitSystem, to: UnitSystem) => {
+    if (from === to) return value;
+    return from === "metric" ? value * 0.0610237441 : value / 0.0610237441;
+  };
+  const formatConverted = (value: number) => {
+    const rounded = Number(value.toFixed(2));
+    return Number.isNaN(rounded) ? "" : String(rounded);
+  };
+  const convertInput = (value: string, from: UnitSystem, to: UnitSystem) => {
+    if (!value) return value;
+    const numeric = toNumber(value);
+    if (Number.isNaN(numeric)) return value;
+    return formatConverted(convertLength(numeric, from, to));
+  };
+  const handleUnitChange = (nextUnit: UnitSystem) => {
+    if (nextUnit === unitSystem) return;
+    setBore((value) => convertInput(value, unitSystem, nextUnit));
+    setStroke((value) => convertInput(value, unitSystem, nextUnit));
+    setRodLength((value) => convertInput(value, unitSystem, nextUnit));
+    setUnitSystem(nextUnit);
+  };
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -152,6 +176,7 @@ export default function RlNewWidget() {
 
       const response = await postWithRetry(payload, controller.signal);
       setResult(response);
+      setResultUnit(response.unit_system || unitSystem);
     } catch (err) {
       if ((err as Error).name === "AbortError") return;
       if (isRetriable(err)) {
@@ -184,8 +209,17 @@ export default function RlNewWidget() {
 
   const resultsList = useMemo((): ResultItem[] => {
     if (!result) return [];
+    const resolvedUnit = resultUnit || result.unit_system || "metric";
+    const displacement = convertDisplacement(
+      result.results.displacement_cc,
+      resolvedUnit,
+      unitSystem
+    );
     return [
-      { label: t("displacementCcLabel"), value: result.results.displacement_cc.toFixed(2) },
+      {
+        label: t("displacementLabel"),
+        value: `${displacement.toFixed(2)} ${displacementUnit}`,
+      },
       {
         label: t("rlRatioLabel"),
         value: `${result.results.rl_ratio.toFixed(2)} (${formatSmoothness(result.results.smoothness)})`,
@@ -193,63 +227,82 @@ export default function RlNewWidget() {
       { label: t("rodStrokeLabel"), value: result.results.rod_stroke_ratio.toFixed(2) },
       { label: t("geometryLabel"), value: formatGeometry(result.results.geometry) },
     ];
-  }, [result, t]);
+  }, [result, resultUnit, t, unitSystem, displacementUnit]);
+
+  const renderDiffLabel = (label: string, diff: number) => {
+    let state = "no-change";
+    let icon = "▬";
+    if (diff > 0) {
+      state = "increase";
+      icon = "▲";
+    } else if (diff < 0) {
+      state = "decrease";
+      icon = "▼";
+    }
+    return (
+      <span className="ptp-result__label-row">
+        {t("deltaDiffLabel")} {label}
+        <span className={`ptp-diff-icon ptp-diff-icon--${state}`}>{icon}</span>
+      </span>
+    );
+  };
+
+  const renderDiffValue = (diff: number, percent: number | null, unit?: string) => {
+    let state = "no-change";
+    if (diff > 0) state = "increase";
+    if (diff < 0) state = "decrease";
+    const percentText =
+      percent === null ? t("notApplicableLabel") : `${percent.toFixed(2)}%`;
+    const unitSuffix = unit ? ` ${unit}` : "";
+    return (
+      <span className={`ptp-diff-value--${state}`}>
+        {diff.toFixed(2)}
+        {unitSuffix} [{percentText}]
+      </span>
+    );
+  };
 
   const comparisonItems = useMemo((): ResultItem[] => {
     if (!baseline || !result) return [];
-    const labels = {
-      original: t("originalValueLabel"),
-      newValue: t("newValueLabel"),
-      diff: t("diffValueLabel"),
-      diffPercent: t("diffPercentLabel"),
-      na: t("notApplicableLabel"),
-    };
+    const baselineUnit = baseline.unit_system || "metric";
+    const resolvedUnit = resultUnit || result.unit_system || "metric";
+    const baselineDisplacement = convertDisplacement(
+      baseline.results.displacement_cc,
+      baselineUnit,
+      unitSystem
+    );
+    const resultDisplacement = convertDisplacement(
+      result.results.displacement_cc,
+      resolvedUnit,
+      unitSystem
+    );
+    const rlDiff = result.results.rl_ratio - baseline.results.rl_ratio;
+    const rlPercent = baseline.results.rl_ratio
+      ? (rlDiff / baseline.results.rl_ratio) * 100
+      : null;
+    const rodDiff = result.results.rod_stroke_ratio - baseline.results.rod_stroke_ratio;
+    const rodPercent = baseline.results.rod_stroke_ratio
+      ? (rodDiff / baseline.results.rod_stroke_ratio) * 100
+      : null;
+    const displacementDiff = resultDisplacement - baselineDisplacement;
+    const displacementPercent = baselineDisplacement
+      ? (displacementDiff / baselineDisplacement) * 100
+      : null;
     return [
       {
-        label: t("rlRatioLabel"),
-        value: formatNumericComparison(
-          baseline.results.rl_ratio,
-          result.results.rl_ratio,
-          null,
-          labels
-        ),
+        label: renderDiffLabel(t("rlRatioLabel"), rlDiff),
+        value: renderDiffValue(rlDiff, rlPercent),
       },
       {
-        label: t("rodStrokeLabel"),
-        value: formatNumericComparison(
-          baseline.results.rod_stroke_ratio,
-          result.results.rod_stroke_ratio,
-          null,
-          labels
-        ),
+        label: renderDiffLabel(t("rodStrokeLabel"), rodDiff),
+        value: renderDiffValue(rodDiff, rodPercent),
       },
       {
-        label: t("displacementCcLabel"),
-        value: formatNumericComparison(
-          baseline.results.displacement_cc,
-          result.results.displacement_cc,
-          "cc",
-          labels
-        ),
-      },
-      {
-        label: t("geometryLabel"),
-        value: formatTextComparison(
-          formatGeometry(baseline.results.geometry),
-          formatGeometry(result.results.geometry),
-          labels
-        ),
-      },
-      {
-        label: t("smoothnessLabel"),
-        value: formatTextComparison(
-          formatSmoothness(baseline.results.smoothness),
-          formatSmoothness(result.results.smoothness),
-          labels
-        ),
+        label: renderDiffLabel(t("displacementLabel"), displacementDiff),
+        value: renderDiffValue(displacementDiff, displacementPercent, displacementUnit),
       },
     ];
-  }, [baseline, result, t]);
+  }, [baseline, result, resultUnit, t, unitSystem, displacementUnit]);
 
   return (
     <Layout title={t("rl")} hideHeader hideFooter variant="pilot">
@@ -261,8 +314,8 @@ export default function RlNewWidget() {
         )}
         <Card className="ptp-stack">
           <div className="ptp-section-header">
-            <div className="ptp-section-title">{t("newSection")}</div>
-            <UnitToggleButton value={unitSystem} onChange={setUnitSystem} />
+            <div className="ptp-section-title">{t("newAssemblySection")}</div>
+            <UnitToggleButton value={unitSystem} onChange={handleUnitChange} />
           </div>
           {error ? <ErrorBanner message={error} /> : null}
           {retryHint ? <div className="ptp-field__helper">{retryHint}</div> : null}
@@ -296,16 +349,22 @@ export default function RlNewWidget() {
             />
           </div>
           <div className="ptp-actions ptp-actions--between ptp-actions--spaced">
-            {!baseline && !result ? <div className="ptp-field__helper">{t("compareHintWidget")}</div> : <span />}
+            <div className="ptp-actions__left">
+              {!baseline && !result ? (
+                <span className="ptp-actions__hint">{t("compareHintWidget")}</span>
+              ) : null}
+            </div>
             <Button type="button" onClick={handleSubmit} disabled={loading}>
               {loading ? t("loading") : t("calculate")}
             </Button>
           </div>
-          {loading ? <LoadingState /> : null}
+          {loading ? <StatusPanel message={t("warmupMessage")} /> : null}
           {warmupNotice ? <div className="ptp-card">{warmupNotice}</div> : null}
-          {result ? <ResultPanel title={t("newResultsTitle")} items={resultsList} /> : null}
+          {result ? (
+            <ResultPanel title={t("newAssemblyResultsTitle")} items={resultsList} />
+          ) : null}
           {comparisonItems.length > 0 ? (
-            <ResultPanel title={t("comparisonNewTitle")} items={comparisonItems} />
+            <ResultPanel title={t("comparisonAssemblyTitle")} items={comparisonItems} />
           ) : null}
         </Card>
       </div>

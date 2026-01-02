@@ -6,8 +6,8 @@ import { Card } from "../../components/Card";
 import { ErrorBanner } from "../../components/ErrorBanner";
 import { InputField } from "../../components/InputField";
 import { Layout } from "../../components/Layout";
-import { LoadingState } from "../../components/LoadingState";
 import { ResultPanel } from "../../components/ResultPanel";
+import { StatusPanel } from "../../components/StatusPanel";
 import { UnitSystem } from "../../components/UnitSystemSwitch";
 import { UnitToggleButton } from "../../components/UnitToggleButton";
 import { postJson, ApiError } from "../../lib/api";
@@ -73,10 +73,35 @@ export default function RlOriginalWidget() {
   const [warmupNotice, setWarmupNotice] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [result, setResult] = useState<RLResponse | null>(null);
+  const [resultUnit, setResultUnit] = useState<"metric" | "imperial" | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
   const toNumber = (value: string) => Number(value.replace(",", "."));
   const unitLabel = unitSystem === "imperial" ? "in" : "mm";
+  const displacementUnit = unitSystem === "imperial" ? "cu in" : "cc";
+  const convertLength = (value: number, from: UnitSystem, to: UnitSystem) =>
+    from === to ? value : from === "metric" ? value / 25.4 : value * 25.4;
+  const convertDisplacement = (value: number, from: UnitSystem, to: UnitSystem) => {
+    if (from === to) return value;
+    return from === "metric" ? value * 0.0610237441 : value / 0.0610237441;
+  };
+  const formatConverted = (value: number) => {
+    const rounded = Number(value.toFixed(2));
+    return Number.isNaN(rounded) ? "" : String(rounded);
+  };
+  const convertInput = (value: string, from: UnitSystem, to: UnitSystem) => {
+    if (!value) return value;
+    const numeric = toNumber(value);
+    if (Number.isNaN(numeric)) return value;
+    return formatConverted(convertLength(numeric, from, to));
+  };
+  const handleUnitChange = (nextUnit: UnitSystem) => {
+    if (nextUnit === unitSystem) return;
+    setBore((value) => convertInput(value, unitSystem, nextUnit));
+    setStroke((value) => convertInput(value, unitSystem, nextUnit));
+    setRodLength((value) => convertInput(value, unitSystem, nextUnit));
+    setUnitSystem(nextUnit);
+  };
 
   const postWithRetry = async (payload: unknown, signal: AbortSignal) => {
     for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt += 1) {
@@ -134,6 +159,7 @@ export default function RlOriginalWidget() {
 
       const response = await postWithRetry(payload, controller.signal);
       setResult(response);
+      setResultUnit(response.unit_system || unitSystem);
       const message: OriginalMessage = {
         type: "ptp:calc:rl:originalResult",
         pageId,
@@ -172,8 +198,17 @@ export default function RlOriginalWidget() {
 
   const resultsList = useMemo((): ResultItem[] => {
     if (!result) return [];
+    const resolvedUnit = resultUnit || result.unit_system || "metric";
+    const displacement = convertDisplacement(
+      result.results.displacement_cc,
+      resolvedUnit,
+      unitSystem
+    );
     return [
-      { label: t("displacementCcLabel"), value: result.results.displacement_cc.toFixed(2) },
+      {
+        label: t("displacementLabel"),
+        value: `${displacement.toFixed(2)} ${displacementUnit}`,
+      },
       {
         label: t("rlRatioLabel"),
         value: `${result.results.rl_ratio.toFixed(2)} (${formatSmoothness(result.results.smoothness)})`,
@@ -181,15 +216,15 @@ export default function RlOriginalWidget() {
       { label: t("rodStrokeLabel"), value: result.results.rod_stroke_ratio.toFixed(2) },
       { label: t("geometryLabel"), value: formatGeometry(result.results.geometry) },
     ];
-  }, [result, t]);
+  }, [result, resultUnit, t, unitSystem, displacementUnit]);
 
   return (
     <Layout title={t("rl")} hideHeader hideFooter variant="pilot">
       <div className="ptp-stack">
         <Card className="ptp-stack">
           <div className="ptp-section-header">
-            <div className="ptp-section-title">{t("originalSection")}</div>
-            <UnitToggleButton value={unitSystem} onChange={setUnitSystem} />
+            <div className="ptp-section-title">{t("originalAssemblySection")}</div>
+            <UnitToggleButton value={unitSystem} onChange={handleUnitChange} />
           </div>
           {error ? <ErrorBanner message={error} /> : null}
           {retryHint ? <div className="ptp-field__helper">{retryHint}</div> : null}
@@ -227,9 +262,11 @@ export default function RlOriginalWidget() {
               {loading ? t("loading") : t("calculate")}
             </Button>
           </div>
-          {loading ? <LoadingState /> : null}
+          {loading ? <StatusPanel message={t("warmupMessage")} /> : null}
           {warmupNotice ? <div className="ptp-card">{warmupNotice}</div> : null}
-          {result ? <ResultPanel title={t("originalResultsTitle")} items={resultsList} /> : null}
+          {result ? (
+            <ResultPanel title={t("originalAssemblyResultsTitle")} items={resultsList} />
+          ) : null}
         </Card>
       </div>
     </Layout>

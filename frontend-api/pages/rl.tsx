@@ -5,15 +5,15 @@ import { Card } from "../components/Card";
 import { ErrorBanner } from "../components/ErrorBanner";
 import { InputField } from "../components/InputField";
 import { Layout } from "../components/Layout";
-import { LoadingState } from "../components/LoadingState";
 import { ResultPanel } from "../components/ResultPanel";
+import { StatusPanel } from "../components/StatusPanel";
 import { UnitSystem } from "../components/UnitSystemSwitch";
 import { UnitToggleButton } from "../components/UnitToggleButton";
 import { postJson, ApiError } from "../lib/api";
-import { formatNumericComparison, formatTextComparison } from "../lib/comparison";
 import { useI18n } from "../lib/i18n";
 
 type RLResponse = {
+  unit_system?: "metric" | "imperial";
   results: {
     displacement_cc: number;
     geometry: string;
@@ -42,11 +42,42 @@ export default function RLPage() {
   const [fieldErrorsNew, setFieldErrorsNew] = useState<Record<string, string>>({});
   const [originalResult, setOriginalResult] = useState<RLResponse | null>(null);
   const [newResult, setNewResult] = useState<RLResponse | null>(null);
+  const [originalResultUnit, setOriginalResultUnit] = useState<"metric" | "imperial" | null>(
+    null
+  );
+  const [newResultUnit, setNewResultUnit] = useState<"metric" | "imperial" | null>(null);
   const abortOriginalRef = useRef<AbortController | null>(null);
   const abortNewRef = useRef<AbortController | null>(null);
 
   const toNumber = (value: string) => Number(value.replace(",", "."));
   const unitLabel = unitSystem === "imperial" ? "in" : "mm";
+  const displacementUnit = unitSystem === "imperial" ? "cu in" : "cc";
+  const convertLength = (value: number, from: UnitSystem, to: UnitSystem) =>
+    from === to ? value : from === "metric" ? value / 25.4 : value * 25.4;
+  const convertDisplacement = (value: number, from: UnitSystem, to: UnitSystem) => {
+    if (from === to) return value;
+    return from === "metric" ? value * 0.0610237441 : value / 0.0610237441;
+  };
+  const formatConverted = (value: number) => {
+    const rounded = Number(value.toFixed(2));
+    return Number.isNaN(rounded) ? "" : String(rounded);
+  };
+  const convertInput = (value: string, from: UnitSystem, to: UnitSystem) => {
+    if (!value) return value;
+    const numeric = toNumber(value);
+    if (Number.isNaN(numeric)) return value;
+    return formatConverted(convertLength(numeric, from, to));
+  };
+  const handleUnitChange = (nextUnit: UnitSystem) => {
+    if (nextUnit === unitSystem) return;
+    setOriginalBore((value) => convertInput(value, unitSystem, nextUnit));
+    setOriginalStroke((value) => convertInput(value, unitSystem, nextUnit));
+    setOriginalRod((value) => convertInput(value, unitSystem, nextUnit));
+    setNewBore((value) => convertInput(value, unitSystem, nextUnit));
+    setNewStroke((value) => convertInput(value, unitSystem, nextUnit));
+    setNewRod((value) => convertInput(value, unitSystem, nextUnit));
+    setUnitSystem(nextUnit);
+  };
 
   const handleOriginalSubmit = async () => {
     setErrorOriginal(null);
@@ -84,6 +115,7 @@ export default function RLPage() {
         controller.signal
       );
       setOriginalResult(response);
+      setOriginalResultUnit(response.unit_system || unitSystem);
     } catch (err) {
       if ((err as Error).name === "AbortError") return;
       const apiError = err as ApiError;
@@ -144,6 +176,7 @@ export default function RLPage() {
         controller.signal
       );
       setNewResult(response);
+      setNewResultUnit(response.unit_system || unitSystem);
     } catch (err) {
       if ((err as Error).name === "AbortError") return;
       const apiError = err as ApiError;
@@ -171,10 +204,19 @@ export default function RLPage() {
     return t(key);
   };
 
-  const buildResults = (result: RLResponse | null) => {
+  const buildResults = (result: RLResponse | null, baseUnit: UnitSystem | null) => {
     if (!result) return [];
+    const resolvedUnit = baseUnit || result.unit_system || "metric";
+    const displacement = convertDisplacement(
+      result.results.displacement_cc,
+      resolvedUnit,
+      unitSystem
+    );
     return [
-      { label: t("displacementCcLabel"), value: result.results.displacement_cc.toFixed(2) },
+      {
+        label: t("displacementLabel"),
+        value: `${displacement.toFixed(2)} ${displacementUnit}`,
+      },
       {
         label: t("rlRatioLabel"),
         value: `${result.results.rl_ratio.toFixed(2)} (${formatSmoothness(result.results.smoothness)})`,
@@ -185,74 +227,99 @@ export default function RLPage() {
   };
 
   const originalResultsList = useMemo(
-    () => buildResults(originalResult),
-    [originalResult]
+    () => buildResults(originalResult, originalResultUnit),
+    [originalResult, originalResultUnit, unitSystem]
   );
-  const newResultsList = useMemo(() => buildResults(newResult), [newResult]);
+  const newResultsList = useMemo(
+    () => buildResults(newResult, newResultUnit),
+    [newResult, newResultUnit, unitSystem]
+  );
+
+  const renderDiffLabel = (label: string, diff: number) => {
+    let state = "no-change";
+    let icon = "▬";
+    if (diff > 0) {
+      state = "increase";
+      icon = "▲";
+    } else if (diff < 0) {
+      state = "decrease";
+      icon = "▼";
+    }
+    return (
+      <span className="ptp-result__label-row">
+        {t("deltaDiffLabel")} {label}
+        <span className={`ptp-diff-icon ptp-diff-icon--${state}`}>{icon}</span>
+      </span>
+    );
+  };
+
+  const renderDiffValue = (diff: number, percent: number | null, unit?: string) => {
+    let state = "no-change";
+    if (diff > 0) state = "increase";
+    if (diff < 0) state = "decrease";
+    const percentText =
+      percent === null ? t("notApplicableLabel") : `${percent.toFixed(2)}%`;
+    const unitSuffix = unit ? ` ${unit}` : "";
+    return (
+      <span className={`ptp-diff-value--${state}`}>
+        {diff.toFixed(2)}
+        {unitSuffix} [{percentText}]
+      </span>
+    );
+  };
 
   const comparisonItems = useMemo(() => {
     if (!originalResult || !newResult) return [];
-    const labels = {
-      original: t("originalValueLabel"),
-      newValue: t("newValueLabel"),
-      diff: t("diffValueLabel"),
-      diffPercent: t("diffPercentLabel"),
-      na: t("notApplicableLabel"),
-    };
+    const originalUnit = originalResultUnit || originalResult.unit_system || "metric";
+    const newUnit = newResultUnit || newResult.unit_system || "metric";
+    const originalDisplacement = convertDisplacement(
+      originalResult.results.displacement_cc,
+      originalUnit,
+      unitSystem
+    );
+    const newDisplacement = convertDisplacement(
+      newResult.results.displacement_cc,
+      newUnit,
+      unitSystem
+    );
+
+    const rlDiff = newResult.results.rl_ratio - originalResult.results.rl_ratio;
+    const rlPercent = originalResult.results.rl_ratio
+      ? (rlDiff / originalResult.results.rl_ratio) * 100
+      : null;
+    const rodDiff =
+      newResult.results.rod_stroke_ratio - originalResult.results.rod_stroke_ratio;
+    const rodPercent = originalResult.results.rod_stroke_ratio
+      ? (rodDiff / originalResult.results.rod_stroke_ratio) * 100
+      : null;
+    const displacementDiff = newDisplacement - originalDisplacement;
+    const displacementPercent = originalDisplacement
+      ? (displacementDiff / originalDisplacement) * 100
+      : null;
+
     return [
       {
-        label: t("rlRatioLabel"),
-        value: formatNumericComparison(
-          originalResult.results.rl_ratio,
-          newResult.results.rl_ratio,
-          null,
-          labels
-        ),
+        label: renderDiffLabel(t("rlRatioLabel"), rlDiff),
+        value: renderDiffValue(rlDiff, rlPercent),
       },
       {
-        label: t("rodStrokeLabel"),
-        value: formatNumericComparison(
-          originalResult.results.rod_stroke_ratio,
-          newResult.results.rod_stroke_ratio,
-          null,
-          labels
-        ),
+        label: renderDiffLabel(t("rodStrokeLabel"), rodDiff),
+        value: renderDiffValue(rodDiff, rodPercent),
       },
       {
-        label: t("displacementCcLabel"),
-        value: formatNumericComparison(
-          originalResult.results.displacement_cc,
-          newResult.results.displacement_cc,
-          "cc",
-          labels
-        ),
-      },
-      {
-        label: t("geometryLabel"),
-        value: formatTextComparison(
-          formatGeometry(originalResult.results.geometry),
-          formatGeometry(newResult.results.geometry),
-          labels
-        ),
-      },
-      {
-        label: t("smoothnessLabel"),
-        value: formatTextComparison(
-          formatSmoothness(originalResult.results.smoothness),
-          formatSmoothness(newResult.results.smoothness),
-          labels
-        ),
+        label: renderDiffLabel(t("displacementLabel"), displacementDiff),
+        value: renderDiffValue(displacementDiff, displacementPercent, displacementUnit),
       },
     ];
-  }, [newResult, originalResult, t]);
+  }, [newResult, originalResult, originalResultUnit, newResultUnit, unitSystem, t]);
 
   return (
     <Layout title={t("rl")} subtitle={t("unitLocked")} variant="pilot" hideHeader hideFooter>
       <div className="ptp-stack">
         <Card className="ptp-stack">
           <div className="ptp-section-header">
-            <div className="ptp-section-title">{t("originalSection")}</div>
-            <UnitToggleButton value={unitSystem} onChange={setUnitSystem} />
+            <div className="ptp-section-title">{t("originalAssemblySection")}</div>
+            <UnitToggleButton value={unitSystem} onChange={handleUnitChange} />
           </div>
           {errorOriginal ? <ErrorBanner message={errorOriginal} /> : null}
           <div className="grid">
@@ -289,14 +356,14 @@ export default function RLPage() {
               {loadingOriginal ? t("loading") : t("calculate")}
             </Button>
           </div>
-          {loadingOriginal ? <LoadingState /> : null}
+          {loadingOriginal ? <StatusPanel message={t("warmupMessage")} /> : null}
           {originalResult ? (
-            <ResultPanel title={t("originalResultsTitle")} items={originalResultsList} />
+            <ResultPanel title={t("originalAssemblyResultsTitle")} items={originalResultsList} />
           ) : null}
         </Card>
         <Card className="ptp-stack">
           <div className="ptp-section-header">
-            <div className="ptp-section-title">{t("newSection")}</div>
+            <div className="ptp-section-title">{t("newAssemblySection")}</div>
           </div>
           {errorNew ? <ErrorBanner message={errorNew} /> : null}
           <div className="grid">
@@ -328,16 +395,22 @@ export default function RLPage() {
               error={fieldErrorsNew.rod_length}
             />
           </div>
-          {!originalResult ? <div className="ptp-field__helper">{t("compareHint")}</div> : null}
-          <div className="ptp-actions">
+          <div className="ptp-actions ptp-actions--between ptp-actions--spaced">
+            <div className="ptp-actions__left">
+              {!originalResult && !newResult ? (
+                <span className="ptp-actions__hint">{t("compareHint")}</span>
+              ) : null}
+            </div>
             <Button type="button" onClick={handleNewSubmit} disabled={loadingNew}>
               {loadingNew ? t("loading") : t("calculate")}
             </Button>
           </div>
-          {loadingNew ? <LoadingState /> : null}
-          {newResult ? <ResultPanel title={t("newResultsTitle")} items={newResultsList} /> : null}
+          {loadingNew ? <StatusPanel message={t("warmupMessage")} /> : null}
+          {newResult ? (
+            <ResultPanel title={t("newAssemblyResultsTitle")} items={newResultsList} />
+          ) : null}
           {comparisonItems.length > 0 ? (
-            <ResultPanel title={t("comparisonNewTitle")} items={comparisonItems} />
+            <ResultPanel title={t("comparisonAssemblyTitle")} items={comparisonItems} />
           ) : null}
         </Card>
       </div>
