@@ -236,12 +236,40 @@ export default function SprocketPage() {
   const comparisonItems = useMemo(() => {
     if (!newResult) return [];
     if (!originalResult) return [];
-    const ratioDiff = newResult.results.diff_ratio_absolute ?? 0;
-    const ratioPercent = newResult.results.diff_ratio_percent ?? null;
-    const chainDiffRaw = newResult.results.diff_chain_length_absolute ?? null;
-    const chainPercent = newResult.results.diff_chain_length_percent ?? null;
-    const centerDiffRaw = newResult.results.diff_center_distance_absolute ?? null;
-    const centerPercent = newResult.results.diff_center_distance_percent ?? null;
+    const ratioDiff =
+      newResult.results.diff_ratio_absolute ??
+      newResult.results.ratio - originalResult.results.ratio;
+    const ratioPercent =
+      newResult.results.diff_ratio_percent ??
+      (originalResult.results.ratio
+        ? (ratioDiff / originalResult.results.ratio) * 100
+        : null);
+    const chainDiffRaw =
+      newResult.results.diff_chain_length_absolute ??
+      (originalResult.results.chain_length_mm !== undefined &&
+      originalResult.results.chain_length_mm !== null &&
+      newResult.results.chain_length_mm !== undefined &&
+      newResult.results.chain_length_mm !== null
+        ? newResult.results.chain_length_mm - originalResult.results.chain_length_mm
+        : null);
+    const chainPercent =
+      newResult.results.diff_chain_length_percent ??
+      (originalResult.results.chain_length_mm
+        ? (chainDiffRaw ?? 0) / originalResult.results.chain_length_mm * 100
+        : null);
+    const centerDiffRaw =
+      newResult.results.diff_center_distance_absolute ??
+      (originalResult.results.center_distance_mm !== undefined &&
+      originalResult.results.center_distance_mm !== null &&
+      newResult.results.center_distance_mm !== undefined &&
+      newResult.results.center_distance_mm !== null
+        ? newResult.results.center_distance_mm - originalResult.results.center_distance_mm
+        : null);
+    const centerPercent =
+      newResult.results.diff_center_distance_percent ??
+      (originalResult.results.center_distance_mm
+        ? (centerDiffRaw ?? 0) / originalResult.results.center_distance_mm * 100
+        : null);
     const chainDiff =
       chainDiffRaw === null
         ? null
@@ -257,8 +285,9 @@ export default function SprocketPage() {
 
     return [
       {
-        label: renderDiffLabel(t("sprocketRatioLabel"), ratioDiff),
-        value: renderDiffValue(ratioDiff, ratioPercent, ""),
+        label: renderDiffLabel(t("sprocketRatioLabel"), ratioDiff ?? 0),
+        value:
+          ratioDiff === null ? t("notApplicableLabel") : renderDiffValue(ratioDiff, ratioPercent, ""),
       },
       {
         label: renderDiffLabel(t("chainLengthLabel"), chainDiff ?? 0),
