@@ -34,6 +34,7 @@ body {
   min-height: 100%;
 }
 
+html.ptp-embed,
 body.ptp-embed {
   background: transparent;
 }
@@ -155,11 +156,11 @@ body.ptp-embed .ptp-subtitle {
   justify-content: space-between;
   gap: 12px;
   flex-wrap: nowrap;
-  padding-bottom: 8px;
+  padding-bottom: 18px;
 }
 
 .ptp-section-title {
-  font-size: 28px;
+  font-size: 34px;
   font-weight: 700;
   letter-spacing: -0.02em;
   flex: 1;
@@ -336,7 +337,7 @@ body.ptp-embed .ptp-subtitle {
   gap: 8px;
   padding: 8px 14px;
   border-radius: 999px;
-  border: 1px solid var(--ptp-border);
+  border: none;
   background: var(--ptp-surface-alt);
   color: var(--ptp-text);
   font-size: 13px;
@@ -344,6 +345,7 @@ body.ptp-embed .ptp-subtitle {
   transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease,
     color 0.18s ease;
   flex-shrink: 0;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.28);
 }
 
 .ptp-unit-toggle:focus-visible {
@@ -353,13 +355,11 @@ body.ptp-embed .ptp-subtitle {
 
 .ptp-unit-toggle.is-imperial {
   background: rgba(199, 120, 58, 0.18);
-  border-color: rgba(199, 120, 58, 0.45);
   color: var(--ptp-primary);
 }
 
 .ptp-unit-toggle.is-metric {
   background: rgba(111, 176, 244, 0.16);
-  border-color: rgba(111, 176, 244, 0.35);
   color: var(--ptp-metric);
 }
 
@@ -381,7 +381,7 @@ body.ptp-embed .ptp-subtitle {
   }
 
   .ptp-section-title {
-    font-size: 24px;
+    font-size: 28px;
   }
 
   .ptp-shell {

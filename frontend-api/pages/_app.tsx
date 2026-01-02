@@ -13,6 +13,7 @@ function EmbedBridge() {
     if (typeof document === "undefined") return;
     const isEmbed = typeof window !== "undefined" && window.top !== window;
     document.body.classList.toggle("ptp-embed", isEmbed);
+    document.documentElement.classList.toggle("ptp-embed", isEmbed);
   }, []);
 
   return null;
