@@ -12,12 +12,16 @@ export function Layout({
   unitSystem,
   onUnitChange,
   children,
+  hideHeader = false,
+  hideFooter = false,
 }: {
   title: string;
   subtitle?: string;
   unitSystem?: UnitSystem;
   onUnitChange?: (next: UnitSystem) => void;
   children: React.ReactNode;
+  hideHeader?: boolean;
+  hideFooter?: boolean;
 }) {
   const { t } = useI18n();
 
@@ -28,17 +32,19 @@ export function Layout({
       </Head>
       <main className="ptp-shell">
         <div className="ptp-container">
-          <HeaderBar
-            title={title}
-            subtitle={subtitle || t("appTitle")}
-            rightSlot={
-              unitSystem && onUnitChange ? (
-                <UnitToggleButton value={unitSystem} onChange={onUnitChange} />
-              ) : null
-            }
-          />
+          {hideHeader ? null : (
+            <HeaderBar
+              title={title}
+              subtitle={subtitle || t("appTitle")}
+              rightSlot={
+                unitSystem && onUnitChange ? (
+                  <UnitToggleButton value={unitSystem} onChange={onUnitChange} />
+                ) : null
+              }
+            />
+          )}
           <section className="ptp-content">{children}</section>
-          <footer className="ptp-footer">{t("footer")}</footer>
+          {hideFooter ? null : <footer className="ptp-footer">{t("footer")}</footer>}
         </div>
       </main>
     </>

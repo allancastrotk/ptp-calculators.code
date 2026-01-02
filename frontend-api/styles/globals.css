@@ -330,4 +330,28 @@ body.ptp-embed .ptp-subtitle {
   .ptp-shell {
     padding: 24px 12px 40px;
   }
+}.
+.ptp-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ptp-section-title {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.ptp-actions {
+  margin-top: 12px;
+}
+
+.ptp-field__label {
+  text-align: center;
+}
+
+.ptp-input {
+  text-align: center;
 }

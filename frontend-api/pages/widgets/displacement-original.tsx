@@ -1,12 +1,15 @@
 import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/router";
 
+import { Button } from "../../components/Button";
+import { Card } from "../../components/Card";
 import { ErrorBanner } from "../../components/ErrorBanner";
 import { InputField } from "../../components/InputField";
 import { Layout } from "../../components/Layout";
 import { LoadingState } from "../../components/LoadingState";
 import { ResultPanel } from "../../components/ResultPanel";
 import { UnitSystem } from "../../components/UnitSystemSwitch";
+import { UnitToggleButton } from "../../components/UnitToggleButton";
 import { postJson, ApiError } from "../../lib/api";
 import { postEmbedMessage } from "../../lib/embed";
 import { useI18n } from "../../lib/i18n";
@@ -172,12 +175,15 @@ export default function DisplacementOriginalWidget() {
   }, [result]);
 
   return (
-    <Layout title={t("displacement")} unitSystem={unitSystem} onUnitChange={setUnitSystem}>
-      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-        <div className="card">
-          <div style={{ fontWeight: 600, marginBottom: 8 }}>{t("originalSection")}</div>
+    <Layout title={t("displacement")} hideHeader hideFooter>
+      <div className="ptp-stack">
+        <Card className="ptp-stack">
+          <div className="ptp-section-header">
+            <div className="ptp-section-title">{t("originalSection")}</div>
+            <UnitToggleButton value={unitSystem} onChange={setUnitSystem} />
+          </div>
           {error ? <ErrorBanner message={error} /> : null}
-          {retryHint ? <div className="subtitle">{retryHint}</div> : null}
+          {retryHint ? <div className="ptp-field__helper">{retryHint}</div> : null}
           <div className="grid">
             <InputField
               label={t("boreLabel")}
@@ -216,17 +222,19 @@ export default function DisplacementOriginalWidget() {
               error={fieldErrors.baseline_cc}
             />
           </div>
-          <button className="button" type="button" onClick={handleSubmit} disabled={loading}>
-            {loading ? t("loading") : t("calculateOriginal")}
-          </button>
+          <div className="ptp-actions">
+            <Button type="button" onClick={handleSubmit} disabled={loading}>
+              {loading ? t("loading") : t("calculateOriginal")}
+            </Button>
+          </div>
           {loading ? <LoadingState /> : null}
           {warmupNotice ? (
-            <div className="card">
-              <div className="subtitle">{warmupNotice}</div>
+            <div className="ptp-card">
+              <div className="ptp-field__helper">{warmupNotice}</div>
             </div>
           ) : null}
           {result ? <ResultPanel title={t("originalResultsTitle")} items={resultsList} /> : null}
-        </div>
+        </Card>
       </div>
     </Layout>
   );
