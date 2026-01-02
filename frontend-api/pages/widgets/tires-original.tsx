@@ -6,6 +6,7 @@ import { Card } from "../../components/Card";
 import { ErrorBanner } from "../../components/ErrorBanner";
 import { InputField } from "../../components/InputField";
 import { Layout } from "../../components/Layout";
+import { MeasureToggleButton } from "../../components/MeasureToggleButton";
 import { ResultPanel } from "../../components/ResultPanel";
 import { SelectField } from "../../components/SelectField";
 import { StatusPanel } from "../../components/StatusPanel";
@@ -137,6 +138,16 @@ export default function TiresOriginalWidget() {
       return { ...current, width: "", aspect: "", flotation: "" };
     }
     return { ...current, aspect: "" };
+  };
+
+  const toggleMeasure = () => {
+    setInputs((current) => ({
+      ...current,
+      flotationEnabled: !current.flotationEnabled,
+      flotation: "",
+      width: "",
+      aspect: "",
+    }));
   };
 
   const validateInputs = (nextInputs: TireInputs) => {
@@ -316,24 +327,6 @@ export default function TiresOriginalWidget() {
                 />
               </>
             ) : null}
-            {hasFlotation(inputs.vehicleType) ? (
-              <label className="ptp-field">
-                <span className="ptp-field__label">{t("flotationLabel")}</span>
-                <input
-                  type="checkbox"
-                  checked={inputs.flotationEnabled}
-                  onChange={(event) =>
-                    setInputs({
-                      ...inputs,
-                      flotationEnabled: event.target.checked,
-                      flotation: "",
-                      width: "",
-                      aspect: "",
-                    })
-                  }
-                />
-              </label>
-            ) : null}
             {inputs.flotationEnabled ? (
               <SelectField
                 label={t("flotationLabel")}
@@ -357,7 +350,17 @@ export default function TiresOriginalWidget() {
               error={fieldErrors.rim_width_in}
             />
           </div>
-          <div className="ptp-actions ptp-actions--spaced">
+          <div className="ptp-actions ptp-actions--between ptp-actions--spaced">
+            {hasFlotation(inputs.vehicleType) ? (
+              <MeasureToggleButton
+                value={inputs.flotationEnabled}
+                onChange={toggleMeasure}
+                metricLabel={t("measureMetricLabel")}
+                flotationLabel={t("measureFlotationLabel")}
+              />
+            ) : (
+              <span />
+            )}
             <Button type="button" onClick={handleSubmit} disabled={loading}>
               {loading ? t("loading") : t("calculate")}
             </Button>

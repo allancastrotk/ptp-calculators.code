@@ -6,6 +6,7 @@ import { Card } from "../../components/Card";
 import { ErrorBanner } from "../../components/ErrorBanner";
 import { InputField } from "../../components/InputField";
 import { Layout } from "../../components/Layout";
+import { MeasureToggleButton } from "../../components/MeasureToggleButton";
 import { ResultPanel } from "../../components/ResultPanel";
 import { SelectField } from "../../components/SelectField";
 import { StatusPanel } from "../../components/StatusPanel";
@@ -154,6 +155,16 @@ export default function TiresNewWidget() {
       return { ...current, width: "", aspect: "", flotation: "" };
     }
     return { ...current, aspect: "" };
+  };
+
+  const toggleMeasure = () => {
+    setInputs((current) => ({
+      ...current,
+      flotationEnabled: !current.flotationEnabled,
+      flotation: "",
+      width: "",
+      aspect: "",
+    }));
   };
 
   const validateInputs = (nextInputs: TireInputs) => {
@@ -392,24 +403,6 @@ export default function TiresNewWidget() {
                 />
               </>
             ) : null}
-            {hasFlotation(inputs.vehicleType) ? (
-              <label className="ptp-field">
-                <span className="ptp-field__label">{t("flotationLabel")}</span>
-                <input
-                  type="checkbox"
-                  checked={inputs.flotationEnabled}
-                  onChange={(event) =>
-                    setInputs({
-                      ...inputs,
-                      flotationEnabled: event.target.checked,
-                      flotation: "",
-                      width: "",
-                      aspect: "",
-                    })
-                  }
-                />
-              </label>
-            ) : null}
             {inputs.flotationEnabled ? (
               <SelectField
                 label={t("flotationLabel")}
@@ -434,7 +427,18 @@ export default function TiresNewWidget() {
             />
           </div>
           <div className="ptp-actions ptp-actions--between ptp-actions--spaced">
-            {!baseline && !result ? <div className="ptp-field__helper">{t("compareHintWidget")}</div> : <span />}
+            {!baseline && !result ? (
+              <div className="ptp-field__helper">{t("compareHintWidget")}</div>
+            ) : hasFlotation(inputs.vehicleType) ? (
+              <MeasureToggleButton
+                value={inputs.flotationEnabled}
+                onChange={toggleMeasure}
+                metricLabel={t("measureMetricLabel")}
+                flotationLabel={t("measureFlotationLabel")}
+              />
+            ) : (
+              <span />
+            )}
             <Button type="button" onClick={handleSubmit} disabled={loading}>
               {loading ? t("loading") : t("calculate")}
             </Button>
