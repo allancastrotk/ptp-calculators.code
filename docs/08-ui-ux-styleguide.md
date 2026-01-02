@@ -11,16 +11,16 @@ Ele serve como referencia tecnica para manter consistencia visual e evitar perda
 
 ## Tokens e paleta
 
-- Primario (cobre queimado): `--ptp-primary`
-- Contraste primario: `--ptp-primary-contrast`
-- Texto: `--ptp-text`
-- Texto secundario: `--ptp-muted`
-- Superficie: `--ptp-surface`
-- Superficie alternativa: `--ptp-surface-alt`
-- Borda (sutil): `--ptp-border`
-- Foco: `--ptp-focus`
-- Azul blueprint (detalhes): usado no gradiente do card
-- Metrico (accent): `--ptp-metric`
+- Primario (cobre queimado): `--ptp-primary` [#C7783A]
+- Contraste primario: `--ptp-primary-contrast` [#24160E]
+- Texto: `--ptp-text` [#F3EFE9]
+- Texto secundario: `--ptp-muted` [#B7ACA2]
+- Superficie: `--ptp-surface` [#1B1612]
+- Superficie alternativa: `--ptp-surface-alt` [#231C16]
+- Borda (sutil): `--ptp-border` [#C9783A]
+- Foco: `--ptp-focus` [#C7783A]
+- Azul blueprint (detalhes): [#285A82]
+- Metrico (accent): `--ptp-metric` [#6DA0C7]
 
 ## Backgrounds e embed
 
@@ -30,12 +30,10 @@ Ele serve como referencia tecnica para manter consistencia visual e evitar perda
 
 ## Cards
 
-## Cards
-
 - Cards sao o "bloco principal" do conteudo.
 - Estilo "pilot":
-  - Gradiente diagonal (135deg) com azul blueprint no canto superior/esquerdo
-    e azul bem escuro no canto inferior/direito.
+  - Gradiente diagonal (135deg) com azul blueprint [#285A82] no canto superior/esquerdo
+    e azul bem escuro [#05060A] no canto inferior/direito.
   - Sombra suave para profundidade.
   - Sem borda explicita.
 

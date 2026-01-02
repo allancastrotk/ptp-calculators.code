@@ -1,4 +1,16 @@
-export const TIRES_DB = {
+export type RimData = {
+  widths: string[];
+  [width: string]: { aspects?: number[]; flotation?: string[] } | string[];
+};
+
+export type VehicleData = {
+  rims: number[];
+  [rim: string]: RimData | number[];
+};
+
+export type VehicleType = "Car" | "Motorcycle" | "Utility";
+
+export const TIRES_DB: Record<VehicleType, VehicleData> = {
   Car: {
     rims: [13, 14, 15, 16, 17, 18, 19, 20, 21, 22],
     "13": {
@@ -121,7 +133,5 @@ export const TIRES_DB = {
     },
   },
 };
-
-export type VehicleType = keyof typeof TIRES_DB;
 
 export const VEHICLE_TYPES: VehicleType[] = ["Car", "Motorcycle", "Utility"];
