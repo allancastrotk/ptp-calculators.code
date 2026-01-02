@@ -3,7 +3,11 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from app.calculators.displacement import classify_geometry, calculate_displacement_cc
-from app.calculators.rl import calculate_rl_ratio, calculate_rod_stroke_ratio
+from app.calculators.rl import (
+    calculate_rl_ratio,
+    calculate_rod_stroke_ratio,
+    classify_smoothness,
+)
 from app.calculators.sprocket import (
     calculate_center_distance_mm,
     calculate_chain_length_mm,
@@ -15,6 +19,7 @@ from app.calculators.tires import (
     calculate_diameter_mm,
     parse_flotation,
 )
+from app.data.tires_db import TIRES_DB
 from app.core.security import require_internal_key
 from app.core.units import cc_to_cuin, cc_to_liters, inches_to_mm, mm_to_inches
 from app.schemas.common import ErrorResponse
@@ -130,11 +135,12 @@ def calc_rl(payload: RLRequest):
     stroke = payload.inputs.stroke
     rod_length = payload.inputs.rod_length
     bore = payload.inputs.bore
+    baseline = payload.inputs.baseline
 
     if resolved_unit_system == "imperial":
         stroke_mm = inches_to_mm(stroke)
         rod_length_mm = inches_to_mm(rod_length)
-        bore_mm = inches_to_mm(bore) if bore is not None else None
+        bore_mm = inches_to_mm(bore)
     else:
         stroke_mm = stroke
         rod_length_mm = rod_length
@@ -142,16 +148,56 @@ def calc_rl(payload: RLRequest):
 
     rl_ratio = calculate_rl_ratio(stroke_mm, rod_length_mm)
     rod_stroke_ratio = calculate_rod_stroke_ratio(stroke_mm, rod_length_mm)
+    displacement_cc_raw = calculate_displacement_cc(bore_mm, stroke_mm, 1)
+    geometry = classify_geometry(bore_mm, stroke_mm)
+    smoothness = classify_smoothness(rl_ratio)
+
+    diff_rl_percent = None
+    diff_displacement_percent = None
+    baseline_normalized = None
+    if baseline is not None:
+        if resolved_unit_system == "imperial":
+            baseline_bore_mm = inches_to_mm(baseline.bore)
+            baseline_stroke_mm = inches_to_mm(baseline.stroke)
+            baseline_rod_mm = inches_to_mm(baseline.rod_length)
+        else:
+            baseline_bore_mm = baseline.bore
+            baseline_stroke_mm = baseline.stroke
+            baseline_rod_mm = baseline.rod_length
+
+        baseline_rl = calculate_rl_ratio(baseline_stroke_mm, baseline_rod_mm)
+        baseline_displacement_cc = calculate_displacement_cc(
+            baseline_bore_mm, baseline_stroke_mm, 1
+        )
+        diff_rl_percent = (rl_ratio - baseline_rl) / baseline_rl * 100.0
+        diff_displacement_percent = (
+            (displacement_cc_raw - baseline_displacement_cc) / baseline_displacement_cc * 100.0
+        )
+
+        baseline_normalized = RLNormalizedInputs(
+            bore_mm=baseline_bore_mm,
+            stroke_mm=baseline_stroke_mm,
+            rod_length_mm=baseline_rod_mm,
+            baseline=None,
+        )
 
     results = RLResults(
         rl_ratio=round(rl_ratio, 2),
         rod_stroke_ratio=round(rod_stroke_ratio, 2),
+        displacement_cc=round(displacement_cc_raw, 2),
+        geometry=geometry,
+        smoothness=smoothness,
+        diff_rl_percent=round(diff_rl_percent, 2) if diff_rl_percent is not None else None,
+        diff_displacement_percent=round(diff_displacement_percent, 2)
+        if diff_displacement_percent is not None
+        else None,
     )
 
     normalized_inputs = RLNormalizedInputs(
+        bore_mm=bore_mm,
         stroke_mm=stroke_mm,
         rod_length_mm=rod_length_mm,
-        bore_mm=bore_mm,
+        baseline=baseline_normalized,
     )
 
     return RLResponse(
@@ -316,6 +362,42 @@ def calc_tires(payload: TiresRequest):
     inputs = payload.inputs
     errors = []
 
+    def rim_key(value: float) -> str:
+        return str(int(value)) if float(value).is_integer() else str(value)
+
+    def width_key(value: float) -> str:
+        return str(int(value)) if float(value).is_integer() else str(value)
+
+    def validate_against_db(source, prefix: str) -> list[dict]:
+        issues: list[dict] = []
+        vehicle_db = TIRES_DB.get(source.vehicle_type)
+        if not vehicle_db:
+            issues.append({"field": f"{prefix}vehicle_type", "reason": "invalid vehicle type"})
+            return issues
+
+        rim_str = rim_key(source.rim_in)
+        if rim_str not in vehicle_db:
+            issues.append({"field": f"{prefix}rim_in", "reason": "invalid rim"})
+            return issues
+
+        if source.flotation:
+            flotation_options: list[str] = []
+            for width in vehicle_db[rim_str]["widths"]:
+                flotation_options.extend(vehicle_db[rim_str].get(width, {}).get("flotation", []))
+            if source.flotation not in flotation_options:
+                issues.append({"field": f"{prefix}flotation", "reason": "invalid flotation option"})
+            return issues
+
+        width_str = width_key(source.width_mm)  # type: ignore[arg-type]
+        if width_str not in vehicle_db[rim_str]["widths"]:
+            issues.append({"field": f"{prefix}width_mm", "reason": "invalid width"})
+            return issues
+
+        aspects = vehicle_db[rim_str].get(width_str, {}).get("aspects", [])
+        if source.aspect_percent not in aspects:
+            issues.append({"field": f"{prefix}aspect_percent", "reason": "invalid aspect"})
+        return issues
+
     if inputs.flotation and inputs.vehicle_type != "Utility":
         errors.append({"field": "inputs.flotation", "reason": "flotation allowed only for Utility"})
 
@@ -323,6 +405,8 @@ def calc_tires(payload: TiresRequest):
         parsed = parse_flotation(inputs.flotation)
         if not parsed:
             errors.append({"field": "inputs.flotation", "reason": "invalid flotation format"})
+
+    errors.extend(validate_against_db(inputs, "inputs."))
 
     if inputs.rim_width_in is not None and inputs.rim_width_in <= 0:
         errors.append({"field": "inputs.rim_width_in", "reason": "must be greater than zero"})
@@ -361,6 +445,8 @@ def calc_tires(payload: TiresRequest):
             base_parsed = parse_flotation(base_inputs.flotation)
             if not base_parsed:
                 base_errors.append({"field": "inputs.baseline.flotation", "reason": "invalid flotation format"})
+
+        base_errors.extend(validate_against_db(base_inputs, "inputs.baseline."))
 
         if base_errors:
             response = ErrorResponse(
