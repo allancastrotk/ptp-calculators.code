@@ -189,11 +189,13 @@ body.ptp-embed .ptp-subtitle {
   position: relative;
   display: flex;
   align-items: center;
+  flex: 1;
   min-height: 32px;
 }
 
 .ptp-actions__hint {
   position: absolute;
+  left: 0;
   right: 0;
   top: calc(100% + 6px);
   font-size: 12px;
