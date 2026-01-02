@@ -2,6 +2,7 @@ from fastapi import Depends, FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
+from app.calculators.common import percent_diff
 from app.calculators.displacement import classify_geometry, calculate_displacement_cc
 from app.calculators.rl import (
     calculate_rl_ratio,
@@ -21,7 +22,7 @@ from app.calculators.tires import (
 )
 from app.data.tires_db import TIRES_DB
 from app.core.security import require_internal_key
-from app.core.units import cc_to_cuin, cc_to_liters, inches_to_mm, mm_to_inches
+from app.core.units import cc_to_cuin, cc_to_liters, inches_to_mm, mm_to_inches, resolve_unit_system
 from app.schemas.common import ErrorResponse
 from app.schemas.displacement import (
     DisplacementRequest,
@@ -71,11 +72,7 @@ def validation_exception_handler(request: Request, exc: RequestValidationError):
     dependencies=[Depends(require_internal_key)],
 )
 def calc_displacement(payload: DisplacementRequest):
-    warnings: list[str] = []
-    resolved_unit_system = payload.unit_system
-    if payload.unit_system == "auto":
-        resolved_unit_system = "metric"
-        warnings.append("unit_system set to auto; assuming metric inputs.")
+    resolved_unit_system, warnings = resolve_unit_system(payload.unit_system)
 
     bore = payload.inputs.bore
     stroke = payload.inputs.stroke
@@ -94,7 +91,7 @@ def calc_displacement(payload: DisplacementRequest):
 
     diff_percent = None
     if baseline_cc is not None:
-        diff_percent = (displacement_cc_raw - baseline_cc) / baseline_cc * 100.0
+        diff_percent = percent_diff(displacement_cc_raw, baseline_cc)
 
     results = DisplacementResults(
         displacement_cc=round(displacement_cc_raw, 2),
@@ -126,11 +123,7 @@ def calc_displacement(payload: DisplacementRequest):
     dependencies=[Depends(require_internal_key)],
 )
 def calc_rl(payload: RLRequest):
-    warnings: list[str] = []
-    resolved_unit_system = payload.unit_system
-    if payload.unit_system == "auto":
-        resolved_unit_system = "metric"
-        warnings.append("unit_system set to auto; assuming metric inputs.")
+    resolved_unit_system, warnings = resolve_unit_system(payload.unit_system)
 
     stroke = payload.inputs.stroke
     rod_length = payload.inputs.rod_length
@@ -169,10 +162,8 @@ def calc_rl(payload: RLRequest):
         baseline_displacement_cc = calculate_displacement_cc(
             baseline_bore_mm, baseline_stroke_mm, 1
         )
-        diff_rl_percent = (rl_ratio - baseline_rl) / baseline_rl * 100.0
-        diff_displacement_percent = (
-            (displacement_cc_raw - baseline_displacement_cc) / baseline_displacement_cc * 100.0
-        )
+        diff_rl_percent = percent_diff(rl_ratio, baseline_rl)
+        diff_displacement_percent = percent_diff(displacement_cc_raw, baseline_displacement_cc)
 
         baseline_normalized = RLNormalizedInputs(
             bore_mm=baseline_bore_mm,
@@ -215,11 +206,7 @@ def calc_rl(payload: RLRequest):
     dependencies=[Depends(require_internal_key)],
 )
 def calc_sprocket(payload: SprocketRequest):
-    warnings: list[str] = []
-    resolved_unit_system = payload.unit_system
-    if payload.unit_system == "auto":
-        resolved_unit_system = "metric"
-        warnings.append("unit_system set to auto; assuming metric inputs.")
+    resolved_unit_system, warnings = resolve_unit_system(payload.unit_system)
 
     sprocket_teeth = payload.inputs.sprocket_teeth
     crown_teeth = payload.inputs.crown_teeth
@@ -263,7 +250,7 @@ def calc_sprocket(payload: SprocketRequest):
     if baseline is not None:
         baseline_ratio = calculate_ratio(baseline.crown_teeth, baseline.sprocket_teeth)
         diff_ratio_absolute = ratio - baseline_ratio
-        diff_ratio_percent = (diff_ratio_absolute / baseline_ratio) * 100.0
+        diff_ratio_percent = percent_diff(ratio, baseline_ratio)
 
         baseline_chain_length_mm = None
         baseline_center_distance_mm = None
@@ -283,13 +270,13 @@ def calc_sprocket(payload: SprocketRequest):
 
         if chain_length_mm and baseline_chain_length_mm:
             diff_chain_length_absolute = chain_length_mm - baseline_chain_length_mm
-            diff_chain_length_percent = (
-                diff_chain_length_absolute / baseline_chain_length_mm * 100.0
+            diff_chain_length_percent = percent_diff(
+                chain_length_mm, baseline_chain_length_mm
             )
         if center_distance_mm and baseline_center_distance_mm:
             diff_center_distance_absolute = center_distance_mm - baseline_center_distance_mm
-            diff_center_distance_percent = (
-                diff_center_distance_absolute / baseline_center_distance_mm * 100.0
+            diff_center_distance_percent = percent_diff(
+                center_distance_mm, baseline_center_distance_mm
             )
 
         baseline_normalized = SprocketNormalizedInputs(
@@ -353,11 +340,7 @@ def calc_sprocket(payload: SprocketRequest):
     dependencies=[Depends(require_internal_key)],
 )
 def calc_tires(payload: TiresRequest):
-    warnings: list[str] = []
-    resolved_unit_system = payload.unit_system
-    if payload.unit_system == "auto":
-        resolved_unit_system = "metric"
-        warnings.append("unit_system set to auto; assuming metric inputs.")
+    resolved_unit_system, warnings = resolve_unit_system(payload.unit_system)
 
     inputs = payload.inputs
     errors = []
@@ -476,9 +459,9 @@ def calc_tires(payload: TiresRequest):
         )
 
         diff_diameter = diameter_mm - baseline_diameter_mm
-        diff_diameter_percent = diff_diameter / baseline_diameter_mm * 100.0
+        diff_diameter_percent = percent_diff(diameter_mm, baseline_diameter_mm)
         diff_width = assembly_width_mm - baseline_assembly_width_mm
-        diff_width_percent = diff_width / baseline_assembly_width_mm * 100.0
+        diff_width_percent = percent_diff(assembly_width_mm, baseline_assembly_width_mm)
 
         baseline_normalized = TiresNormalizedInputs(
             vehicle_type=base_inputs.vehicle_type,

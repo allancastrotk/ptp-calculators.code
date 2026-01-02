@@ -180,3 +180,27 @@ def test_tires_invalid_combinations(client):
     for payload in invalid_payloads:
         response = client.post("/v1/calc/tires", json=payload, headers=headers)
         assert response.status_code == 400
+
+
+def test_tires_diff_values(client):
+    headers = {"X-PTP-Internal-Key": "test-key"}
+    payload = {
+        "unit_system": "metric",
+        "inputs": {
+            "vehicle_type": "Car",
+            "rim_in": 16,
+            "width_mm": 215,
+            "aspect_percent": 55,
+            "baseline": {
+                "vehicle_type": "Car",
+                "rim_in": 16,
+                "width_mm": 205,
+                "aspect_percent": 55,
+            },
+        },
+    }
+    response = client.post("/v1/calc/tires", json=payload, headers=headers)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["results"]["diff_diameter_percent"] == 1.74
+    assert data["results"]["diff_width_percent"] == 4.88

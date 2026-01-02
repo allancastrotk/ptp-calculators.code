@@ -1,7 +1,9 @@
 import pytest
+from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
 from app.calculators.sprocket import calculate_ratio
+from app.main import app
 from app.schemas.sprocket import SprocketInputs, SprocketResults
 
 
@@ -29,3 +31,25 @@ def test_sprocket_results_shape():
         "diff_center_distance_percent",
         "diff_center_distance_absolute",
     }
+
+
+@pytest.fixture()
+def client(monkeypatch):
+    monkeypatch.setenv("PTP_INTERNAL_KEY", "test-key")
+    return TestClient(app)
+
+
+def test_sprocket_diff_ratio(client):
+    headers = {"X-PTP-Internal-Key": "test-key"}
+    payload = {
+        "unit_system": "metric",
+        "inputs": {
+            "sprocket_teeth": 15,
+            "crown_teeth": 38,
+            "baseline": {"sprocket_teeth": 14, "crown_teeth": 38},
+        },
+    }
+    response = client.post("/v1/calc/sprocket", json=payload, headers=headers)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["results"]["diff_ratio_percent"] == -6.67

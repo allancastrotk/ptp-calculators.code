@@ -1,5 +1,7 @@
 import math
 
+from app.calculators.common import percent_diff
+
 TOLERANCE = 0.03
 
 
@@ -29,6 +31,6 @@ def displacement_results(
         "geometry": geometry,
     }
     if baseline_cc:
-        diff_percent = (displacement_cc - baseline_cc) / baseline_cc * 100.0
+        diff_percent = percent_diff(displacement_cc, baseline_cc)
         results["diff_percent"] = round(diff_percent, 2)
     return results

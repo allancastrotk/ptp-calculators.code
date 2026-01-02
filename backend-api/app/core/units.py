@@ -16,3 +16,12 @@ def cc_to_liters(value: float) -> float:
 
 def cc_to_cuin(value: float) -> float:
     return value / CC_TO_CUIN
+
+
+def resolve_unit_system(unit_system: str) -> tuple[str, list[str]]:
+    warnings: list[str] = []
+    resolved = unit_system
+    if unit_system == "auto":
+        resolved = "metric"
+        warnings.append("unit_system set to auto; assuming metric inputs.")
+    return resolved, warnings
