@@ -187,3 +187,70 @@ Tires
   });
 </script>
 ```
+## Displacement widgets (Original/New)
+
+Use two separate iframes when you want Original and New on the same host page. The host generates a shared `pageId` and bridges the result from the Original widget to the New widget.
+
+```html
+<div id="ptp-displacement-widgets">
+  <iframe
+    id="ptp-displacement-original"
+    src="https://ptp-calculators.vercel.app/widgets/displacement-original?lang=pt_BR&pageId=ptp-displacement-123"
+    width="100%"
+    style="border:0;"
+    loading="lazy"
+    referrerpolicy="no-referrer"
+  ></iframe>
+  <iframe
+    id="ptp-displacement-new"
+    src="https://ptp-calculators.vercel.app/widgets/displacement-new?lang=pt_BR&pageId=ptp-displacement-123"
+    width="100%"
+    style="border:0;"
+    loading="lazy"
+    referrerpolicy="no-referrer"
+  ></iframe>
+</div>
+<script>
+  const uiOrigin = "https://ptp-calculators.vercel.app";
+  const pageId = `ptp-displacement-${Math.random().toString(36).slice(2)}`;
+  const originalIframe = document.getElementById("ptp-displacement-original");
+  const newIframe = document.getElementById("ptp-displacement-new");
+
+  originalIframe.src = `${uiOrigin}/widgets/displacement-original?lang=pt_BR&pageId=${pageId}`;
+  newIframe.src = `${uiOrigin}/widgets/displacement-new?lang=pt_BR&pageId=${pageId}`;
+
+  originalIframe.addEventListener("load", () => {
+    originalIframe.contentWindow.postMessage({ language: "pt_BR" }, uiOrigin);
+  });
+  newIframe.addEventListener("load", () => {
+    newIframe.contentWindow.postMessage({ language: "pt_BR" }, uiOrigin);
+  });
+
+  window.addEventListener("message", (event) => {
+    if (event.origin !== uiOrigin) return;
+
+    if (event.data?.type === "ptp:resize") {
+      if (event.source === originalIframe.contentWindow) {
+        originalIframe.style.height = `${event.data.height}px`;
+      }
+      if (event.source === newIframe.contentWindow) {
+        newIframe.style.height = `${event.data.height}px`;
+      }
+    }
+
+    if (
+      event.data?.type === "ptp:calc:displacement:originalResult" &&
+      event.data?.pageId === pageId
+    ) {
+      newIframe.contentWindow.postMessage(
+        {
+          type: "ptp:calc:displacement:baseline",
+          pageId,
+          payload: event.data.payload,
+        },
+        uiOrigin
+      );
+    }
+  });
+</script>
+```
