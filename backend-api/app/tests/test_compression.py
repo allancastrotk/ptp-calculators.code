@@ -59,6 +59,27 @@ def test_displacement_compression_four_stroke(client):
     assert data["results"]["compression"]["compression_ratio"] == 14.58
 
 
+def test_displacement_compression_simple_mode(client):
+    headers = {"X-PTP-Internal-Key": "test-key", "Authorization": "Bearer test-key"}
+    payload = {
+        "unit_system": "metric",
+        "inputs": {
+            "bore": 100,
+            "stroke": 100,
+            "cylinders": 1,
+            "compression": {
+                "mode": "simple",
+                "chamber_volume": 50,
+            },
+        },
+    }
+    response = client.post("/v1/calc/displacement", json=payload, headers=headers)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["results"]["compression"]["compression_mode"] == "four_stroke"
+    assert data["results"]["compression"]["compression_ratio"] == 16.71
+
+
 def test_displacement_compression_two_stroke(client):
     headers = {"X-PTP-Internal-Key": "test-key", "Authorization": "Bearer test-key"}
     payload = {

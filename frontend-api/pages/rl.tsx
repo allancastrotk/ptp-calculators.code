@@ -2,6 +2,10 @@ import React, { useMemo, useRef, useState } from "react";
 
 import { Button } from "../components/Button";
 import { Card } from "../components/Card";
+import {
+  CompressionMode,
+  CompressionModeToggleButton,
+} from "../components/CompressionModeToggleButton";
 import { CompressionToggleButton } from "../components/CompressionToggleButton";
 import { ErrorBanner } from "../components/ErrorBanner";
 import { InputField } from "../components/InputField";
@@ -63,6 +67,8 @@ export default function RLPage() {
   const [originalStroke, setOriginalStroke] = useState("");
   const [originalRod, setOriginalRod] = useState("");
   const [originalCompressionEnabled, setOriginalCompressionEnabled] = useState(false);
+  const [originalCompressionMode, setOriginalCompressionMode] =
+    useState<CompressionMode>("simple");
   const [originalCompression, setOriginalCompression] = useState<CompressionInputs>(
     createCompressionInputs
   );
@@ -70,6 +76,7 @@ export default function RLPage() {
   const [newStroke, setNewStroke] = useState("");
   const [newRod, setNewRod] = useState("");
   const [newCompressionEnabled, setNewCompressionEnabled] = useState(false);
+  const [newCompressionMode, setNewCompressionMode] = useState<CompressionMode>("simple");
   const [newCompression, setNewCompression] = useState<CompressionInputs>(
     createCompressionInputs
   );
@@ -162,14 +169,16 @@ export default function RLPage() {
     if (originalCompressionEnabled) {
       if (!originalCompression.chamberVolume)
         nextErrors["compression.chamber_volume"] = t("required");
-      if (!originalCompression.gasketThickness)
-        nextErrors["compression.gasket_thickness"] = t("required");
-      if (!originalCompression.gasketBore)
-        nextErrors["compression.gasket_bore"] = t("required");
-      if (!originalCompression.deckHeight)
-        nextErrors["compression.deck_height"] = t("required");
-      if (!originalCompression.pistonVolume)
-        nextErrors["compression.piston_volume"] = t("required");
+      if (originalCompressionMode === "advanced") {
+        if (!originalCompression.gasketThickness)
+          nextErrors["compression.gasket_thickness"] = t("required");
+        if (!originalCompression.gasketBore)
+          nextErrors["compression.gasket_bore"] = t("required");
+        if (!originalCompression.deckHeight)
+          nextErrors["compression.deck_height"] = t("required");
+        if (!originalCompression.pistonVolume)
+          nextErrors["compression.piston_volume"] = t("required");
+      }
     }
     if (Object.keys(nextErrors).length > 0) {
       setFieldErrorsOriginal(nextErrors);
@@ -191,7 +200,7 @@ export default function RLPage() {
           stroke: toNumber(originalStroke),
           rod_length: toNumber(originalRod),
           compression: originalCompressionEnabled
-            ? buildCompressionPayload(originalCompression)
+            ? buildCompressionPayload(originalCompression, originalCompressionMode)
             : undefined,
         },
       };
@@ -231,14 +240,16 @@ export default function RLPage() {
     if (newCompressionEnabled) {
       if (!newCompression.chamberVolume)
         nextErrors["compression.chamber_volume"] = t("required");
-      if (!newCompression.gasketThickness)
-        nextErrors["compression.gasket_thickness"] = t("required");
-      if (!newCompression.gasketBore)
-        nextErrors["compression.gasket_bore"] = t("required");
-      if (!newCompression.deckHeight)
-        nextErrors["compression.deck_height"] = t("required");
-      if (!newCompression.pistonVolume)
-        nextErrors["compression.piston_volume"] = t("required");
+      if (newCompressionMode === "advanced") {
+        if (!newCompression.gasketThickness)
+          nextErrors["compression.gasket_thickness"] = t("required");
+        if (!newCompression.gasketBore)
+          nextErrors["compression.gasket_bore"] = t("required");
+        if (!newCompression.deckHeight)
+          nextErrors["compression.deck_height"] = t("required");
+        if (!newCompression.pistonVolume)
+          nextErrors["compression.piston_volume"] = t("required");
+      }
     }
     if (Object.keys(nextErrors).length > 0) {
       setFieldErrorsNew(nextErrors);
@@ -259,7 +270,9 @@ export default function RLPage() {
           bore: toNumber(newBore),
           stroke: toNumber(newStroke),
           rod_length: toNumber(newRod),
-          compression: newCompressionEnabled ? buildCompressionPayload(newCompression) : undefined,
+          compression: newCompressionEnabled
+            ? buildCompressionPayload(newCompression, newCompressionMode)
+            : undefined,
           baseline: originalResult
             ? {
                 bore: toNumber(originalBore),
@@ -305,18 +318,29 @@ export default function RLPage() {
     return <span className={className}>{t(key)}</span>;
   };
 
-  const buildCompressionPayload = (inputs: CompressionInputs) => ({
+  const buildCompressionPayload = (inputs: CompressionInputs, mode: CompressionMode) => ({
+    mode,
     chamber_volume: toNumber(inputs.chamberVolume),
-    gasket_thickness: toNumber(inputs.gasketThickness),
-    gasket_bore: toNumber(inputs.gasketBore),
-    deck_height: toNumber(inputs.deckHeight),
-    piston_volume: toNumber(inputs.pistonVolume),
+    gasket_thickness: mode === "advanced" ? toNumber(inputs.gasketThickness) : undefined,
+    gasket_bore: mode === "advanced" ? toNumber(inputs.gasketBore) : undefined,
+    deck_height: mode === "advanced" ? toNumber(inputs.deckHeight) : undefined,
+    piston_volume: mode === "advanced" ? toNumber(inputs.pistonVolume) : undefined,
     exhaust_port_height: inputs.exhaustPortHeight ? toNumber(inputs.exhaustPortHeight) : undefined,
     transfer_port_height: inputs.transferPortHeight
       ? toNumber(inputs.transferPortHeight)
       : undefined,
     crankcase_volume: inputs.crankcaseVolume ? toNumber(inputs.crankcaseVolume) : undefined,
   });
+
+  const handleOriginalCompressionToggle = (next: boolean) => {
+    setOriginalCompressionEnabled(next);
+    if (next) setOriginalCompressionMode("simple");
+  };
+
+  const handleNewCompressionToggle = (next: boolean) => {
+    setNewCompressionEnabled(next);
+    if (next) setNewCompressionMode("simple");
+  };
 
   const buildResults = (result: RLResponse | null, baseUnit: UnitSystem | null) => {
     if (!result) return [];
@@ -654,50 +678,66 @@ export default function RLPage() {
                   inputMode="decimal"
                   error={fieldErrorsOriginal["compression.chamber_volume"]}
                 />
-                <InputField
-                  label={t("gasketThicknessLabel")}
-                  unitLabel={unitLabel}
-                  placeholder={unitSystem === "imperial" ? "0.04" : "1.0"}
-                  value={originalCompression.gasketThickness}
-                  onChange={(value) =>
-                    setOriginalCompression((current) => ({ ...current, gasketThickness: value }))
-                  }
-                  inputMode="decimal"
-                  error={fieldErrorsOriginal["compression.gasket_thickness"]}
-                />
-                <InputField
-                  label={t("gasketBoreLabel")}
-                  unitLabel={unitLabel}
-                  placeholder={unitSystem === "imperial" ? "2.72" : "69.0"}
-                  value={originalCompression.gasketBore}
-                  onChange={(value) =>
-                    setOriginalCompression((current) => ({ ...current, gasketBore: value }))
-                  }
-                  inputMode="decimal"
-                  error={fieldErrorsOriginal["compression.gasket_bore"]}
-                />
-                <InputField
-                  label={t("deckHeightLabel")}
-                  unitLabel={unitLabel}
-                  placeholder={unitSystem === "imperial" ? "0.00" : "0.0"}
-                  value={originalCompression.deckHeight}
-                  onChange={(value) =>
-                    setOriginalCompression((current) => ({ ...current, deckHeight: value }))
-                  }
-                  inputMode="decimal"
-                  error={fieldErrorsOriginal["compression.deck_height"]}
-                />
-                <InputField
-                  label={t("pistonVolumeLabel")}
-                  unitLabel={displacementUnit}
-                  placeholder={unitSystem === "imperial" ? "-0.12" : "-2.0"}
-                  value={originalCompression.pistonVolume}
-                  onChange={(value) =>
-                    setOriginalCompression((current) => ({ ...current, pistonVolume: value }))
-                  }
-                  inputMode="decimal"
-                  error={fieldErrorsOriginal["compression.piston_volume"]}
-                />
+                {originalCompressionMode === "advanced" ? (
+                  <>
+                    <InputField
+                      label={t("gasketThicknessLabel")}
+                      unitLabel={unitLabel}
+                      placeholder={unitSystem === "imperial" ? "0.04" : "1.0"}
+                      value={originalCompression.gasketThickness}
+                      onChange={(value) =>
+                        setOriginalCompression((current) => ({
+                          ...current,
+                          gasketThickness: value,
+                        }))
+                      }
+                      inputMode="decimal"
+                      error={fieldErrorsOriginal["compression.gasket_thickness"]}
+                    />
+                    <InputField
+                      label={t("gasketBoreLabel")}
+                      unitLabel={unitLabel}
+                      placeholder={unitSystem === "imperial" ? "2.72" : "69.0"}
+                      value={originalCompression.gasketBore}
+                      onChange={(value) =>
+                        setOriginalCompression((current) => ({
+                          ...current,
+                          gasketBore: value,
+                        }))
+                      }
+                      inputMode="decimal"
+                      error={fieldErrorsOriginal["compression.gasket_bore"]}
+                    />
+                    <InputField
+                      label={t("deckHeightLabel")}
+                      unitLabel={unitLabel}
+                      placeholder={unitSystem === "imperial" ? "0.00" : "0.0"}
+                      value={originalCompression.deckHeight}
+                      onChange={(value) =>
+                        setOriginalCompression((current) => ({
+                          ...current,
+                          deckHeight: value,
+                        }))
+                      }
+                      inputMode="decimal"
+                      error={fieldErrorsOriginal["compression.deck_height"]}
+                    />
+                    <InputField
+                      label={t("pistonVolumeLabel")}
+                      unitLabel={displacementUnit}
+                      placeholder={unitSystem === "imperial" ? "-0.12" : "-2.0"}
+                      value={originalCompression.pistonVolume}
+                      onChange={(value) =>
+                        setOriginalCompression((current) => ({
+                          ...current,
+                          pistonVolume: value,
+                        }))
+                      }
+                      inputMode="decimal"
+                      error={fieldErrorsOriginal["compression.piston_volume"]}
+                    />
+                  </>
+                ) : null}
                 <div className="ptp-divider ptp-grid-divider">
                   <span>{t("compressionTwoStrokeSectionTitle")}</span>
                 </div>
@@ -750,8 +790,14 @@ export default function RLPage() {
             <div className="ptp-actions__left">
               <CompressionToggleButton
                 value={originalCompressionEnabled}
-                onChange={setOriginalCompressionEnabled}
+                onChange={handleOriginalCompressionToggle}
               />
+              {originalCompressionEnabled ? (
+                <CompressionModeToggleButton
+                  value={originalCompressionMode}
+                  onChange={setOriginalCompressionMode}
+                />
+              ) : null}
             </div>
             <div className="ptp-actions__right">
               <Button type="button" onClick={handleOriginalSubmit} disabled={loadingOriginal}>
@@ -819,50 +865,54 @@ export default function RLPage() {
                   inputMode="decimal"
                   error={fieldErrorsNew["compression.chamber_volume"]}
                 />
-                <InputField
-                  label={t("gasketThicknessLabel")}
-                  unitLabel={unitLabel}
-                  placeholder={unitSystem === "imperial" ? "0.04" : "1.0"}
-                  value={newCompression.gasketThickness}
-                  onChange={(value) =>
-                    setNewCompression((current) => ({ ...current, gasketThickness: value }))
-                  }
-                  inputMode="decimal"
-                  error={fieldErrorsNew["compression.gasket_thickness"]}
-                />
-                <InputField
-                  label={t("gasketBoreLabel")}
-                  unitLabel={unitLabel}
-                  placeholder={unitSystem === "imperial" ? "2.72" : "69.0"}
-                  value={newCompression.gasketBore}
-                  onChange={(value) =>
-                    setNewCompression((current) => ({ ...current, gasketBore: value }))
-                  }
-                  inputMode="decimal"
-                  error={fieldErrorsNew["compression.gasket_bore"]}
-                />
-                <InputField
-                  label={t("deckHeightLabel")}
-                  unitLabel={unitLabel}
-                  placeholder={unitSystem === "imperial" ? "0.00" : "0.0"}
-                  value={newCompression.deckHeight}
-                  onChange={(value) =>
-                    setNewCompression((current) => ({ ...current, deckHeight: value }))
-                  }
-                  inputMode="decimal"
-                  error={fieldErrorsNew["compression.deck_height"]}
-                />
-                <InputField
-                  label={t("pistonVolumeLabel")}
-                  unitLabel={displacementUnit}
-                  placeholder={unitSystem === "imperial" ? "-0.12" : "-2.0"}
-                  value={newCompression.pistonVolume}
-                  onChange={(value) =>
-                    setNewCompression((current) => ({ ...current, pistonVolume: value }))
-                  }
-                  inputMode="decimal"
-                  error={fieldErrorsNew["compression.piston_volume"]}
-                />
+                {newCompressionMode === "advanced" ? (
+                  <>
+                    <InputField
+                      label={t("gasketThicknessLabel")}
+                      unitLabel={unitLabel}
+                      placeholder={unitSystem === "imperial" ? "0.04" : "1.0"}
+                      value={newCompression.gasketThickness}
+                      onChange={(value) =>
+                        setNewCompression((current) => ({ ...current, gasketThickness: value }))
+                      }
+                      inputMode="decimal"
+                      error={fieldErrorsNew["compression.gasket_thickness"]}
+                    />
+                    <InputField
+                      label={t("gasketBoreLabel")}
+                      unitLabel={unitLabel}
+                      placeholder={unitSystem === "imperial" ? "2.72" : "69.0"}
+                      value={newCompression.gasketBore}
+                      onChange={(value) =>
+                        setNewCompression((current) => ({ ...current, gasketBore: value }))
+                      }
+                      inputMode="decimal"
+                      error={fieldErrorsNew["compression.gasket_bore"]}
+                    />
+                    <InputField
+                      label={t("deckHeightLabel")}
+                      unitLabel={unitLabel}
+                      placeholder={unitSystem === "imperial" ? "0.00" : "0.0"}
+                      value={newCompression.deckHeight}
+                      onChange={(value) =>
+                        setNewCompression((current) => ({ ...current, deckHeight: value }))
+                      }
+                      inputMode="decimal"
+                      error={fieldErrorsNew["compression.deck_height"]}
+                    />
+                    <InputField
+                      label={t("pistonVolumeLabel")}
+                      unitLabel={displacementUnit}
+                      placeholder={unitSystem === "imperial" ? "-0.12" : "-2.0"}
+                      value={newCompression.pistonVolume}
+                      onChange={(value) =>
+                        setNewCompression((current) => ({ ...current, pistonVolume: value }))
+                      }
+                      inputMode="decimal"
+                      error={fieldErrorsNew["compression.piston_volume"]}
+                    />
+                  </>
+                ) : null}
                 <div className="ptp-divider ptp-grid-divider">
                   <span>{t("compressionTwoStrokeSectionTitle")}</span>
                 </div>
@@ -915,8 +965,14 @@ export default function RLPage() {
             <div className="ptp-actions__left">
               <CompressionToggleButton
                 value={newCompressionEnabled}
-                onChange={setNewCompressionEnabled}
+                onChange={handleNewCompressionToggle}
               />
+              {newCompressionEnabled ? (
+                <CompressionModeToggleButton
+                  value={newCompressionMode}
+                  onChange={setNewCompressionMode}
+                />
+              ) : null}
               {!originalResult && !newResult ? (
                 <span className="ptp-actions__hint">{t("compareHint")}</span>
               ) : null}

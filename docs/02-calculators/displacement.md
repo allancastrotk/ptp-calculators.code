@@ -19,6 +19,7 @@ Taxa de compressao (extensao v1, opcional):
 
 | Parametro | Campo | Unidade | Restricoes | Observacoes |
 | --- | --- | --- | --- | --- |
+| Compression mode | `compression.mode` | adimensional | `simple` ou `advanced` | `simple` usa apenas `chamber_volume`; `advanced` usa junta/deck/pistao |
 | Chamber volume | `compression.chamber_volume` | cc (ou cu in) | > 0 | Volume da camara |
 | Gasket thickness | `compression.gasket_thickness` | mm (ou in) | > 0 | Espessura da junta |
 | Gasket bore | `compression.gasket_bore` | mm (ou in) | > 0 | Diametro do furo da junta |
@@ -103,6 +104,8 @@ Implementacao atual:
 Taxa de compressao:
 - Opcional; quando habilitada, e calculada no backend.
 - O modo 4T e o default; o modo 2T e ativado quando houver alturas de janelas informadas.
+- `compression.mode` controla o nivel de detalhe: `simple` considera apenas `chamber_volume` (ignora junta/deck/pistao), `advanced` considera todos os campos.
+- Se `compression.mode` nao for informado, o backend assume `advanced` quando houver campos avancados preenchidos; caso contrario, assume `simple`.
 ## 6) Observacoes de legado
 
 Compatibilidade obrigatoria:

@@ -113,6 +113,18 @@ def calc_displacement(payload: DisplacementRequest):
     compression_results = None
     if payload.inputs.compression:
         compression = payload.inputs.compression
+        mode = compression.mode
+        has_advanced_fields = any(
+            value is not None
+            for value in [
+                compression.gasket_thickness,
+                compression.gasket_bore,
+                compression.deck_height,
+                compression.piston_volume,
+            ]
+        )
+        if mode is None:
+            mode = "advanced" if has_advanced_fields else "simple"
         chamber_cc = compression.chamber_volume
         gasket_thickness_mm = compression.gasket_thickness
         gasket_bore_mm = compression.gasket_bore
@@ -124,10 +136,15 @@ def calc_displacement(payload: DisplacementRequest):
 
         if resolved_unit_system == "imperial":
             chamber_cc = cuin_to_cc(chamber_cc)
-            piston_volume_cc = cuin_to_cc(piston_volume_cc)
-            gasket_thickness_mm = inches_to_mm(gasket_thickness_mm)
-            gasket_bore_mm = inches_to_mm(gasket_bore_mm)
-            deck_height_mm = inches_to_mm(deck_height_mm)
+            if piston_volume_cc is not None:
+                piston_volume_cc = cuin_to_cc(piston_volume_cc)
+            if mode == "advanced":
+                if gasket_thickness_mm is not None:
+                    gasket_thickness_mm = inches_to_mm(gasket_thickness_mm)
+                if gasket_bore_mm is not None:
+                    gasket_bore_mm = inches_to_mm(gasket_bore_mm)
+                if deck_height_mm is not None:
+                    deck_height_mm = inches_to_mm(deck_height_mm)
             if exhaust_height_mm is not None:
                 exhaust_height_mm = inches_to_mm(exhaust_height_mm)
             if transfer_height_mm is not None:
@@ -135,7 +152,13 @@ def calc_displacement(payload: DisplacementRequest):
             if crankcase_volume_cc is not None:
                 crankcase_volume_cc = cuin_to_cc(crankcase_volume_cc)
 
-        if chamber_cc <= 0 or gasket_thickness_mm <= 0 or gasket_bore_mm <= 0:
+        if mode == "simple":
+            gasket_thickness_mm = 0.0
+            gasket_bore_mm = bore_mm
+            deck_height_mm = 0.0
+            piston_volume_cc = 0.0
+
+        if chamber_cc <= 0:
             response = ErrorResponse(
                 error_code="validation_error",
                 message="Invalid request payload.",
@@ -144,6 +167,43 @@ def calc_displacement(payload: DisplacementRequest):
                 ],
             )
             return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=response.model_dump())
+
+        if mode == "advanced":
+            if (
+                gasket_thickness_mm is None
+                or gasket_bore_mm is None
+                or deck_height_mm is None
+                or piston_volume_cc is None
+            ):
+                response = ErrorResponse(
+                    error_code="validation_error",
+                    message="Invalid request payload.",
+                    field_errors=[
+                        {"field": "inputs.compression", "reason": "missing advanced inputs"}
+                    ],
+                )
+                return JSONResponse(
+                    status_code=status.HTTP_400_BAD_REQUEST, content=response.model_dump()
+                )
+            if gasket_thickness_mm <= 0 or gasket_bore_mm <= 0:
+                response = ErrorResponse(
+                    error_code="validation_error",
+                    message="Invalid request payload.",
+                    field_errors=[
+                        {
+                            "field": "inputs.compression",
+                            "reason": "invalid compression inputs",
+                        }
+                    ],
+                )
+                return JSONResponse(
+                    status_code=status.HTTP_400_BAD_REQUEST, content=response.model_dump()
+                )
+
+        gasket_thickness_mm = gasket_thickness_mm or 0.0
+        gasket_bore_mm = gasket_bore_mm or bore_mm
+        deck_height_mm = deck_height_mm or 0.0
+        piston_volume_cc = piston_volume_cc or 0.0
 
         gasket_cc = gasket_volume_cc(gasket_bore_mm, gasket_thickness_mm)
         deck_cc = deck_volume_cc(bore_mm, deck_height_mm)
@@ -222,6 +282,18 @@ def calc_displacement(payload: DisplacementRequest):
     compression_normalized = None
     if payload.inputs.compression:
         compression = payload.inputs.compression
+        mode = compression.mode
+        has_advanced_fields = any(
+            value is not None
+            for value in [
+                compression.gasket_thickness,
+                compression.gasket_bore,
+                compression.deck_height,
+                compression.piston_volume,
+            ]
+        )
+        if mode is None:
+            mode = "advanced" if has_advanced_fields else "simple"
         chamber_cc = compression.chamber_volume
         gasket_thickness_mm = compression.gasket_thickness
         gasket_bore_mm = compression.gasket_bore
@@ -233,10 +305,15 @@ def calc_displacement(payload: DisplacementRequest):
 
         if resolved_unit_system == "imperial":
             chamber_cc = cuin_to_cc(chamber_cc)
-            piston_volume_cc = cuin_to_cc(piston_volume_cc)
-            gasket_thickness_mm = inches_to_mm(gasket_thickness_mm)
-            gasket_bore_mm = inches_to_mm(gasket_bore_mm)
-            deck_height_mm = inches_to_mm(deck_height_mm)
+            if piston_volume_cc is not None:
+                piston_volume_cc = cuin_to_cc(piston_volume_cc)
+            if mode == "advanced":
+                if gasket_thickness_mm is not None:
+                    gasket_thickness_mm = inches_to_mm(gasket_thickness_mm)
+                if gasket_bore_mm is not None:
+                    gasket_bore_mm = inches_to_mm(gasket_bore_mm)
+                if deck_height_mm is not None:
+                    deck_height_mm = inches_to_mm(deck_height_mm)
             if exhaust_height_mm is not None:
                 exhaust_height_mm = inches_to_mm(exhaust_height_mm)
             if transfer_height_mm is not None:
@@ -244,12 +321,19 @@ def calc_displacement(payload: DisplacementRequest):
             if crankcase_volume_cc is not None:
                 crankcase_volume_cc = cuin_to_cc(crankcase_volume_cc)
 
+        if mode == "simple":
+            gasket_thickness_mm = 0.0
+            gasket_bore_mm = bore_mm
+            deck_height_mm = 0.0
+            piston_volume_cc = 0.0
+
         compression_normalized = CompressionNormalizedInputs(
+            mode=mode,
             chamber_volume=chamber_cc,
-            gasket_thickness=gasket_thickness_mm,
-            gasket_bore=gasket_bore_mm,
-            deck_height=deck_height_mm,
-            piston_volume=piston_volume_cc,
+            gasket_thickness=gasket_thickness_mm or 0.0,
+            gasket_bore=gasket_bore_mm or bore_mm,
+            deck_height=deck_height_mm or 0.0,
+            piston_volume=piston_volume_cc or 0.0,
             exhaust_port_height=exhaust_height_mm,
             transfer_port_height=transfer_height_mm,
             crankcase_volume=crankcase_volume_cc,
@@ -330,6 +414,18 @@ def calc_rl(payload: RLRequest):
     compression_results = None
     if payload.inputs.compression:
         compression = payload.inputs.compression
+        mode = compression.mode
+        has_advanced_fields = any(
+            value is not None
+            for value in [
+                compression.gasket_thickness,
+                compression.gasket_bore,
+                compression.deck_height,
+                compression.piston_volume,
+            ]
+        )
+        if mode is None:
+            mode = "advanced" if has_advanced_fields else "simple"
         chamber_cc = compression.chamber_volume
         gasket_thickness_mm = compression.gasket_thickness
         gasket_bore_mm = compression.gasket_bore
@@ -341,10 +437,15 @@ def calc_rl(payload: RLRequest):
 
         if resolved_unit_system == "imperial":
             chamber_cc = cuin_to_cc(chamber_cc)
-            piston_volume_cc = cuin_to_cc(piston_volume_cc)
-            gasket_thickness_mm = inches_to_mm(gasket_thickness_mm)
-            gasket_bore_mm = inches_to_mm(gasket_bore_mm)
-            deck_height_mm = inches_to_mm(deck_height_mm)
+            if piston_volume_cc is not None:
+                piston_volume_cc = cuin_to_cc(piston_volume_cc)
+            if mode == "advanced":
+                if gasket_thickness_mm is not None:
+                    gasket_thickness_mm = inches_to_mm(gasket_thickness_mm)
+                if gasket_bore_mm is not None:
+                    gasket_bore_mm = inches_to_mm(gasket_bore_mm)
+                if deck_height_mm is not None:
+                    deck_height_mm = inches_to_mm(deck_height_mm)
             if exhaust_height_mm is not None:
                 exhaust_height_mm = inches_to_mm(exhaust_height_mm)
             if transfer_height_mm is not None:
@@ -352,7 +453,13 @@ def calc_rl(payload: RLRequest):
             if crankcase_volume_cc is not None:
                 crankcase_volume_cc = cuin_to_cc(crankcase_volume_cc)
 
-        if chamber_cc <= 0 or gasket_thickness_mm <= 0 or gasket_bore_mm <= 0:
+        if mode == "simple":
+            gasket_thickness_mm = 0.0
+            gasket_bore_mm = bore_mm
+            deck_height_mm = 0.0
+            piston_volume_cc = 0.0
+
+        if chamber_cc <= 0:
             response = ErrorResponse(
                 error_code="validation_error",
                 message="Invalid request payload.",
@@ -361,6 +468,43 @@ def calc_rl(payload: RLRequest):
                 ],
             )
             return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=response.model_dump())
+
+        if mode == "advanced":
+            if (
+                gasket_thickness_mm is None
+                or gasket_bore_mm is None
+                or deck_height_mm is None
+                or piston_volume_cc is None
+            ):
+                response = ErrorResponse(
+                    error_code="validation_error",
+                    message="Invalid request payload.",
+                    field_errors=[
+                        {"field": "inputs.compression", "reason": "missing advanced inputs"}
+                    ],
+                )
+                return JSONResponse(
+                    status_code=status.HTTP_400_BAD_REQUEST, content=response.model_dump()
+                )
+            if gasket_thickness_mm <= 0 or gasket_bore_mm <= 0:
+                response = ErrorResponse(
+                    error_code="validation_error",
+                    message="Invalid request payload.",
+                    field_errors=[
+                        {
+                            "field": "inputs.compression",
+                            "reason": "invalid compression inputs",
+                        }
+                    ],
+                )
+                return JSONResponse(
+                    status_code=status.HTTP_400_BAD_REQUEST, content=response.model_dump()
+                )
+
+        gasket_thickness_mm = gasket_thickness_mm or 0.0
+        gasket_bore_mm = gasket_bore_mm or bore_mm
+        deck_height_mm = deck_height_mm or 0.0
+        piston_volume_cc = piston_volume_cc or 0.0
 
         gasket_cc = gasket_volume_cc(gasket_bore_mm, gasket_thickness_mm)
         deck_cc = deck_volume_cc(bore_mm, deck_height_mm)
@@ -443,6 +587,18 @@ def calc_rl(payload: RLRequest):
     compression_normalized = None
     if payload.inputs.compression:
         compression = payload.inputs.compression
+        mode = compression.mode
+        has_advanced_fields = any(
+            value is not None
+            for value in [
+                compression.gasket_thickness,
+                compression.gasket_bore,
+                compression.deck_height,
+                compression.piston_volume,
+            ]
+        )
+        if mode is None:
+            mode = "advanced" if has_advanced_fields else "simple"
         chamber_cc = compression.chamber_volume
         gasket_thickness_mm = compression.gasket_thickness
         gasket_bore_mm = compression.gasket_bore
@@ -454,10 +610,15 @@ def calc_rl(payload: RLRequest):
 
         if resolved_unit_system == "imperial":
             chamber_cc = cuin_to_cc(chamber_cc)
-            piston_volume_cc = cuin_to_cc(piston_volume_cc)
-            gasket_thickness_mm = inches_to_mm(gasket_thickness_mm)
-            gasket_bore_mm = inches_to_mm(gasket_bore_mm)
-            deck_height_mm = inches_to_mm(deck_height_mm)
+            if piston_volume_cc is not None:
+                piston_volume_cc = cuin_to_cc(piston_volume_cc)
+            if mode == "advanced":
+                if gasket_thickness_mm is not None:
+                    gasket_thickness_mm = inches_to_mm(gasket_thickness_mm)
+                if gasket_bore_mm is not None:
+                    gasket_bore_mm = inches_to_mm(gasket_bore_mm)
+                if deck_height_mm is not None:
+                    deck_height_mm = inches_to_mm(deck_height_mm)
             if exhaust_height_mm is not None:
                 exhaust_height_mm = inches_to_mm(exhaust_height_mm)
             if transfer_height_mm is not None:
@@ -465,12 +626,19 @@ def calc_rl(payload: RLRequest):
             if crankcase_volume_cc is not None:
                 crankcase_volume_cc = cuin_to_cc(crankcase_volume_cc)
 
+        if mode == "simple":
+            gasket_thickness_mm = 0.0
+            gasket_bore_mm = bore_mm
+            deck_height_mm = 0.0
+            piston_volume_cc = 0.0
+
         compression_normalized = CompressionNormalizedInputs(
+            mode=mode,
             chamber_volume=chamber_cc,
-            gasket_thickness=gasket_thickness_mm,
-            gasket_bore=gasket_bore_mm,
-            deck_height=deck_height_mm,
-            piston_volume=piston_volume_cc,
+            gasket_thickness=gasket_thickness_mm or 0.0,
+            gasket_bore=gasket_bore_mm or bore_mm,
+            deck_height=deck_height_mm or 0.0,
+            piston_volume=piston_volume_cc or 0.0,
             exhaust_port_height=exhaust_height_mm,
             transfer_port_height=transfer_height_mm,
             crankcase_volume=crankcase_volume_cc,

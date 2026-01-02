@@ -103,6 +103,7 @@ Resultados recomendados:
   - `compression_mode`: `four_stroke` ou `two_stroke`
 
 Campos de `compression` (inputs):
+- `mode` (opcional): `simple` ou `advanced`. Se ausente, backend assume `advanced` quando houver campos avancados preenchidos; caso contrario, assume `simple`.
 - `chamber_volume` (cc ou cu in)
 - `gasket_thickness` (mm ou in)
 - `gasket_bore` (mm ou in)
@@ -142,6 +143,7 @@ Resultados obrigatorios:
   - `compression_mode`: `four_stroke` ou `two_stroke`
 
 Campos de `compression` (inputs):
+- `mode` (opcional): `simple` ou `advanced`. Se ausente, backend assume `advanced` quando houver campos avancados preenchidos; caso contrario, assume `simple`.
 - `chamber_volume` (cc ou cu in)
 - `gasket_thickness` (mm ou in)
 - `gasket_bore` (mm ou in)
