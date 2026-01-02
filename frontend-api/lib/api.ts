@@ -18,7 +18,7 @@ export async function postJson<T>(
 
   if (!response.ok) {
     const data = (await response.json().catch(() => ({}))) as ApiError;
-    const error = new Error(data.message || "Request failed") as Error & ApiError;
+    const error = new Error(data.message || "Request failed") as Error & ApiError;\n    (error as Error & { status?: number }).status = response.status;\n
     error.error_code = data.error_code;
     error.message = data.message || error.message;
     error.field_errors = data.field_errors || [];

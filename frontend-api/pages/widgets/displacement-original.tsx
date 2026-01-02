@@ -39,6 +39,20 @@ type OriginalMessage = {
   payload: DisplacementResponse;
 };
 
+const RETRY_DELAYS_MS = [800, 1600, 2400];
+const RETRY_STATUSES = new Set([502, 503, 504]);
+
+function isRetriable(error: unknown): boolean {
+  if (error instanceof TypeError) return true;
+  if (!error || typeof error !== "object") return false;
+  const status = (error as { status?: number }).status;
+  return status ? RETRY_STATUSES.has(status) : false;
+}
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export default function DisplacementOriginalWidget() {
   const { t } = useI18n();
   const router = useRouter();
@@ -54,12 +68,41 @@ export default function DisplacementOriginalWidget() {
   const [baselineCc, setBaselineCc] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [retryHint, setRetryHint] = useState<string | null>(null);
+  const [warmupNotice, setWarmupNotice] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [result, setResult] = useState<DisplacementResponse | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
+  const postWithRetry = async (payload: unknown, signal: AbortSignal) => {
+    for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt += 1) {
+      try {
+        if (attempt > 0) {
+          setWarmupNotice(t("warmupMessage"));
+        }
+        const response = await postJson<DisplacementResponse>(
+          "/api/v1/calc/displacement",
+          payload,
+          signal
+        );
+        setWarmupNotice(null);
+        return response;
+      } catch (err) {
+        if ((err as Error).name === "AbortError") throw err;
+        const retriable = isRetriable(err);
+        if (!retriable || attempt === RETRY_DELAYS_MS.length) {
+          throw err;
+        }
+        await sleep(RETRY_DELAYS_MS[attempt]);
+      }
+    }
+    throw new Error("Request failed");
+  };
+
   const handleSubmit = async () => {
     setError(null);
+    setRetryHint(null);
+    setWarmupNotice(null);
     setFieldErrors({});
 
     const nextErrors: Record<string, string> = {};
@@ -90,11 +133,7 @@ export default function DisplacementOriginalWidget() {
         },
       };
 
-      const response = await postJson<DisplacementResponse>(
-        "/api/v1/calc/displacement",
-        payload,
-        controller.signal
-      );
+      const response = await postWithRetry(payload, controller.signal);
       setResult(response);
       const message: OriginalMessage = {
         type: "ptp:calc:displacement:originalResult",
@@ -104,6 +143,9 @@ export default function DisplacementOriginalWidget() {
       postEmbedMessage(message);
     } catch (err) {
       if ((err as Error).name === "AbortError") return;
+      if (isRetriable(err)) {
+        setRetryHint(t("retryHint"));
+      }
       const apiError = err as ApiError;
       setError(apiError.message || "Request failed");
       if (apiError.field_errors) {
@@ -135,6 +177,7 @@ export default function DisplacementOriginalWidget() {
         <div className="card">
           <div style={{ fontWeight: 600, marginBottom: 8 }}>{t("originalSection")}</div>
           {error ? <ErrorBanner message={error} /> : null}
+          {retryHint ? <div className="subtitle">{retryHint}</div> : null}
           <div className="grid">
             <InputField
               label={t("boreLabel")}
@@ -177,6 +220,11 @@ export default function DisplacementOriginalWidget() {
             {loading ? t("loading") : t("calculateOriginal")}
           </button>
           {loading ? <LoadingState /> : null}
+          {warmupNotice ? (
+            <div className="card">
+              <div className="subtitle">{warmupNotice}</div>
+            </div>
+          ) : null}
           {result ? <ResultPanel title={t("originalResultsTitle")} items={resultsList} /> : null}
         </div>
       </div>
