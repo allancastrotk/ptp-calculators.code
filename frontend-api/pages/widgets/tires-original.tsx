@@ -27,7 +27,7 @@ type TiresResponse = {
   meta: { version: string; timestamp: string; source: string };
 };
 
-type ResultItem = { label: string; value: string };
+type ResultItem = { label: React.ReactNode; value: React.ReactNode };
 
 type OriginalMessage = {
   type: "ptp:calc:tires:originalResult";
