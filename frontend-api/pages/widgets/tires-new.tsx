@@ -8,6 +8,7 @@ import { InputField } from "../../components/InputField";
 import { Layout } from "../../components/Layout";
 import { ResultPanel } from "../../components/ResultPanel";
 import { SelectField } from "../../components/SelectField";
+import { StatusPanel } from "../../components/StatusPanel";
 import { UnitSystem } from "../../components/UnitSystemSwitch";
 import { UnitToggleButton } from "../../components/UnitToggleButton";
 import { postJson, ApiError } from "../../lib/api";
@@ -271,7 +272,7 @@ export default function TiresNewWidget() {
     }
     return (
       <span className="ptp-result__label-row">
-        {label}
+        {t("deltaDiffLabel")} {label}
         <span className={`ptp-diff-icon ptp-diff-icon--${state}`}>{icon}</span>
       </span>
     );
@@ -353,6 +354,7 @@ export default function TiresNewWidget() {
               <>
                 <SelectField
                   label={t("widthLabel")}
+                  unitLabel="mm"
                   value={inputs.width}
                   onChange={(value) => setInputs(resetDependent({ ...inputs, width: value }, "width"))}
                   placeholder={t("selectPlaceholder")}
@@ -364,6 +366,7 @@ export default function TiresNewWidget() {
                 />
                 <SelectField
                   label={t("aspectLabel")}
+                  unitLabel="%"
                   value={inputs.aspect}
                   onChange={(value) => setInputs({ ...inputs, aspect: value })}
                   placeholder={t("selectPlaceholder")}
@@ -422,12 +425,7 @@ export default function TiresNewWidget() {
               {loading ? t("loading") : t("calculate")}
             </Button>
           </div>
-          {loading ? (
-            <ResultPanel
-              title={t("statusTitle")}
-              items={[{ label: t("statusLabel"), value: t("warmupMessage") }]}
-            />
-          ) : null}
+          {loading ? <StatusPanel message={t("warmupMessage")} /> : null}
           {warmupNotice ? <div className="ptp-card">{warmupNotice}</div> : null}
           {result ? (
             <ResultPanel title={t("newAssemblyResultsTitle")} items={resultsList} />

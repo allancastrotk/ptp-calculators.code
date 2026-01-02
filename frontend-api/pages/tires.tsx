@@ -7,6 +7,7 @@ import { InputField } from "../components/InputField";
 import { Layout } from "../components/Layout";
 import { ResultPanel } from "../components/ResultPanel";
 import { SelectField } from "../components/SelectField";
+import { StatusPanel } from "../components/StatusPanel";
 import { UnitSystem } from "../components/UnitSystemSwitch";
 import { UnitToggleButton } from "../components/UnitToggleButton";
 import { postJson, ApiError } from "../lib/api";
@@ -281,7 +282,7 @@ export default function TiresPage() {
     }
     return (
       <span className="ptp-result__label-row">
-        {label}
+        {t("deltaDiffLabel")} {label}
         <span className={`ptp-diff-icon ptp-diff-icon--${state}`}>{icon}</span>
       </span>
     );
@@ -373,6 +374,7 @@ export default function TiresPage() {
               <>
                 <SelectField
                   label={t("widthLabel")}
+                  unitLabel="mm"
                   value={originalInputs.width}
                   onChange={(value) =>
                     updateOriginal(resetDependent({ ...originalInputs, width: value }, "width"))
@@ -386,6 +388,7 @@ export default function TiresPage() {
                 />
                 <SelectField
                   label={t("aspectLabel")}
+                  unitLabel="%"
                   value={originalInputs.aspect}
                   onChange={(value) => updateOriginal({ aspect: value })}
                   placeholder={t("selectPlaceholder")}
@@ -443,12 +446,7 @@ export default function TiresPage() {
               {loadingOriginal ? t("loading") : t("calculate")}
             </Button>
           </div>
-          {loadingOriginal ? (
-            <ResultPanel
-              title={t("statusTitle")}
-              items={[{ label: t("statusLabel"), value: t("warmupMessage") }]}
-            />
-          ) : null}
+          {loadingOriginal ? <StatusPanel message={t("warmupMessage")} /> : null}
           {originalResult ? (
             <ResultPanel title={t("originalAssemblyResultsTitle")} items={originalResultsList} />
           ) : null}
@@ -485,6 +483,7 @@ export default function TiresPage() {
               <>
                 <SelectField
                   label={t("widthLabel")}
+                  unitLabel="mm"
                   value={newInputs.width}
                   onChange={(value) =>
                     updateNew(resetDependent({ ...newInputs, width: value }, "width"))
@@ -498,6 +497,7 @@ export default function TiresPage() {
                 />
                 <SelectField
                   label={t("aspectLabel")}
+                  unitLabel="%"
                   value={newInputs.aspect}
                   onChange={(value) => updateNew({ aspect: value })}
                   placeholder={t("selectPlaceholder")}
@@ -554,12 +554,7 @@ export default function TiresPage() {
               {loadingNew ? t("loading") : t("calculate")}
             </Button>
           </div>
-          {loadingNew ? (
-            <ResultPanel
-              title={t("statusTitle")}
-              items={[{ label: t("statusLabel"), value: t("warmupMessage") }]}
-            />
-          ) : null}
+          {loadingNew ? <StatusPanel message={t("warmupMessage")} /> : null}
           {newResult ? (
             <ResultPanel title={t("newAssemblyResultsTitle")} items={newResultsList} />
           ) : null}
