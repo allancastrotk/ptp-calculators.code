@@ -1,5 +1,7 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 
+import { Button } from "../components/Button";
+import { Card } from "../components/Card";
 import { ErrorBanner } from "../components/ErrorBanner";
 import { InputField } from "../components/InputField";
 import { Layout } from "../components/Layout";
@@ -29,8 +31,6 @@ type DisplacementResponse = {
   meta: { version: string; timestamp: string; source: string };
 };
 
-const ORIGINAL_STORAGE_KEY = "ptp:displacement:originalResult:v1";
-
 type ResultItem = { label: string; value: string };
 
 export default function DisplacementPage() {
@@ -53,27 +53,6 @@ export default function DisplacementPage() {
   const [newResult, setNewResult] = useState<DisplacementResponse | null>(null);
   const abortOriginalRef = useRef<AbortController | null>(null);
   const abortNewRef = useRef<AbortController | null>(null);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const stored = sessionStorage.getItem(ORIGINAL_STORAGE_KEY);
-    if (!stored) return;
-    try {
-      const parsed = JSON.parse(stored) as DisplacementResponse;
-      setOriginalResult(parsed);
-    } catch {
-      sessionStorage.removeItem(ORIGINAL_STORAGE_KEY);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (originalResult) {
-      sessionStorage.setItem(ORIGINAL_STORAGE_KEY, JSON.stringify(originalResult));
-    } else {
-      sessionStorage.removeItem(ORIGINAL_STORAGE_KEY);
-    }
-  }, [originalResult]);
 
   const handleOriginalSubmit = async () => {
     setErrorOriginal(null);
@@ -229,10 +208,12 @@ export default function DisplacementPage() {
   };
 
   return (
-    <Layout title={t("displacement")} unitSystem={unitSystem} onUnitChange={setUnitSystem}>
-      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-        <div className="card">
-          <div style={{ fontWeight: 600, marginBottom: 8 }}>{t("originalSection")}</div>
+    <Layout title={t("displacement")} unitSystem={unitSystem} onUnitChange={setUnitSystem} variant="pilot">
+      <div className="ptp-stack">
+        <Card className="ptp-stack">
+          <div className="ptp-section-header">
+            <div className="ptp-section-title">{t("originalSection")}</div>
+          </div>
           {errorOriginal ? <ErrorBanner message={errorOriginal} /> : null}
           <div className="grid">
             <InputField
@@ -241,6 +222,7 @@ export default function DisplacementPage() {
               placeholder={unitSystem === "imperial" ? "2.28" : "58.0"}
               value={originalBore}
               onChange={setOriginalBore}
+              inputMode="decimal"
               error={fieldErrorsOriginal.bore}
             />
             <InputField
@@ -249,6 +231,7 @@ export default function DisplacementPage() {
               placeholder={unitSystem === "imperial" ? "1.97" : "50.0"}
               value={originalStroke}
               onChange={setOriginalStroke}
+              inputMode="decimal"
               error={fieldErrorsOriginal.stroke}
             />
             <InputField
@@ -256,49 +239,47 @@ export default function DisplacementPage() {
               placeholder={"4"}
               value={originalCylinders}
               onChange={setOriginalCylinders}
+              inputMode="numeric"
               error={fieldErrorsOriginal.cylinders}
             />
             <InputField
               label={t("compareDeclaredLabel")}
               unitLabel="cc"
               placeholder={"528.4"}
+              helper={t("compareDeclaredHelp")}
               value={baselineCc}
               onChange={setBaselineCc}
+              inputMode="decimal"
               error={fieldErrorsOriginal.baseline_cc}
             />
           </div>
-          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-            <button
-              className="button"
-              type="button"
-              onClick={handleOriginalSubmit}
-              disabled={loadingOriginal}
-            >
+          <div className="ptp-actions">
+            <Button type="button" onClick={handleOriginalSubmit} disabled={loadingOriginal}>
               {loadingOriginal ? t("loading") : t("calculateOriginal")}
-            </button>
-            <button className="button secondary" type="button" onClick={handleClear}>
+            </Button>
+            <Button type="button" variant="secondary" onClick={handleClear}>
               {t("clear")}
-            </button>
+            </Button>
           </div>
           {loadingOriginal ? <LoadingState /> : null}
           {originalResult ? (
             <ResultPanel title={t("originalResultsTitle")} items={originalResultsList} />
           ) : null}
           {originalResult ? (
-            <div className="card">
-              <div style={{ fontWeight: 600, marginBottom: 8 }}>
-                {t("normalizedInputsTitle")}
-              </div>
+            <Card>
+              <div className="ptp-card__title">{t("normalizedInputsTitle")}</div>
               <div className="subtitle">
                 Bore: {originalResult.normalized_inputs.bore_mm.toFixed(2)} | Stroke:{" "}
                 {originalResult.normalized_inputs.stroke_mm.toFixed(2)} | Cylinders:{" "}
                 {originalResult.normalized_inputs.cylinders}
               </div>
-            </div>
+            </Card>
           ) : null}
-        </div>
-        <div className="card">
-          <div style={{ fontWeight: 600, marginBottom: 8 }}>{t("newSection")}</div>
+        </Card>
+        <Card className="ptp-stack">
+          <div className="ptp-section-header">
+            <div className="ptp-section-title">{t("newSection")}</div>
+          </div>
           {errorNew ? <ErrorBanner message={errorNew} /> : null}
           <div className="grid">
             <InputField
@@ -307,6 +288,7 @@ export default function DisplacementPage() {
               placeholder={unitSystem === "imperial" ? "2.52" : "64.0"}
               value={newBore}
               onChange={setNewBore}
+              inputMode="decimal"
               error={fieldErrorsNew.bore}
             />
             <InputField
@@ -315,6 +297,7 @@ export default function DisplacementPage() {
               placeholder={unitSystem === "imperial" ? "2.13" : "54.0"}
               value={newStroke}
               onChange={setNewStroke}
+              inputMode="decimal"
               error={fieldErrorsNew.stroke}
             />
             <InputField
@@ -322,28 +305,19 @@ export default function DisplacementPage() {
               placeholder={"4"}
               value={newCylinders}
               onChange={setNewCylinders}
+              inputMode="numeric"
               error={fieldErrorsNew.cylinders}
             />
           </div>
-          {!originalResult ? <div className="subtitle">{t("compareHint")}</div> : null}
-          <button className="button" type="button" onClick={handleNewSubmit} disabled={loadingNew}>
-            {loadingNew ? t("loading") : t("calculateNew")}
-          </button>
+          {!originalResult ? <div className="ptp-field__helper">{t("compareHint")}</div> : null}
+          <div className="ptp-actions">
+            <Button type="button" onClick={handleNewSubmit} disabled={loadingNew}>
+              {loadingNew ? t("loading") : t("calculateNew")}
+            </Button>
+          </div>
           {loadingNew ? <LoadingState /> : null}
           {newResult ? <ResultPanel title={t("newResultsTitle")} items={newResultsList} /> : null}
-          {newResult ? (
-            <div className="card">
-              <div style={{ fontWeight: 600, marginBottom: 8 }}>
-                {t("normalizedInputsTitle")}
-              </div>
-              <div className="subtitle">
-                Bore: {newResult.normalized_inputs.bore_mm.toFixed(2)} | Stroke:{" "}
-                {newResult.normalized_inputs.stroke_mm.toFixed(2)} | Cylinders:{" "}
-                {newResult.normalized_inputs.cylinders}
-              </div>
-            </div>
-          ) : null}
-        </div>
+        </Card>
         {comparisonItems.length > 0 ? (
           <ResultPanel title={t("comparisonTitle")} items={comparisonItems} />
         ) : null}

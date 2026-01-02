@@ -200,7 +200,7 @@ export default function DisplacementNewWidget() {
   }, [baseline, result]);
 
   return (
-    <Layout title={t("displacement")} hideHeader hideFooter>
+    <Layout title={t("displacement")} hideHeader hideFooter variant="pilot">
       <div className="ptp-stack">
         {pageId ? null : (
           <Card>
@@ -242,7 +242,12 @@ export default function DisplacementNewWidget() {
               error={fieldErrors.cylinders}
             />
           </div>
-          <div className="ptp-actions">
+          <div className="ptp-actions ptp-actions--between">
+            {!baseline && !result ? (
+              <div className="ptp-field__helper">{t("compareHintWidget")}</div>
+            ) : (
+              <span />
+            )}
             <Button type="button" onClick={handleSubmit} disabled={loading}>
               {loading ? t("loading") : t("calculateNew")}
             </Button>
@@ -257,12 +262,7 @@ export default function DisplacementNewWidget() {
         </Card>
         {comparisonItems.length > 0 ? (
           <ResultPanel title={t("comparisonTitle")} items={comparisonItems} />
-        ) : (
-          <ResultPanel
-            title={t("comparisonTitle")}
-            items={[{ label: t("comparisonStatusLabel"), value: t("compareHintWidget") }]}
-          />
-        )}
+        ) : null}
       </div>
     </Layout>
   );

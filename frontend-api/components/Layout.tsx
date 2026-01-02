@@ -6,6 +6,8 @@ import { HeaderBar } from "./HeaderBar";
 import { UnitToggleButton } from "./UnitToggleButton";
 import { UnitSystem } from "./UnitSystemSwitch";
 
+type LayoutVariant = "pilot" | "default";
+
 export function Layout({
   title,
   subtitle,
@@ -14,6 +16,7 @@ export function Layout({
   children,
   hideHeader = false,
   hideFooter = false,
+  variant = "default",
 }: {
   title: string;
   subtitle?: string;
@@ -22,15 +25,17 @@ export function Layout({
   children: React.ReactNode;
   hideHeader?: boolean;
   hideFooter?: boolean;
+  variant?: LayoutVariant;
 }) {
   const { t } = useI18n();
+  const variantClass = variant === "pilot" ? "ptp-variant-pilot" : "";
 
   return (
     <>
       <Head>
         <title>{title}</title>
       </Head>
-      <main className="ptp-shell">
+      <main className={["ptp-shell", variantClass].filter(Boolean).join(" ")}>
         <div className="ptp-container">
           {hideHeader ? null : (
             <HeaderBar

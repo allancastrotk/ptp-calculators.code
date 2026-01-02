@@ -175,7 +175,7 @@ export default function DisplacementOriginalWidget() {
   }, [result]);
 
   return (
-    <Layout title={t("displacement")} hideHeader hideFooter>
+    <Layout title={t("displacement")} hideHeader hideFooter variant="pilot">
       <div className="ptp-stack">
         <Card className="ptp-stack">
           <div className="ptp-section-header">
