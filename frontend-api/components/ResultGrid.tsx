@@ -3,7 +3,7 @@ import React from "react";
 export function ResultGrid({
   items,
 }: {
-  items: { label: string; value: string | number }[];
+  items: { label: React.ReactNode; value: React.ReactNode }[];
 }) {
   return (
     <div className="ptp-results-grid">

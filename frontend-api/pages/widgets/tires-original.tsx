@@ -6,9 +6,10 @@ import { Card } from "../../components/Card";
 import { ErrorBanner } from "../../components/ErrorBanner";
 import { InputField } from "../../components/InputField";
 import { Layout } from "../../components/Layout";
-import { LoadingState } from "../../components/LoadingState";
 import { ResultPanel } from "../../components/ResultPanel";
 import { SelectField } from "../../components/SelectField";
+import { UnitSystem } from "../../components/UnitSystemSwitch";
+import { UnitToggleButton } from "../../components/UnitToggleButton";
 import { postJson, ApiError } from "../../lib/api";
 import { postEmbedMessage } from "../../lib/embed";
 import { useI18n } from "../../lib/i18n";
@@ -77,6 +78,7 @@ export default function TiresOriginalWidget() {
   }, [router.query.pageId]);
 
   const [inputs, setInputs] = useState<TireInputs>(createEmptyInputs);
+  const [unitSystem, setUnitSystem] = useState<UnitSystem>("metric");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [retryHint, setRetryHint] = useState<string | null>(null);
@@ -85,9 +87,7 @@ export default function TiresOriginalWidget() {
   const [result, setResult] = useState<TiresResponse | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
-  const isEnglish = language === "en_US";
-  const unitSystem = isEnglish ? "imperial" : "metric";
-  const unitLabel = isEnglish ? "in" : "mm";
+  const unitLabel = unitSystem === "imperial" ? "in" : "mm";
   const toNumber = (value: string) => Number(value.replace(",", "."));
   const hasFlotation = (vehicleType: VehicleType | "") =>
     vehicleType === "LightTruck" || vehicleType === "Kart" || vehicleType === "Kartcross";
@@ -226,14 +226,27 @@ export default function TiresOriginalWidget() {
 
   const resultsList = useMemo((): ResultItem[] => {
     if (!result) return [];
-    return [
+    const items = [
       {
         label: t("tiresDiameterLabel"),
         value: `${result.results.diameter.toFixed(2)} ${unitLabel}`,
       },
       { label: t("tiresWidthLabel"), value: `${result.results.width.toFixed(2)} ${unitLabel}` },
     ];
-  }, [result, t, unitLabel]);
+
+    if (!inputs.flotationEnabled && inputs.width && inputs.rimWidth) {
+      const rimWidthMm = toNumber(inputs.rimWidth) * 25.4;
+      const widthMm = toNumber(inputs.width);
+      const deltaMm = widthMm - rimWidthMm;
+      const delta = unitSystem === "imperial" ? deltaMm / 25.4 : deltaMm;
+      items.push({
+        label: t("tireRimDeltaLabel"),
+        value: `${delta.toFixed(2)} ${unitLabel}`,
+      });
+    }
+
+    return items;
+  }, [inputs, result, t, unitLabel, unitSystem]);
 
   const options = buildOptions(inputs.vehicleType);
 
@@ -242,7 +255,8 @@ export default function TiresOriginalWidget() {
       <div className="ptp-stack">
         <Card className="ptp-stack">
           <div className="ptp-section-header">
-            <div className="ptp-section-title">{t("originalSection")}</div>
+            <div className="ptp-section-title">{t("originalAssemblySection")}</div>
+            <UnitToggleButton value={unitSystem} onChange={setUnitSystem} />
           </div>
           {error ? <ErrorBanner message={error} /> : null}
           {retryHint ? <div className="ptp-field__helper">{retryHint}</div> : null}
@@ -338,9 +352,16 @@ export default function TiresOriginalWidget() {
               {loading ? t("loading") : t("calculate")}
             </Button>
           </div>
-          {loading ? <LoadingState /> : null}
+          {loading ? (
+            <ResultPanel
+              title={t("statusTitle")}
+              items={[{ label: t("statusLabel"), value: t("warmupMessage") }]}
+            />
+          ) : null}
           {warmupNotice ? <div className="ptp-card">{warmupNotice}</div> : null}
-          {result ? <ResultPanel title={t("originalResultsTitle")} items={resultsList} /> : null}
+          {result ? (
+            <ResultPanel title={t("originalAssemblyResultsTitle")} items={resultsList} />
+          ) : null}
         </Card>
       </div>
     </Layout>

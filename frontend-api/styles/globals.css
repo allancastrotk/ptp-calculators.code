@@ -319,6 +319,32 @@ body.ptp-embed .ptp-subtitle {
   font-size: 12px;
 }
 
+.ptp-result__label-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ptp-diff-icon {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.ptp-diff-icon--increase,
+.ptp-diff-value--increase {
+  color: #6cc36c;
+}
+
+.ptp-diff-icon--decrease,
+.ptp-diff-value--decrease {
+  color: #ff7b7b;
+}
+
+.ptp-diff-icon--no-change,
+.ptp-diff-value--no-change {
+  color: var(--ptp-muted);
+}
+
 .ptp-result__value {
   font-weight: 700;
   font-size: 18px;

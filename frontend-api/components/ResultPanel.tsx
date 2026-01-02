@@ -8,7 +8,7 @@ export function ResultPanel({
   items,
 }: {
   title: string;
-  items: { label: string; value: string | number }[];
+  items: { label: React.ReactNode; value: React.ReactNode }[];
 }) {
   return (
     <Card className="ptp-stack">

@@ -6,11 +6,11 @@ import { Card } from "../../components/Card";
 import { ErrorBanner } from "../../components/ErrorBanner";
 import { InputField } from "../../components/InputField";
 import { Layout } from "../../components/Layout";
-import { LoadingState } from "../../components/LoadingState";
 import { ResultPanel } from "../../components/ResultPanel";
 import { SelectField } from "../../components/SelectField";
+import { UnitSystem } from "../../components/UnitSystemSwitch";
+import { UnitToggleButton } from "../../components/UnitToggleButton";
 import { postJson, ApiError } from "../../lib/api";
-import { formatNumericComparison } from "../../lib/comparison";
 import { useI18n } from "../../lib/i18n";
 import { TIRES_DB, VEHICLE_TYPES, VehicleType, getRimData, getWidthEntry } from "../../lib/tiresDb";
 
@@ -79,6 +79,7 @@ export default function TiresNewWidget() {
   }, [router.query.pageId]);
 
   const [inputs, setInputs] = useState<TireInputs>(createEmptyInputs);
+  const [unitSystem, setUnitSystem] = useState<UnitSystem>("metric");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [retryHint, setRetryHint] = useState<string | null>(null);
@@ -88,9 +89,7 @@ export default function TiresNewWidget() {
   const [baseline, setBaseline] = useState<TiresResponse | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
-  const isEnglish = language === "en_US";
-  const unitSystem = isEnglish ? "imperial" : "metric";
-  const unitLabel = isEnglish ? "in" : "mm";
+  const unitLabel = unitSystem === "imperial" ? "in" : "mm";
   const toNumber = (value: string) => Number(value.replace(",", "."));
   const hasFlotation = (vehicleType: VehicleType | "") =>
     vehicleType === "LightTruck" || vehicleType === "Kart" || vehicleType === "Kartcross";
@@ -238,42 +237,77 @@ export default function TiresNewWidget() {
 
   const resultsList = useMemo((): ResultItem[] => {
     if (!result) return [];
-    return [
+    const items = [
       {
         label: t("tiresDiameterLabel"),
         value: `${result.results.diameter.toFixed(2)} ${unitLabel}`,
       },
       { label: t("tiresWidthLabel"), value: `${result.results.width.toFixed(2)} ${unitLabel}` },
     ];
-  }, [result, t, unitLabel]);
+
+    if (!inputs.flotationEnabled && inputs.width && inputs.rimWidth) {
+      const rimWidthMm = toNumber(inputs.rimWidth) * 25.4;
+      const widthMm = toNumber(inputs.width);
+      const deltaMm = widthMm - rimWidthMm;
+      const delta = unitSystem === "imperial" ? deltaMm / 25.4 : deltaMm;
+      items.push({
+        label: t("tireRimDeltaLabel"),
+        value: `${delta.toFixed(2)} ${unitLabel}`,
+      });
+    }
+
+    return items;
+  }, [inputs, result, t, unitLabel, unitSystem]);
+
+  const renderDiffLabel = (label: string, diff: number) => {
+    let state = "no-change";
+    let icon = "▬";
+    if (diff > 0) {
+      state = "increase";
+      icon = "▲";
+    } else if (diff < 0) {
+      state = "decrease";
+      icon = "▼";
+    }
+    return (
+      <span className="ptp-result__label-row">
+        {label}
+        <span className={`ptp-diff-icon ptp-diff-icon--${state}`}>{icon}</span>
+      </span>
+    );
+  };
+
+  const renderDiffValue = (diff: number, percent: number | null) => {
+    let state = "no-change";
+    if (diff > 0) state = "increase";
+    if (diff < 0) state = "decrease";
+    const percentText =
+      percent === null ? t("notApplicableLabel") : `${percent.toFixed(2)}%`;
+    return (
+      <span className={`ptp-diff-value--${state}`}>
+        {t("differenceLabel")}: {diff.toFixed(2)} {unitLabel} [{percentText}]
+      </span>
+    );
+  };
 
   const comparisonItems = useMemo((): ResultItem[] => {
     if (!baseline || !result) return [];
-    const labels = {
-      original: t("originalValueLabel"),
-      newValue: t("newValueLabel"),
-      diff: t("diffValueLabel"),
-      diffPercent: t("diffPercentLabel"),
-      na: t("notApplicableLabel"),
-    };
+    const diameterDiff = result.results.diameter - baseline.results.diameter;
+    const diameterPercent = baseline.results.diameter
+      ? (diameterDiff / baseline.results.diameter) * 100
+      : null;
+    const widthDiff = result.results.width - baseline.results.width;
+    const widthPercent = baseline.results.width
+      ? (widthDiff / baseline.results.width) * 100
+      : null;
     return [
       {
-        label: t("tiresDiameterLabel"),
-        value: formatNumericComparison(
-          baseline.results.diameter,
-          result.results.diameter,
-          unitLabel,
-          labels
-        ),
+        label: renderDiffLabel(t("tiresDiameterLabel"), diameterDiff),
+        value: renderDiffValue(diameterDiff, diameterPercent),
       },
       {
-        label: t("tiresWidthLabel"),
-        value: formatNumericComparison(
-          baseline.results.width,
-          result.results.width,
-          unitLabel,
-          labels
-        ),
+        label: renderDiffLabel(t("tiresWidthLabel"), widthDiff),
+        value: renderDiffValue(widthDiff, widthPercent),
       },
     ];
   }, [baseline, result, t, unitLabel]);
@@ -290,7 +324,8 @@ export default function TiresNewWidget() {
         )}
         <Card className="ptp-stack">
           <div className="ptp-section-header">
-            <div className="ptp-section-title">{t("newSection")}</div>
+            <div className="ptp-section-title">{t("newAssemblySection")}</div>
+            <UnitToggleButton value={unitSystem} onChange={setUnitSystem} />
           </div>
           {error ? <ErrorBanner message={error} /> : null}
           {retryHint ? <div className="ptp-field__helper">{retryHint}</div> : null}
@@ -387,11 +422,18 @@ export default function TiresNewWidget() {
               {loading ? t("loading") : t("calculate")}
             </Button>
           </div>
-          {loading ? <LoadingState /> : null}
+          {loading ? (
+            <ResultPanel
+              title={t("statusTitle")}
+              items={[{ label: t("statusLabel"), value: t("warmupMessage") }]}
+            />
+          ) : null}
           {warmupNotice ? <div className="ptp-card">{warmupNotice}</div> : null}
-          {result ? <ResultPanel title={t("newResultsTitle")} items={resultsList} /> : null}
+          {result ? (
+            <ResultPanel title={t("newAssemblyResultsTitle")} items={resultsList} />
+          ) : null}
           {comparisonItems.length > 0 ? (
-            <ResultPanel title={t("comparisonNewTitle")} items={comparisonItems} />
+            <ResultPanel title={t("comparisonAssemblyTitle")} items={comparisonItems} />
           ) : null}
         </Card>
       </div>
