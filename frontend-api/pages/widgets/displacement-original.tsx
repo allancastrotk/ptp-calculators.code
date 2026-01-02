@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 
 import { Button } from "../../components/Button";
 import { Card } from "../../components/Card";
+import { CompressionToggleButton } from "../../components/CompressionToggleButton";
 import { ErrorBanner } from "../../components/ErrorBanner";
 import { InputField } from "../../components/InputField";
 import { Layout } from "../../components/Layout";
@@ -29,12 +30,42 @@ type DisplacementResponse = {
     displacement_ci: number;
     geometry: string;
     diff_percent?: number | null;
+    compression?: {
+      compression_ratio: number;
+      clearance_volume: number;
+      swept_volume: number;
+      trapped_volume?: number | null;
+      crankcase_compression_ratio?: number | null;
+      compression_mode: "four_stroke" | "two_stroke";
+    } | null;
   };
   warnings?: string[];
   meta: { version: string; timestamp: string; source: string };
 };
 
 type ResultItem = { label: React.ReactNode; value: React.ReactNode };
+
+type CompressionInputs = {
+  chamberVolume: string;
+  gasketThickness: string;
+  gasketBore: string;
+  deckHeight: string;
+  pistonVolume: string;
+  exhaustPortHeight: string;
+  transferPortHeight: string;
+  crankcaseVolume: string;
+};
+
+const createCompressionInputs = (): CompressionInputs => ({
+  chamberVolume: "",
+  gasketThickness: "",
+  gasketBore: "",
+  deckHeight: "",
+  pistonVolume: "",
+  exhaustPortHeight: "",
+  transferPortHeight: "",
+  crankcaseVolume: "",
+});
 
 type OriginalMessage = {
   type: "ptp:calc:displacement:originalResult";
@@ -69,6 +100,10 @@ export default function DisplacementOriginalWidget() {
   const [stroke, setStroke] = useState("");
   const [cylinders, setCylinders] = useState("");
   const [baselineCc, setBaselineCc] = useState("");
+  const [compressionEnabled, setCompressionEnabled] = useState(false);
+  const [compressionInputs, setCompressionInputs] = useState<CompressionInputs>(
+    createCompressionInputs
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [retryHint, setRetryHint] = useState<string | null>(null);
@@ -78,8 +113,11 @@ export default function DisplacementOriginalWidget() {
   const abortRef = useRef<AbortController | null>(null);
 
   const toNumber = (value: string) => Number(value.replace(",", "."));
+  const volumeFactor = 16.387064;
   const convertLength = (value: number, from: UnitSystem, to: UnitSystem) =>
     from === to ? value : from === "metric" ? value / 25.4 : value * 25.4;
+  const convertVolume = (value: number, from: UnitSystem, to: UnitSystem) =>
+    from === to ? value : from === "metric" ? value / volumeFactor : value * volumeFactor;
   const formatConverted = (value: number) => {
     const rounded = Number(value.toFixed(2));
     return Number.isNaN(rounded) ? "" : String(rounded);
@@ -90,10 +128,28 @@ export default function DisplacementOriginalWidget() {
     if (Number.isNaN(numeric)) return value;
     return formatConverted(convertLength(numeric, from, to));
   };
+  const convertInputVolume = (value: string, from: UnitSystem, to: UnitSystem) => {
+    if (!value) return value;
+    const numeric = toNumber(value);
+    if (Number.isNaN(numeric)) return value;
+    return formatConverted(convertVolume(numeric, from, to));
+  };
   const handleUnitChange = (nextUnit: UnitSystem) => {
     if (nextUnit === unitSystem) return;
     setBore((value) => convertInput(value, unitSystem, nextUnit));
     setStroke((value) => convertInput(value, unitSystem, nextUnit));
+    setBaselineCc((value) => convertInputVolume(value, unitSystem, nextUnit));
+    setCompressionInputs((current) => ({
+      ...current,
+      chamberVolume: convertInputVolume(current.chamberVolume, unitSystem, nextUnit),
+      gasketThickness: convertInput(current.gasketThickness, unitSystem, nextUnit),
+      gasketBore: convertInput(current.gasketBore, unitSystem, nextUnit),
+      deckHeight: convertInput(current.deckHeight, unitSystem, nextUnit),
+      pistonVolume: convertInputVolume(current.pistonVolume, unitSystem, nextUnit),
+      exhaustPortHeight: convertInput(current.exhaustPortHeight, unitSystem, nextUnit),
+      transferPortHeight: convertInput(current.transferPortHeight, unitSystem, nextUnit),
+      crankcaseVolume: convertInputVolume(current.crankcaseVolume, unitSystem, nextUnit),
+    }));
     setUnitSystem(nextUnit);
   };
 
@@ -101,6 +157,22 @@ export default function DisplacementOriginalWidget() {
     const key = `geometry_${value}` as const;
     return t(key);
   };
+
+  const lengthUnit = unitSystem === "imperial" ? "in" : "mm";
+  const volumeUnit = unitSystem === "imperial" ? "cu in" : "cc";
+
+  const buildCompressionPayload = (inputs: CompressionInputs) => ({
+    chamber_volume: toNumber(inputs.chamberVolume),
+    gasket_thickness: toNumber(inputs.gasketThickness),
+    gasket_bore: toNumber(inputs.gasketBore),
+    deck_height: toNumber(inputs.deckHeight),
+    piston_volume: toNumber(inputs.pistonVolume),
+    exhaust_port_height: inputs.exhaustPortHeight ? toNumber(inputs.exhaustPortHeight) : undefined,
+    transfer_port_height: inputs.transferPortHeight
+      ? toNumber(inputs.transferPortHeight)
+      : undefined,
+    crankcase_volume: inputs.crankcaseVolume ? toNumber(inputs.crankcaseVolume) : undefined,
+  });
 
   const postWithRetry = async (payload: unknown, signal: AbortSignal) => {
     for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt += 1) {
@@ -137,6 +209,18 @@ export default function DisplacementOriginalWidget() {
     if (!bore) nextErrors.bore = t("required");
     if (!stroke) nextErrors.stroke = t("required");
     if (!cylinders) nextErrors.cylinders = t("required");
+    if (compressionEnabled) {
+      if (!compressionInputs.chamberVolume)
+        nextErrors["compression.chamber_volume"] = t("required");
+      if (!compressionInputs.gasketThickness)
+        nextErrors["compression.gasket_thickness"] = t("required");
+      if (!compressionInputs.gasketBore)
+        nextErrors["compression.gasket_bore"] = t("required");
+      if (!compressionInputs.deckHeight)
+        nextErrors["compression.deck_height"] = t("required");
+      if (!compressionInputs.pistonVolume)
+        nextErrors["compression.piston_volume"] = t("required");
+    }
     if (Object.keys(nextErrors).length > 0) {
       setFieldErrors(nextErrors);
       return;
@@ -158,6 +242,7 @@ export default function DisplacementOriginalWidget() {
           stroke: toNumber(stroke),
           cylinders: toNumber(cylinders),
           baseline_cc: baselineCc ? toNumber(baselineCc) : undefined,
+          compression: compressionEnabled ? buildCompressionPayload(compressionInputs) : undefined,
         },
       };
 
@@ -198,6 +283,42 @@ export default function DisplacementOriginalWidget() {
       { label: t("geometryLabel"), value: formatGeometry(result.results.geometry) },
     ];
   }, [result, t]);
+
+  const compressionResultsList = useMemo((): ResultItem[] => {
+    const compression = result?.results.compression;
+    if (!compression) return [];
+    return [
+      {
+        label: t("compressionRatioLabel"),
+        value: compression.compression_ratio.toFixed(2),
+      },
+      {
+        label: t("clearanceVolumeLabel"),
+        value: `${compression.clearance_volume.toFixed(2)} ${volumeUnit}`,
+      },
+      {
+        label: t("sweptVolumeLabel"),
+        value: `${compression.swept_volume.toFixed(2)} ${volumeUnit}`,
+      },
+      ...(compression.trapped_volume !== undefined && compression.trapped_volume !== null
+        ? [
+            {
+              label: t("trappedVolumeLabel"),
+              value: `${compression.trapped_volume.toFixed(2)} ${volumeUnit}`,
+            },
+          ]
+        : []),
+      ...(compression.crankcase_compression_ratio !== undefined &&
+      compression.crankcase_compression_ratio !== null
+        ? [
+            {
+              label: t("crankcaseCompressionLabel"),
+              value: compression.crankcase_compression_ratio.toFixed(2),
+            },
+          ]
+        : []),
+    ];
+  }, [result, t, volumeUnit]);
 
   const renderDiffLabel = (label: string, diff: number) => {
     let state = "no-change";
@@ -246,6 +367,14 @@ export default function DisplacementOriginalWidget() {
     ];
   }, [result, t]);
 
+  const resultSections =
+    compressionResultsList.length > 0
+      ? [
+          { items: resultsList },
+          { title: t("compressionSectionTitle"), items: compressionResultsList },
+        ]
+      : undefined;
+
   return (
     <Layout title={t("displacement")} hideHeader hideFooter variant="pilot">
       <div className="ptp-stack">
@@ -285,7 +414,7 @@ export default function DisplacementOriginalWidget() {
             />
             <InputField
               label={t("compareDeclaredLabel")}
-              unitLabel="cc"
+              unitLabel={volumeUnit}
               placeholder={"528.4"}
               helper={t("compareDeclaredHelp")}
               value={baselineCc}
@@ -294,6 +423,120 @@ export default function DisplacementOriginalWidget() {
               error={fieldErrors.baseline_cc}
             />
           </div>
+          <div className="ptp-actions ptp-actions--between ptp-actions--spaced">
+            <div className="ptp-actions__left">
+              <CompressionToggleButton
+                value={compressionEnabled}
+                onChange={setCompressionEnabled}
+              />
+            </div>
+          </div>
+          {compressionEnabled ? (
+            <>
+              <div className="ptp-divider">
+                <span>{t("compressionSectionTitle")}</span>
+              </div>
+              <div className="grid">
+                <InputField
+                  label={t("chamberVolumeLabel")}
+                  unitLabel={volumeUnit}
+                  placeholder={unitSystem === "imperial" ? "2.40" : "39.3"}
+                  value={compressionInputs.chamberVolume}
+                  onChange={(value) =>
+                    setCompressionInputs((current) => ({ ...current, chamberVolume: value }))
+                  }
+                  inputMode="decimal"
+                  error={fieldErrors["compression.chamber_volume"]}
+                />
+                <InputField
+                  label={t("gasketThicknessLabel")}
+                  unitLabel={lengthUnit}
+                  placeholder={unitSystem === "imperial" ? "0.04" : "1.0"}
+                  value={compressionInputs.gasketThickness}
+                  onChange={(value) =>
+                    setCompressionInputs((current) => ({ ...current, gasketThickness: value }))
+                  }
+                  inputMode="decimal"
+                  error={fieldErrors["compression.gasket_thickness"]}
+                />
+                <InputField
+                  label={t("gasketBoreLabel")}
+                  unitLabel={lengthUnit}
+                  placeholder={unitSystem === "imperial" ? "2.72" : "69.0"}
+                  value={compressionInputs.gasketBore}
+                  onChange={(value) =>
+                    setCompressionInputs((current) => ({ ...current, gasketBore: value }))
+                  }
+                  inputMode="decimal"
+                  error={fieldErrors["compression.gasket_bore"]}
+                />
+                <InputField
+                  label={t("deckHeightLabel")}
+                  unitLabel={lengthUnit}
+                  placeholder={unitSystem === "imperial" ? "0.00" : "0.0"}
+                  value={compressionInputs.deckHeight}
+                  onChange={(value) =>
+                    setCompressionInputs((current) => ({ ...current, deckHeight: value }))
+                  }
+                  inputMode="decimal"
+                  error={fieldErrors["compression.deck_height"]}
+                />
+                <InputField
+                  label={t("pistonVolumeLabel")}
+                  unitLabel={volumeUnit}
+                  placeholder={unitSystem === "imperial" ? "-0.12" : "-2.0"}
+                  value={compressionInputs.pistonVolume}
+                  onChange={(value) =>
+                    setCompressionInputs((current) => ({ ...current, pistonVolume: value }))
+                  }
+                  inputMode="decimal"
+                  error={fieldErrors["compression.piston_volume"]}
+                />
+                <InputField
+                  label={t("exhaustPortHeightLabel")}
+                  unitLabel={lengthUnit}
+                  placeholder={unitSystem === "imperial" ? "1.57" : "40.0"}
+                  value={compressionInputs.exhaustPortHeight}
+                  onChange={(value) =>
+                    setCompressionInputs((current) => ({
+                      ...current,
+                      exhaustPortHeight: value,
+                    }))
+                  }
+                  inputMode="decimal"
+                  error={fieldErrors["compression.exhaust_port_height"]}
+                />
+                <InputField
+                  label={t("transferPortHeightLabel")}
+                  unitLabel={lengthUnit}
+                  placeholder={unitSystem === "imperial" ? "1.89" : "48.0"}
+                  value={compressionInputs.transferPortHeight}
+                  onChange={(value) =>
+                    setCompressionInputs((current) => ({
+                      ...current,
+                      transferPortHeight: value,
+                    }))
+                  }
+                  inputMode="decimal"
+                  error={fieldErrors["compression.transfer_port_height"]}
+                />
+                <InputField
+                  label={t("crankcaseVolumeLabel")}
+                  unitLabel={volumeUnit}
+                  placeholder={unitSystem === "imperial" ? "2.44" : "40.0"}
+                  value={compressionInputs.crankcaseVolume}
+                  onChange={(value) =>
+                    setCompressionInputs((current) => ({
+                      ...current,
+                      crankcaseVolume: value,
+                    }))
+                  }
+                  inputMode="decimal"
+                  error={fieldErrors["compression.crankcase_volume"]}
+                />
+              </div>
+            </>
+          ) : null}
           <div className="ptp-actions">
             <Button type="button" onClick={handleSubmit} disabled={loading}>
               {loading ? t("loading") : t("calculate")}
@@ -306,7 +549,11 @@ export default function DisplacementOriginalWidget() {
             </div>
           ) : null}
           {result ? (
-            <ResultPanel title={t("originalAssemblyResultsTitle")} items={resultsList} />
+            <ResultPanel
+              title={t("originalAssemblyResultsTitle")}
+              items={resultsList}
+              sections={resultSections}
+            />
           ) : null}
           {comparisonItems.length > 0 ? (
             <ResultPanel title={t("comparisonDeclaredTitle")} items={comparisonItems} />

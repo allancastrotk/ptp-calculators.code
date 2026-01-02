@@ -3,6 +3,7 @@ from typing import Optional
 from pydantic import BaseModel, confloat
 
 from app.schemas.common import RequestBase, ResponseBase
+from app.schemas.compression import CompressionInputs, CompressionNormalizedInputs, CompressionResults
 
 
 class RLInputs(BaseModel):
@@ -10,6 +11,7 @@ class RLInputs(BaseModel):
     stroke: confloat(gt=0)
     rod_length: confloat(gt=0)
     baseline: Optional["RLBaselineInputs"] = None
+    compression: Optional[CompressionInputs] = None
 
 
 class RLBaselineInputs(BaseModel):
@@ -27,6 +29,7 @@ class RLNormalizedInputs(BaseModel):
     stroke_mm: float
     rod_length_mm: float
     baseline: Optional["RLNormalizedInputs"] = None
+    compression: Optional[CompressionNormalizedInputs] = None
 
 
 class RLResults(BaseModel):
@@ -37,6 +40,7 @@ class RLResults(BaseModel):
     smoothness: str
     diff_rl_percent: Optional[float] = None
     diff_displacement_percent: Optional[float] = None
+    compression: Optional[CompressionResults] = None
 
 
 class RLResponse(ResponseBase):

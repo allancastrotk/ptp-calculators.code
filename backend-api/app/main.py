@@ -3,6 +3,14 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from app.calculators.common import percent_diff
+from app.calculators.compression import (
+    swept_volume_cc,
+    gasket_volume_cc,
+    deck_volume_cc,
+    clearance_volume_cc,
+    compression_ratio,
+    trapped_swept_volume_cc,
+)
 from app.calculators.displacement import classify_geometry, calculate_displacement_cc
 from app.calculators.rl import (
     calculate_rl_ratio,
@@ -23,7 +31,14 @@ from app.calculators.tires import (
 )
 from app.data.tires_db import TIRES_DB
 from app.core.security import require_internal_key
-from app.core.units import cc_to_cuin, cc_to_liters, inches_to_mm, mm_to_inches, resolve_unit_system
+from app.core.units import (
+    cc_to_cuin,
+    cc_to_liters,
+    inches_to_mm,
+    mm_to_inches,
+    resolve_unit_system,
+    cuin_to_cc,
+)
 from app.schemas.common import ErrorResponse
 from app.schemas.displacement import (
     DisplacementRequest,
@@ -31,6 +46,7 @@ from app.schemas.displacement import (
     DisplacementNormalizedInputs,
     DisplacementResults,
 )
+from app.schemas.compression import CompressionNormalizedInputs, CompressionResults
 from app.schemas.rl import RLRequest, RLResponse, RLNormalizedInputs, RLResults
 from app.schemas.sprocket import (
     SprocketRequest,
@@ -94,19 +110,157 @@ def calc_displacement(payload: DisplacementRequest):
     if baseline_cc is not None:
         diff_percent = percent_diff(displacement_cc_raw, baseline_cc)
 
+    compression_results = None
+    if payload.inputs.compression:
+        compression = payload.inputs.compression
+        chamber_cc = compression.chamber_volume
+        gasket_thickness_mm = compression.gasket_thickness
+        gasket_bore_mm = compression.gasket_bore
+        deck_height_mm = compression.deck_height
+        piston_volume_cc = compression.piston_volume
+        exhaust_height_mm = compression.exhaust_port_height
+        transfer_height_mm = compression.transfer_port_height
+        crankcase_volume_cc = compression.crankcase_volume
+
+        if resolved_unit_system == "imperial":
+            chamber_cc = cuin_to_cc(chamber_cc)
+            piston_volume_cc = cuin_to_cc(piston_volume_cc)
+            gasket_thickness_mm = inches_to_mm(gasket_thickness_mm)
+            gasket_bore_mm = inches_to_mm(gasket_bore_mm)
+            deck_height_mm = inches_to_mm(deck_height_mm)
+            if exhaust_height_mm is not None:
+                exhaust_height_mm = inches_to_mm(exhaust_height_mm)
+            if transfer_height_mm is not None:
+                transfer_height_mm = inches_to_mm(transfer_height_mm)
+            if crankcase_volume_cc is not None:
+                crankcase_volume_cc = cuin_to_cc(crankcase_volume_cc)
+
+        if chamber_cc <= 0 or gasket_thickness_mm <= 0 or gasket_bore_mm <= 0:
+            response = ErrorResponse(
+                error_code="validation_error",
+                message="Invalid request payload.",
+                field_errors=[
+                    {"field": "inputs.compression", "reason": "invalid compression inputs"}
+                ],
+            )
+            return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=response.model_dump())
+
+        gasket_cc = gasket_volume_cc(gasket_bore_mm, gasket_thickness_mm)
+        deck_cc = deck_volume_cc(bore_mm, deck_height_mm)
+        clearance_cc = clearance_volume_cc(chamber_cc, gasket_cc, deck_cc, piston_volume_cc)
+        if clearance_cc <= 0:
+            response = ErrorResponse(
+                error_code="validation_error",
+                message="Invalid request payload.",
+                field_errors=[
+                    {"field": "inputs.compression", "reason": "clearance volume must be positive"}
+                ],
+            )
+            return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=response.model_dump())
+
+        swept_cc = swept_volume_cc(bore_mm, stroke_mm)
+        compression_mode = "four_stroke"
+        trapped_cc = None
+
+        port_heights = [value for value in [exhaust_height_mm, transfer_height_mm] if value]
+        if port_heights:
+            port_height_mm = min(port_heights)
+            if port_height_mm <= 0 or port_height_mm >= stroke_mm:
+                response = ErrorResponse(
+                    error_code="validation_error",
+                    message="Invalid request payload.",
+                    field_errors=[
+                        {
+                            "field": "inputs.compression",
+                            "reason": "invalid port height for 2T compression",
+                        }
+                    ],
+                )
+                return JSONResponse(
+                    status_code=status.HTTP_400_BAD_REQUEST, content=response.model_dump()
+                )
+            compression_mode = "two_stroke"
+            trapped_cc = trapped_swept_volume_cc(bore_mm, stroke_mm, port_height_mm)
+            swept_for_ratio = trapped_cc
+        else:
+            swept_for_ratio = swept_cc
+
+        ratio = compression_ratio(swept_for_ratio, clearance_cc)
+        crankcase_ratio = None
+        if compression_mode == "two_stroke" and crankcase_volume_cc:
+            crankcase_ratio = compression_ratio(swept_cc, crankcase_volume_cc)
+
+        if resolved_unit_system == "imperial":
+            swept_out = cc_to_cuin(swept_cc)
+            clearance_out = cc_to_cuin(clearance_cc)
+            trapped_out = cc_to_cuin(trapped_cc) if trapped_cc is not None else None
+        else:
+            swept_out = swept_cc
+            clearance_out = clearance_cc
+            trapped_out = trapped_cc
+
+        compression_results = CompressionResults(
+            compression_ratio=round(ratio, 2),
+            clearance_volume=round(clearance_out, 2),
+            swept_volume=round(swept_out, 2),
+            trapped_volume=round(trapped_out, 2) if trapped_out is not None else None,
+            crankcase_compression_ratio=round(crankcase_ratio, 2)
+            if crankcase_ratio is not None
+            else None,
+            compression_mode=compression_mode,
+        )
+
     results = DisplacementResults(
         displacement_cc=round(displacement_cc_raw, 2),
         displacement_l=round(cc_to_liters(displacement_cc_raw), 2),
         displacement_ci=round(cc_to_cuin(displacement_cc_raw), 2),
         geometry=geometry,
         diff_percent=round(diff_percent, 2) if diff_percent is not None else None,
+        compression=compression_results,
     )
+
+    compression_normalized = None
+    if payload.inputs.compression:
+        compression = payload.inputs.compression
+        chamber_cc = compression.chamber_volume
+        gasket_thickness_mm = compression.gasket_thickness
+        gasket_bore_mm = compression.gasket_bore
+        deck_height_mm = compression.deck_height
+        piston_volume_cc = compression.piston_volume
+        exhaust_height_mm = compression.exhaust_port_height
+        transfer_height_mm = compression.transfer_port_height
+        crankcase_volume_cc = compression.crankcase_volume
+
+        if resolved_unit_system == "imperial":
+            chamber_cc = cuin_to_cc(chamber_cc)
+            piston_volume_cc = cuin_to_cc(piston_volume_cc)
+            gasket_thickness_mm = inches_to_mm(gasket_thickness_mm)
+            gasket_bore_mm = inches_to_mm(gasket_bore_mm)
+            deck_height_mm = inches_to_mm(deck_height_mm)
+            if exhaust_height_mm is not None:
+                exhaust_height_mm = inches_to_mm(exhaust_height_mm)
+            if transfer_height_mm is not None:
+                transfer_height_mm = inches_to_mm(transfer_height_mm)
+            if crankcase_volume_cc is not None:
+                crankcase_volume_cc = cuin_to_cc(crankcase_volume_cc)
+
+        compression_normalized = CompressionNormalizedInputs(
+            chamber_volume=chamber_cc,
+            gasket_thickness=gasket_thickness_mm,
+            gasket_bore=gasket_bore_mm,
+            deck_height=deck_height_mm,
+            piston_volume=piston_volume_cc,
+            exhaust_port_height=exhaust_height_mm,
+            transfer_port_height=transfer_height_mm,
+            crankcase_volume=crankcase_volume_cc,
+        )
 
     normalized_inputs = DisplacementNormalizedInputs(
         bore_mm=bore_mm,
         stroke_mm=stroke_mm,
         cylinders=cylinders,
         baseline_cc=baseline_cc,
+        compression=compression_normalized,
     )
 
     return DisplacementResponse(
@@ -173,6 +327,106 @@ def calc_rl(payload: RLRequest):
             baseline=None,
         )
 
+    compression_results = None
+    if payload.inputs.compression:
+        compression = payload.inputs.compression
+        chamber_cc = compression.chamber_volume
+        gasket_thickness_mm = compression.gasket_thickness
+        gasket_bore_mm = compression.gasket_bore
+        deck_height_mm = compression.deck_height
+        piston_volume_cc = compression.piston_volume
+        exhaust_height_mm = compression.exhaust_port_height
+        transfer_height_mm = compression.transfer_port_height
+        crankcase_volume_cc = compression.crankcase_volume
+
+        if resolved_unit_system == "imperial":
+            chamber_cc = cuin_to_cc(chamber_cc)
+            piston_volume_cc = cuin_to_cc(piston_volume_cc)
+            gasket_thickness_mm = inches_to_mm(gasket_thickness_mm)
+            gasket_bore_mm = inches_to_mm(gasket_bore_mm)
+            deck_height_mm = inches_to_mm(deck_height_mm)
+            if exhaust_height_mm is not None:
+                exhaust_height_mm = inches_to_mm(exhaust_height_mm)
+            if transfer_height_mm is not None:
+                transfer_height_mm = inches_to_mm(transfer_height_mm)
+            if crankcase_volume_cc is not None:
+                crankcase_volume_cc = cuin_to_cc(crankcase_volume_cc)
+
+        if chamber_cc <= 0 or gasket_thickness_mm <= 0 or gasket_bore_mm <= 0:
+            response = ErrorResponse(
+                error_code="validation_error",
+                message="Invalid request payload.",
+                field_errors=[
+                    {"field": "inputs.compression", "reason": "invalid compression inputs"}
+                ],
+            )
+            return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=response.model_dump())
+
+        gasket_cc = gasket_volume_cc(gasket_bore_mm, gasket_thickness_mm)
+        deck_cc = deck_volume_cc(bore_mm, deck_height_mm)
+        clearance_cc = clearance_volume_cc(chamber_cc, gasket_cc, deck_cc, piston_volume_cc)
+        if clearance_cc <= 0:
+            response = ErrorResponse(
+                error_code="validation_error",
+                message="Invalid request payload.",
+                field_errors=[
+                    {"field": "inputs.compression", "reason": "clearance volume must be positive"}
+                ],
+            )
+            return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=response.model_dump())
+
+        swept_cc = swept_volume_cc(bore_mm, stroke_mm)
+        compression_mode = "four_stroke"
+        trapped_cc = None
+
+        port_heights = [value for value in [exhaust_height_mm, transfer_height_mm] if value]
+        if port_heights:
+            port_height_mm = min(port_heights)
+            if port_height_mm <= 0 or port_height_mm >= stroke_mm:
+                response = ErrorResponse(
+                    error_code="validation_error",
+                    message="Invalid request payload.",
+                    field_errors=[
+                        {
+                            "field": "inputs.compression",
+                            "reason": "invalid port height for 2T compression",
+                        }
+                    ],
+                )
+                return JSONResponse(
+                    status_code=status.HTTP_400_BAD_REQUEST, content=response.model_dump()
+                )
+            compression_mode = "two_stroke"
+            trapped_cc = trapped_swept_volume_cc(bore_mm, stroke_mm, port_height_mm)
+            swept_for_ratio = trapped_cc
+        else:
+            swept_for_ratio = swept_cc
+
+        ratio = compression_ratio(swept_for_ratio, clearance_cc)
+        crankcase_ratio = None
+        if compression_mode == "two_stroke" and crankcase_volume_cc:
+            crankcase_ratio = compression_ratio(swept_cc, crankcase_volume_cc)
+
+        if resolved_unit_system == "imperial":
+            swept_out = cc_to_cuin(swept_cc)
+            clearance_out = cc_to_cuin(clearance_cc)
+            trapped_out = cc_to_cuin(trapped_cc) if trapped_cc is not None else None
+        else:
+            swept_out = swept_cc
+            clearance_out = clearance_cc
+            trapped_out = trapped_cc
+
+        compression_results = CompressionResults(
+            compression_ratio=round(ratio, 2),
+            clearance_volume=round(clearance_out, 2),
+            swept_volume=round(swept_out, 2),
+            trapped_volume=round(trapped_out, 2) if trapped_out is not None else None,
+            crankcase_compression_ratio=round(crankcase_ratio, 2)
+            if crankcase_ratio is not None
+            else None,
+            compression_mode=compression_mode,
+        )
+
     results = RLResults(
         rl_ratio=round(rl_ratio, 2),
         rod_stroke_ratio=round(rod_stroke_ratio, 2),
@@ -183,13 +437,51 @@ def calc_rl(payload: RLRequest):
         diff_displacement_percent=round(diff_displacement_percent, 2)
         if diff_displacement_percent is not None
         else None,
+        compression=compression_results,
     )
+
+    compression_normalized = None
+    if payload.inputs.compression:
+        compression = payload.inputs.compression
+        chamber_cc = compression.chamber_volume
+        gasket_thickness_mm = compression.gasket_thickness
+        gasket_bore_mm = compression.gasket_bore
+        deck_height_mm = compression.deck_height
+        piston_volume_cc = compression.piston_volume
+        exhaust_height_mm = compression.exhaust_port_height
+        transfer_height_mm = compression.transfer_port_height
+        crankcase_volume_cc = compression.crankcase_volume
+
+        if resolved_unit_system == "imperial":
+            chamber_cc = cuin_to_cc(chamber_cc)
+            piston_volume_cc = cuin_to_cc(piston_volume_cc)
+            gasket_thickness_mm = inches_to_mm(gasket_thickness_mm)
+            gasket_bore_mm = inches_to_mm(gasket_bore_mm)
+            deck_height_mm = inches_to_mm(deck_height_mm)
+            if exhaust_height_mm is not None:
+                exhaust_height_mm = inches_to_mm(exhaust_height_mm)
+            if transfer_height_mm is not None:
+                transfer_height_mm = inches_to_mm(transfer_height_mm)
+            if crankcase_volume_cc is not None:
+                crankcase_volume_cc = cuin_to_cc(crankcase_volume_cc)
+
+        compression_normalized = CompressionNormalizedInputs(
+            chamber_volume=chamber_cc,
+            gasket_thickness=gasket_thickness_mm,
+            gasket_bore=gasket_bore_mm,
+            deck_height=deck_height_mm,
+            piston_volume=piston_volume_cc,
+            exhaust_port_height=exhaust_height_mm,
+            transfer_port_height=transfer_height_mm,
+            crankcase_volume=crankcase_volume_cc,
+        )
 
     normalized_inputs = RLNormalizedInputs(
         bore_mm=bore_mm,
         stroke_mm=stroke_mm,
         rod_length_mm=rod_length_mm,
         baseline=baseline_normalized,
+        compression=compression_normalized,
     )
 
     return RLResponse(

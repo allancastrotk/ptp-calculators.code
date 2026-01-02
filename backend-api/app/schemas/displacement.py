@@ -3,6 +3,7 @@ from typing import Optional
 from pydantic import BaseModel, Field, conint, confloat
 
 from app.schemas.common import RequestBase, ResponseBase
+from app.schemas.compression import CompressionInputs, CompressionNormalizedInputs, CompressionResults
 
 
 class DisplacementInputs(BaseModel):
@@ -10,6 +11,7 @@ class DisplacementInputs(BaseModel):
     stroke: confloat(gt=0)
     cylinders: conint(gt=0)
     baseline_cc: Optional[confloat(gt=0)] = None
+    compression: Optional[CompressionInputs] = None
 
 
 class DisplacementRequest(RequestBase):
@@ -21,6 +23,7 @@ class DisplacementNormalizedInputs(BaseModel):
     stroke_mm: float
     cylinders: int
     baseline_cc: Optional[float] = None
+    compression: Optional[CompressionNormalizedInputs] = None
 
 
 class DisplacementResults(BaseModel):
@@ -29,6 +32,7 @@ class DisplacementResults(BaseModel):
     displacement_ci: float
     geometry: str
     diff_percent: Optional[float] = None
+    compression: Optional[CompressionResults] = None
 
 
 class DisplacementResponse(ResponseBase):

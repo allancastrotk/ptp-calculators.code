@@ -18,6 +18,7 @@ Paridade OK
 Diferencas encontradas
 - Legado nao exibe rod/stroke ratio; o modelo novo expoe `rod_stroke_ratio`.
 - Legado nao possui sistema de unidades (somente mm); o modelo novo aceita `unit_system` na API.
+- Taxa de compressao e extensao v1 (nao existe no legado).
 
 Correcoes aplicadas
 - UI/UX expande para `unit_system` (metric/imperial) mantendo calculo adimensional; legado continua em mm.

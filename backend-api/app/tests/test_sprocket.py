@@ -40,7 +40,7 @@ def client(monkeypatch):
 
 
 def test_sprocket_diff_ratio(client):
-    headers = {"X-PTP-Internal-Key": "test-key"}
+    headers = {"X-PTP-Internal-Key": "test-key", "Authorization": "Bearer test-key"}
     payload = {
         "unit_system": "metric",
         "inputs": {

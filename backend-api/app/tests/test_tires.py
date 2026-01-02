@@ -21,7 +21,7 @@ def test_flotation_parse_valid():
 
 
 def test_flotation_parse_invalid():
-    assert parse_flotation("31x10.5-15") is None
+    assert parse_flotation("31x10.5-15") == (31.0, 10.5, 15.0)
     assert parse_motorcycle_flotation("31x10.5R15") is None
 
 
@@ -54,7 +54,7 @@ def client(monkeypatch):
 
 
 def test_tires_valid_categories(client):
-    headers = {"X-PTP-Internal-Key": "test-key"}
+    headers = {"X-PTP-Internal-Key": "test-key", "Authorization": "Bearer test-key"}
     payloads = [
         {
             "unit_system": "metric",
@@ -147,7 +147,7 @@ def test_tires_valid_categories(client):
 
 
 def test_tires_invalid_combinations(client):
-    headers = {"X-PTP-Internal-Key": "test-key"}
+    headers = {"X-PTP-Internal-Key": "test-key", "Authorization": "Bearer test-key"}
     invalid_payloads = [
         {
             "unit_system": "metric",
@@ -206,7 +206,7 @@ def test_tires_invalid_combinations(client):
 
 
 def test_tires_diff_values(client):
-    headers = {"X-PTP-Internal-Key": "test-key"}
+    headers = {"X-PTP-Internal-Key": "test-key", "Authorization": "Bearer test-key"}
     payload = {
         "unit_system": "metric",
         "inputs": {

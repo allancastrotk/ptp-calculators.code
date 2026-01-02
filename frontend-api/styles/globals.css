@@ -377,6 +377,25 @@ body.ptp-embed .ptp-subtitle {
   color: #D0645C;
 }
 
+.ptp-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 12px 0;
+  color: var(--ptp-muted);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ptp-divider::before,
+.ptp-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(40, 90, 130, 0.45), transparent);
+}
+
 .ptp-result__value {
   font-weight: 700;
   font-size: 18px;

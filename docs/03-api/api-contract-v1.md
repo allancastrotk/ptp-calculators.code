@@ -81,6 +81,7 @@ Request `inputs`:
 - `stroke`: numero (mm ou in)
 - `cylinders`: inteiro positivo
 - `baseline_cc` (opcional): numero (cc) para comparacao original vs new
+- `compression` (opcional): objeto com dados de taxa
 
 Regras e unidades:
 - Suporta entrada em mm ou inches quando `unit_system=imperial` ou `auto`.
@@ -93,6 +94,23 @@ Resultados recomendados:
 - `displacement_ci` (cubic inches) quando `unit_system=imperial` ou solicitado
 - `geometry` (square/oversquare/undersquare)
 - `diff_percent` (se `baseline_cc` for informado)
+- `compression` (opcional):
+  - `compression_ratio`
+  - `clearance_volume`
+  - `swept_volume`
+  - `trapped_volume` (quando 2T)
+  - `crankcase_compression_ratio` (quando 2T e `crankcase_volume`)
+  - `compression_mode`: `four_stroke` ou `two_stroke`
+
+Campos de `compression` (inputs):
+- `chamber_volume` (cc ou cu in)
+- `gasket_thickness` (mm ou in)
+- `gasket_bore` (mm ou in)
+- `deck_height` (mm ou in)
+- `piston_volume` (cc ou cu in)
+- `exhaust_port_height` (mm ou in, opcional para 2T)
+- `transfer_port_height` (mm ou in, opcional para 2T)
+- `crankcase_volume` (cc ou cu in, opcional para 2T)
 
 ### rl
 
@@ -101,6 +119,7 @@ Request `inputs`:
 - `stroke`: numero (mm ou in)
 - `rod_length`: numero (mm ou in)
 - `baseline` (opcional): objeto com os mesmos campos para comparacao original vs new
+- `compression` (opcional): objeto com dados de taxa
 
 Regras e unidades:
 - `rl_ratio` e `rod_stroke_ratio` sao adimensionais.
@@ -114,6 +133,23 @@ Resultados obrigatorios:
 - `smoothness` (rough/normal/smooth)
 - `diff_rl_percent` (quando `baseline` for informado)
 - `diff_displacement_percent` (quando `baseline` for informado)
+- `compression` (opcional):
+  - `compression_ratio`
+  - `clearance_volume`
+  - `swept_volume`
+  - `trapped_volume` (quando 2T)
+  - `crankcase_compression_ratio` (quando 2T e `crankcase_volume`)
+  - `compression_mode`: `four_stroke` ou `two_stroke`
+
+Campos de `compression` (inputs):
+- `chamber_volume` (cc ou cu in)
+- `gasket_thickness` (mm ou in)
+- `gasket_bore` (mm ou in)
+- `deck_height` (mm ou in)
+- `piston_volume` (cc ou cu in)
+- `exhaust_port_height` (mm ou in, opcional para 2T)
+- `transfer_port_height` (mm ou in, opcional para 2T)
+- `crankcase_volume` (cc ou cu in, opcional para 2T)
 
 ### sprocket
 

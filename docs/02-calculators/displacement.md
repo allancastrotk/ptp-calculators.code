@@ -15,6 +15,19 @@ Tabela de parametros e restricoes observadas no legado:
 | Stroke (curso) | `input type="number"` | mm | `min=0`, `step=0.1`, validacao exige valor finito e > 0 | Placeholder muda por modo |
 | Cylinders (numero de cilindros) | `select` | adimensional | opcoes fixas 1..6; valor vazio invalido | Opcao inicial "Selecione" |
 
+Taxa de compressao (extensao v1, opcional):
+
+| Parametro | Campo | Unidade | Restricoes | Observacoes |
+| --- | --- | --- | --- | --- |
+| Chamber volume | `compression.chamber_volume` | cc (ou cu in) | > 0 | Volume da camara |
+| Gasket thickness | `compression.gasket_thickness` | mm (ou in) | > 0 | Espessura da junta |
+| Gasket bore | `compression.gasket_bore` | mm (ou in) | > 0 | Diametro do furo da junta |
+| Deck height | `compression.deck_height` | mm (ou in) | pode ser 0 | Altura do deck |
+| Piston volume | `compression.piston_volume` | cc (ou cu in) | pode ser negativo | Dome (negativo) ou dish (positivo) |
+| Exhaust port height | `compression.exhaust_port_height` | mm (ou in) | opcional | Se informado junto/sozinho, ativa modo 2T |
+| Transfer port height | `compression.transfer_port_height` | mm (ou in) | opcional | Se informado junto/sozinho, ativa modo 2T |
+| Crankcase volume | `compression.crankcase_volume` | cc (ou cu in) | opcional | Usado para taxa do carter (2T) |
+
 Detalhes de modo:
 - Modo "original": armazena resultados em `localStorage` com chave `displacementCalcOriginal`.
 - Modo "new": nao armazena resultados; usa o valor salvo do modo "original" para calcular variacao percentual.
@@ -37,6 +50,16 @@ Tabela de resultados exibidos:
 | Geometria | texto | nome localizavel | Quadrado, Superquadrado, Subquadrado |
 | Variacao percentual | `%` | `toFixed(2)` | Apenas no modo "new" |
 
+Taxa de compressao (extensao v1, opcional):
+
+| Saida | Unidade | Formato | Observacoes |
+| --- | --- | --- | --- |
+| Compression ratio | adimensional | `toFixed(2)` | Baseada em volume varrido e volume de folga |
+| Clearance volume | cc (ou cu in) | `toFixed(2)` | Volume de folga total |
+| Swept volume | cc (ou cu in) | `toFixed(2)` | Volume varrido total |
+| Trapped volume | cc (ou cu in) | `toFixed(2)` | Apenas quando modo 2T |
+| Crankcase compression | adimensional | `toFixed(2)` | Apenas quando modo 2T e `crankcase_volume` informado |
+
 Detalhes adicionais:
 - Variacao percentual usa classes visuais `increase`, `decrease`, `no-change`.
 - Se nao houver valor "original", o modo "new" mostra mensagem de comparacao.
@@ -51,6 +74,12 @@ Classificacao de geometria:
 - Tolerancia: `0.03` (3%).
 - Regra: se `abs(bore - stroke) / stroke <= 0.03` -> Quadrado.
 - Caso contrario: se `bore > stroke` -> Superquadrado; senao -> Subquadrado.
+
+Taxa de compressao (extensao v1):
+- Volume varrido: `swept = (pi * bore^2 / 4) * stroke / 1000`
+- Volume de folga: `clearance = chamber + gasket + deck + piston`
+- Taxa (4T): `(swept + clearance) / clearance`
+- Taxa (2T): usa `trapped_swept` com base no menor valor entre `exhaust_port_height` e `transfer_port_height`.
 
 ## 5) Regras de negocio
 
@@ -70,6 +99,10 @@ Comportamento do ponto de vista do usuario:
 Implementacao atual:
 - A comparacao Original vs New e feita no frontend (estado local + sessionStorage por aba).
 - Nao ha persistencia server-side no backend ou no BFF.
+
+Taxa de compressao:
+- Opcional; quando habilitada, e calculada no backend.
+- O modo 4T e o default; o modo 2T e ativado quando houver alturas de janelas informadas.
 ## 6) Observacoes de legado
 
 Compatibilidade obrigatoria:
@@ -84,3 +117,4 @@ Comportamentos implicitos:
 
 Pontos pendentes de confirmacao:
 - Se a unidade "cm3" deve permanecer como `cm3` na UI final ou se deve ser renderizada de outra forma.
+- Taxa de compressao nao existe no legado; extensao v1 necessita validacao futura.

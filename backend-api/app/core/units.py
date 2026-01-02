@@ -18,6 +18,10 @@ def cc_to_cuin(value: float) -> float:
     return value / CC_TO_CUIN
 
 
+def cuin_to_cc(value: float) -> float:
+    return value * CC_TO_CUIN
+
+
 def resolve_unit_system(unit_system: str) -> tuple[str, list[str]]:
     warnings: list[str] = []
     resolved = unit_system

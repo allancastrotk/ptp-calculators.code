@@ -32,6 +32,7 @@ def test_rl_results_shape():
         "smoothness",
         "diff_rl_percent",
         "diff_displacement_percent",
+        "compression",
     }
 
 
@@ -53,7 +54,7 @@ def client(monkeypatch):
 
 
 def test_rl_diff_percent(client):
-    headers = {"X-PTP-Internal-Key": "test-key"}
+    headers = {"X-PTP-Internal-Key": "test-key", "Authorization": "Bearer test-key"}
     payload = {
         "unit_system": "metric",
         "inputs": {
@@ -67,3 +68,26 @@ def test_rl_diff_percent(client):
     assert response.status_code == 200
     data = response.json()
     assert data["results"]["diff_rl_percent"] == 11.11
+
+
+def test_rl_compression_results(client):
+    headers = {"X-PTP-Internal-Key": "test-key", "Authorization": "Bearer test-key"}
+    payload = {
+        "unit_system": "metric",
+        "inputs": {
+            "bore": 100,
+            "stroke": 100,
+            "rod_length": 100,
+            "compression": {
+                "chamber_volume": 50,
+                "gasket_thickness": 1,
+                "gasket_bore": 100,
+                "deck_height": 0,
+                "piston_volume": 0,
+            },
+        },
+    }
+    response = client.post("/v1/calc/rl", json=payload, headers=headers)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["results"]["compression"]["compression_ratio"] == 14.58
