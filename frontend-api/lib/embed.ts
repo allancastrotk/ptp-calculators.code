@@ -20,7 +20,7 @@ function resolveLanguage(value?: string): Language | null {
   return null;
 }
 
-function getParentOrigin(): string | null {
+export function getEmbedParentOrigin(): string | null {
   if (typeof document === "undefined") return null;
   if (!document.referrer) return null;
   try {
@@ -31,9 +31,9 @@ function getParentOrigin(): string | null {
   }
 }
 
-function postToHost(message: ResizeMessage | LangAckMessage) {
+export function postEmbedMessage(message: ResizeMessage | LangAckMessage | Record<string, unknown>) {
   if (typeof window === "undefined") return;
-  const origin = getParentOrigin();
+  const origin = getEmbedParentOrigin();
   if (!origin) return;
   if (window.parent && window.parent !== window) {
     window.parent.postMessage(message, origin);
@@ -52,7 +52,7 @@ export function useEmbedBridge(setLanguage: (lang: Language) => void) {
       const next = resolveLanguage(data?.language);
       if (next) {
         setLanguage(next);
-        postToHost({ type: "ptp:lang:ack", language: next });
+        postEmbedMessage({ type: "ptp:lang:ack", language: next });
       }
     };
 
@@ -70,7 +70,7 @@ export function useEmbedBridge(setLanguage: (lang: Language) => void) {
       );
       if (!height || height === lastHeight.current) return;
       lastHeight.current = height;
-      postToHost({ type: "ptp:resize", height });
+      postEmbedMessage({ type: "ptp:resize", height });
     };
 
     emit();
