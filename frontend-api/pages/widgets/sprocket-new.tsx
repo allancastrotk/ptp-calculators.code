@@ -202,6 +202,14 @@ export default function SprocketNewWidget() {
           crown_teeth: toNumber(crown),
           chain_pitch: pitch || undefined,
           chain_links: links ? toNumber(links) : undefined,
+          baseline: baseline
+            ? {
+                sprocket_teeth: baseline.normalized_inputs.sprocket_teeth,
+                crown_teeth: baseline.normalized_inputs.crown_teeth,
+                chain_pitch: baseline.normalized_inputs.chain_pitch || undefined,
+                chain_links: baseline.normalized_inputs.chain_links ?? undefined,
+              }
+            : undefined,
         },
       };
 
