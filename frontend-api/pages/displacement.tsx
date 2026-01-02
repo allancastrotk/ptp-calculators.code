@@ -5,11 +5,10 @@ import { Card } from "../components/Card";
 import { ErrorBanner } from "../components/ErrorBanner";
 import { InputField } from "../components/InputField";
 import { Layout } from "../components/Layout";
-import { LoadingState } from "../components/LoadingState";
 import { ResultPanel } from "../components/ResultPanel";
+import { StatusPanel } from "../components/StatusPanel";
 import { UnitSystem } from "../components/UnitSystemSwitch";
 import { postJson, ApiError } from "../lib/api";
-import { formatNumericComparison, formatTextComparison } from "../lib/comparison";
 import { useI18n } from "../lib/i18n";
 
 type DisplacementResponse = {
@@ -32,7 +31,7 @@ type DisplacementResponse = {
   meta: { version: string; timestamp: string; source: string };
 };
 
-type ResultItem = { label: string; value: string };
+type ResultItem = { label: React.ReactNode; value: React.ReactNode };
 
 export default function DisplacementPage() {
   const { t } = useI18n();
@@ -56,6 +55,31 @@ export default function DisplacementPage() {
   const abortNewRef = useRef<AbortController | null>(null);
 
   const toNumber = (value: string) => Number(value.replace(",", "."));
+  const convertLength = (value: number, from: UnitSystem, to: UnitSystem) =>
+    from === to ? value : from === "metric" ? value / 25.4 : value * 25.4;
+  const formatConverted = (value: number) => {
+    const rounded = Number(value.toFixed(2));
+    return Number.isNaN(rounded) ? "" : String(rounded);
+  };
+  const convertInput = (value: string, from: UnitSystem, to: UnitSystem) => {
+    if (!value) return value;
+    const numeric = toNumber(value);
+    if (Number.isNaN(numeric)) return value;
+    return formatConverted(convertLength(numeric, from, to));
+  };
+  const handleUnitChange = (nextUnit: UnitSystem) => {
+    if (nextUnit === unitSystem) return;
+    setOriginalBore((value) => convertInput(value, unitSystem, nextUnit));
+    setOriginalStroke((value) => convertInput(value, unitSystem, nextUnit));
+    setNewBore((value) => convertInput(value, unitSystem, nextUnit));
+    setNewStroke((value) => convertInput(value, unitSystem, nextUnit));
+    setUnitSystem(nextUnit);
+  };
+
+  const formatGeometry = (value: string) => {
+    const key = `geometry_${value}` as const;
+    return t(key);
+  };
 
   const handleOriginalSubmit = async () => {
     setErrorOriginal(null);
@@ -172,14 +196,8 @@ export default function DisplacementPage() {
       { label: t("displacementCcLabel"), value: result.results.displacement_cc.toFixed(2) },
       { label: t("displacementLLabel"), value: result.results.displacement_l.toFixed(2) },
       { label: t("displacementCiLabel"), value: result.results.displacement_ci.toFixed(2) },
-      { label: t("geometryLabel"), value: result.results.geometry },
-      result.results.diff_percent !== undefined && result.results.diff_percent !== null
-        ? {
-            label: t("diffLabel"),
-            value: `${result.results.diff_percent.toFixed(2)}%`,
-          }
-        : null,
-    ].filter(Boolean) as ResultItem[];
+      { label: t("geometryLabel"), value: formatGeometry(result.results.geometry) },
+    ];
   };
 
   const originalResultsList = useMemo(
@@ -188,50 +206,78 @@ export default function DisplacementPage() {
   );
   const newResultsList = useMemo(() => buildResultsList(newResult), [newResult]);
 
-  const comparisonItems = useMemo((): ResultItem[] => {
-    if (!originalResult || !newResult) return [];
-    const labels = {
-      original: t("originalValueLabel"),
-      newValue: t("newValueLabel"),
-      diff: t("diffValueLabel"),
-      diffPercent: t("diffPercentLabel"),
-      na: t("notApplicableLabel"),
-    };
+  const renderDiffLabel = (label: string, diff: number) => {
+    let state = "no-change";
+    let icon = "▬";
+    if (diff > 0) {
+      state = "increase";
+      icon = "▲";
+    } else if (diff < 0) {
+      state = "decrease";
+      icon = "▼";
+    }
+    return (
+      <span className="ptp-result__label-row">
+        {t("deltaDiffLabel")} {label}
+        <span className={`ptp-diff-icon ptp-diff-icon--${state}`}>{icon}</span>
+      </span>
+    );
+  };
+
+  const renderDiffValue = (diff: number, percent: number | null, unit: string) => {
+    let state = "no-change";
+    if (diff > 0) state = "increase";
+    if (diff < 0) state = "decrease";
+    const percentText =
+      percent === null ? t("notApplicableLabel") : `${percent.toFixed(2)}%`;
+    return (
+      <span className={`ptp-diff-value--${state}`}>
+        {diff.toFixed(2)} {unit} [{percentText}]
+      </span>
+    );
+  };
+
+  const comparisonDeclaredItems = useMemo((): ResultItem[] => {
+    if (!originalResult) return [];
+    const percent = originalResult.results.diff_percent ?? null;
+    if (percent === null || percent === undefined) return [];
+    const baseCc = originalResult.normalized_inputs.baseline_cc;
+    if (!baseCc) return [];
+    const diffCc = originalResult.results.displacement_cc - baseCc;
     return [
       {
-        label: t("displacementCcLabel"),
-        value: formatNumericComparison(
-          originalResult.results.displacement_cc,
-          newResult.results.displacement_cc,
-          "cc",
-          labels
-        ),
+        label: renderDiffLabel(t("displacementCcLabel"), diffCc),
+        value: renderDiffValue(diffCc, percent, "cc"),
+      },
+    ];
+  }, [originalResult, t]);
+
+  const comparisonItems = useMemo((): ResultItem[] => {
+    if (!originalResult || !newResult) return [];
+    const diffCc = newResult.results.displacement_cc - originalResult.results.displacement_cc;
+    const diffL = newResult.results.displacement_l - originalResult.results.displacement_l;
+    const diffCi = newResult.results.displacement_ci - originalResult.results.displacement_ci;
+    const percentCc = originalResult.results.displacement_cc
+      ? (diffCc / originalResult.results.displacement_cc) * 100
+      : null;
+    const percentL = originalResult.results.displacement_l
+      ? (diffL / originalResult.results.displacement_l) * 100
+      : null;
+    const percentCi = originalResult.results.displacement_ci
+      ? (diffCi / originalResult.results.displacement_ci) * 100
+      : null;
+    return [
+      {
+        label: renderDiffLabel(t("displacementCcLabel"), diffCc),
+        value: renderDiffValue(diffCc, percentCc, "cc"),
       },
       {
-        label: t("displacementLLabel"),
-        value: formatNumericComparison(
-          originalResult.results.displacement_l,
-          newResult.results.displacement_l,
-          "L",
-          labels
-        ),
+        label: renderDiffLabel(t("displacementLLabel"), diffL),
+        value: renderDiffValue(diffL, percentL, "L"),
       },
       {
-        label: t("displacementCiLabel"),
-        value: formatNumericComparison(
-          originalResult.results.displacement_ci,
-          newResult.results.displacement_ci,
-          "cu in",
-          labels
-        ),
-      },
-      {
-        label: t("geometryLabel"),
-        value: formatTextComparison(
-          originalResult.results.geometry,
-          newResult.results.geometry,
-          labels
-        ),
+        label: renderDiffLabel(t("displacementCiLabel"), diffCi),
+        value: renderDiffValue(diffCi, percentCi, "cu in"),
       },
     ];
   }, [originalResult, newResult, t]);
@@ -246,11 +292,16 @@ export default function DisplacementPage() {
   };
 
   return (
-    <Layout title={t("displacement")} unitSystem={unitSystem} onUnitChange={setUnitSystem} variant="pilot">
+    <Layout
+      title={t("displacement")}
+      unitSystem={unitSystem}
+      onUnitChange={handleUnitChange}
+      variant="pilot"
+    >
       <div className="ptp-stack">
         <Card className="ptp-stack">
           <div className="ptp-section-header">
-            <div className="ptp-section-title">{t("originalSection")}</div>
+            <div className="ptp-section-title">{t("originalAssemblySection")}</div>
           </div>
           {errorOriginal ? <ErrorBanner message={errorOriginal} /> : null}
           <div className="grid">
@@ -299,24 +350,17 @@ export default function DisplacementPage() {
               {t("clear")}
             </Button>
           </div>
-          {loadingOriginal ? <LoadingState /> : null}
+          {loadingOriginal ? <StatusPanel message={t("warmupMessage")} /> : null}
           {originalResult ? (
-            <ResultPanel title={t("originalResultsTitle")} items={originalResultsList} />
+            <ResultPanel title={t("originalAssemblyResultsTitle")} items={originalResultsList} />
           ) : null}
-          {originalResult ? (
-            <Card>
-              <div className="ptp-card__title">{t("normalizedInputsTitle")}</div>
-              <div className="subtitle">
-                Bore: {originalResult.normalized_inputs.bore_mm.toFixed(2)} | Stroke:{" "}
-                {originalResult.normalized_inputs.stroke_mm.toFixed(2)} | Cylinders:{" "}
-                {originalResult.normalized_inputs.cylinders}
-              </div>
-            </Card>
+          {comparisonDeclaredItems.length > 0 ? (
+            <ResultPanel title={t("comparisonDeclaredTitle")} items={comparisonDeclaredItems} />
           ) : null}
         </Card>
         <Card className="ptp-stack">
           <div className="ptp-section-header">
-            <div className="ptp-section-title">{t("newSection")}</div>
+            <div className="ptp-section-title">{t("newAssemblySection")}</div>
           </div>
           {errorNew ? <ErrorBanner message={errorNew} /> : null}
           <div className="grid">
@@ -347,16 +391,22 @@ export default function DisplacementPage() {
               error={fieldErrorsNew.cylinders}
             />
           </div>
-          {!originalResult ? <div className="ptp-field__helper">{t("compareHint")}</div> : null}
-          <div className="ptp-actions">
+          <div className="ptp-actions ptp-actions--between ptp-actions--spaced">
+            <div className="ptp-actions__left">
+              {!originalResult && !newResult ? (
+                <span className="ptp-actions__hint">{t("compareHint")}</span>
+              ) : null}
+            </div>
             <Button type="button" onClick={handleNewSubmit} disabled={loadingNew}>
               {loadingNew ? t("loading") : t("calculate")}
             </Button>
           </div>
-          {loadingNew ? <LoadingState /> : null}
-          {newResult ? <ResultPanel title={t("newResultsTitle")} items={newResultsList} /> : null}
+          {loadingNew ? <StatusPanel message={t("warmupMessage")} /> : null}
+          {newResult ? (
+            <ResultPanel title={t("newAssemblyResultsTitle")} items={newResultsList} />
+          ) : null}
           {comparisonItems.length > 0 ? (
-            <ResultPanel title={t("comparisonNewTitle")} items={comparisonItems} />
+            <ResultPanel title={t("comparisonAssemblyTitle")} items={comparisonItems} />
           ) : null}
         </Card>
       </div>

@@ -6,8 +6,8 @@ import { Card } from "../../components/Card";
 import { ErrorBanner } from "../../components/ErrorBanner";
 import { InputField } from "../../components/InputField";
 import { Layout } from "../../components/Layout";
-import { LoadingState } from "../../components/LoadingState";
 import { ResultPanel } from "../../components/ResultPanel";
+import { StatusPanel } from "../../components/StatusPanel";
 import { UnitSystem } from "../../components/UnitSystemSwitch";
 import { UnitToggleButton } from "../../components/UnitToggleButton";
 import { postJson, ApiError } from "../../lib/api";
@@ -34,7 +34,7 @@ type DisplacementResponse = {
   meta: { version: string; timestamp: string; source: string };
 };
 
-type ResultItem = { label: string; value: string };
+type ResultItem = { label: React.ReactNode; value: React.ReactNode };
 
 type OriginalMessage = {
   type: "ptp:calc:displacement:originalResult";
@@ -78,6 +78,29 @@ export default function DisplacementOriginalWidget() {
   const abortRef = useRef<AbortController | null>(null);
 
   const toNumber = (value: string) => Number(value.replace(",", "."));
+  const convertLength = (value: number, from: UnitSystem, to: UnitSystem) =>
+    from === to ? value : from === "metric" ? value / 25.4 : value * 25.4;
+  const formatConverted = (value: number) => {
+    const rounded = Number(value.toFixed(2));
+    return Number.isNaN(rounded) ? "" : String(rounded);
+  };
+  const convertInput = (value: string, from: UnitSystem, to: UnitSystem) => {
+    if (!value) return value;
+    const numeric = toNumber(value);
+    if (Number.isNaN(numeric)) return value;
+    return formatConverted(convertLength(numeric, from, to));
+  };
+  const handleUnitChange = (nextUnit: UnitSystem) => {
+    if (nextUnit === unitSystem) return;
+    setBore((value) => convertInput(value, unitSystem, nextUnit));
+    setStroke((value) => convertInput(value, unitSystem, nextUnit));
+    setUnitSystem(nextUnit);
+  };
+
+  const formatGeometry = (value: string) => {
+    const key = `geometry_${value}` as const;
+    return t(key);
+  };
 
   const postWithRetry = async (payload: unknown, signal: AbortSignal) => {
     for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt += 1) {
@@ -172,9 +195,40 @@ export default function DisplacementOriginalWidget() {
       { label: t("displacementCcLabel"), value: result.results.displacement_cc.toFixed(2) },
       { label: t("displacementLLabel"), value: result.results.displacement_l.toFixed(2) },
       { label: t("displacementCiLabel"), value: result.results.displacement_ci.toFixed(2) },
-      { label: t("geometryLabel"), value: result.results.geometry },
+      { label: t("geometryLabel"), value: formatGeometry(result.results.geometry) },
     ];
-  }, [result]);
+  }, [result, t]);
+
+  const renderDiffLabel = (label: string, diff: number) => {
+    let state = "no-change";
+    let icon = "▬";
+    if (diff > 0) {
+      state = "increase";
+      icon = "▲";
+    } else if (diff < 0) {
+      state = "decrease";
+      icon = "▼";
+    }
+    return (
+      <span className="ptp-result__label-row">
+        {t("deltaDiffLabel")} {label}
+        <span className={`ptp-diff-icon ptp-diff-icon--${state}`}>{icon}</span>
+      </span>
+    );
+  };
+
+  const renderDiffValue = (diff: number, percent: number | null, unit: string) => {
+    let state = "no-change";
+    if (diff > 0) state = "increase";
+    if (diff < 0) state = "decrease";
+    const percentText =
+      percent === null ? t("notApplicableLabel") : `${percent.toFixed(2)}%`;
+    return (
+      <span className={`ptp-diff-value--${state}`}>
+        {diff.toFixed(2)} {unit} [{percentText}]
+      </span>
+    );
+  };
 
   const comparisonItems = useMemo((): ResultItem[] => {
     if (!result) return [];
@@ -186,19 +240,19 @@ export default function DisplacementOriginalWidget() {
     const diffCc = result.results.displacement_cc - baseCc;
     return [
       {
-        label: t("diffLabel"),
-        value: `${diffCc.toFixed(2)} cc (${result.results.diff_percent.toFixed(2)}%)`,
+        label: renderDiffLabel(t("displacementCcLabel"), diffCc),
+        value: renderDiffValue(diffCc, result.results.diff_percent, "cc"),
       },
     ];
-  }, [result]);
+  }, [result, t]);
 
   return (
     <Layout title={t("displacement")} hideHeader hideFooter variant="pilot">
       <div className="ptp-stack">
         <Card className="ptp-stack">
           <div className="ptp-section-header">
-            <div className="ptp-section-title">{t("originalSection")}</div>
-            <UnitToggleButton value={unitSystem} onChange={setUnitSystem} />
+            <div className="ptp-section-title">{t("originalAssemblySection")}</div>
+            <UnitToggleButton value={unitSystem} onChange={handleUnitChange} />
           </div>
           {error ? <ErrorBanner message={error} /> : null}
           {retryHint ? <div className="ptp-field__helper">{retryHint}</div> : null}
@@ -245,13 +299,15 @@ export default function DisplacementOriginalWidget() {
               {loading ? t("loading") : t("calculate")}
             </Button>
           </div>
-          {loading ? <LoadingState /> : null}
+          {loading ? <StatusPanel message={t("warmupMessage")} /> : null}
           {warmupNotice ? (
             <div className="ptp-card">
               <div className="ptp-field__helper">{warmupNotice}</div>
             </div>
           ) : null}
-          {result ? <ResultPanel title={t("originalResultsTitle")} items={resultsList} /> : null}
+          {result ? (
+            <ResultPanel title={t("originalAssemblyResultsTitle")} items={resultsList} />
+          ) : null}
           {comparisonItems.length > 0 ? (
             <ResultPanel title={t("comparisonDeclaredTitle")} items={comparisonItems} />
           ) : null}

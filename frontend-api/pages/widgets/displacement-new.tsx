@@ -6,12 +6,11 @@ import { Card } from "../../components/Card";
 import { ErrorBanner } from "../../components/ErrorBanner";
 import { InputField } from "../../components/InputField";
 import { Layout } from "../../components/Layout";
-import { LoadingState } from "../../components/LoadingState";
 import { ResultPanel } from "../../components/ResultPanel";
+import { StatusPanel } from "../../components/StatusPanel";
 import { UnitSystem } from "../../components/UnitSystemSwitch";
 import { UnitToggleButton } from "../../components/UnitToggleButton";
 import { postJson, ApiError } from "../../lib/api";
-import { formatNumericComparison, formatTextComparison } from "../../lib/comparison";
 import { useI18n } from "../../lib/i18n";
 
 type DisplacementResponse = {
@@ -34,7 +33,7 @@ type DisplacementResponse = {
   meta: { version: string; timestamp: string; source: string };
 };
 
-type ResultItem = { label: string; value: string };
+type ResultItem = { label: React.ReactNode; value: React.ReactNode };
 
 type BaselineMessage = {
   type: "ptp:calc:displacement:baseline";
@@ -83,6 +82,29 @@ export default function DisplacementNewWidget() {
   const abortRef = useRef<AbortController | null>(null);
 
   const toNumber = (value: string) => Number(value.replace(",", "."));
+  const convertLength = (value: number, from: UnitSystem, to: UnitSystem) =>
+    from === to ? value : from === "metric" ? value / 25.4 : value * 25.4;
+  const formatConverted = (value: number) => {
+    const rounded = Number(value.toFixed(2));
+    return Number.isNaN(rounded) ? "" : String(rounded);
+  };
+  const convertInput = (value: string, from: UnitSystem, to: UnitSystem) => {
+    if (!value) return value;
+    const numeric = toNumber(value);
+    if (Number.isNaN(numeric)) return value;
+    return formatConverted(convertLength(numeric, from, to));
+  };
+  const handleUnitChange = (nextUnit: UnitSystem) => {
+    if (nextUnit === unitSystem) return;
+    setBore((value) => convertInput(value, unitSystem, nextUnit));
+    setStroke((value) => convertInput(value, unitSystem, nextUnit));
+    setUnitSystem(nextUnit);
+  };
+
+  const formatGeometry = (value: string) => {
+    const key = `geometry_${value}` as const;
+    return t(key);
+  };
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -185,50 +207,67 @@ export default function DisplacementNewWidget() {
       { label: t("displacementCcLabel"), value: result.results.displacement_cc.toFixed(2) },
       { label: t("displacementLLabel"), value: result.results.displacement_l.toFixed(2) },
       { label: t("displacementCiLabel"), value: result.results.displacement_ci.toFixed(2) },
-      { label: t("geometryLabel"), value: result.results.geometry },
+      { label: t("geometryLabel"), value: formatGeometry(result.results.geometry) },
     ];
-  }, [result]);
+  }, [result, t]);
+
+  const renderDiffLabel = (label: string, diff: number) => {
+    let state = "no-change";
+    let icon = "▬";
+    if (diff > 0) {
+      state = "increase";
+      icon = "▲";
+    } else if (diff < 0) {
+      state = "decrease";
+      icon = "▼";
+    }
+    return (
+      <span className="ptp-result__label-row">
+        {t("deltaDiffLabel")} {label}
+        <span className={`ptp-diff-icon ptp-diff-icon--${state}`}>{icon}</span>
+      </span>
+    );
+  };
+
+  const renderDiffValue = (diff: number, percent: number | null, unit: string) => {
+    let state = "no-change";
+    if (diff > 0) state = "increase";
+    if (diff < 0) state = "decrease";
+    const percentText =
+      percent === null ? t("notApplicableLabel") : `${percent.toFixed(2)}%`;
+    return (
+      <span className={`ptp-diff-value--${state}`}>
+        {diff.toFixed(2)} {unit} [{percentText}]
+      </span>
+    );
+  };
 
   const comparisonItems = useMemo((): ResultItem[] => {
     if (!baseline || !result) return [];
-    const labels = {
-      original: t("originalValueLabel"),
-      newValue: t("newValueLabel"),
-      diff: t("diffValueLabel"),
-      diffPercent: t("diffPercentLabel"),
-      na: t("notApplicableLabel"),
-    };
+    const diffCc = result.results.displacement_cc - baseline.results.displacement_cc;
+    const diffL = result.results.displacement_l - baseline.results.displacement_l;
+    const diffCi = result.results.displacement_ci - baseline.results.displacement_ci;
+    const percentCc = baseline.results.displacement_cc
+      ? (diffCc / baseline.results.displacement_cc) * 100
+      : null;
+    const percentL = baseline.results.displacement_l
+      ? (diffL / baseline.results.displacement_l) * 100
+      : null;
+    const percentCi = baseline.results.displacement_ci
+      ? (diffCi / baseline.results.displacement_ci) * 100
+      : null;
     return [
       {
-        label: t("displacementCcLabel"),
-        value: formatNumericComparison(
-          baseline.results.displacement_cc,
-          result.results.displacement_cc,
-          "cc",
-          labels
-        ),
+        label: renderDiffLabel(t("displacementCcLabel"), diffCc),
+        value: renderDiffValue(diffCc, percentCc, "cc"),
       },
       {
-        label: t("displacementLLabel"),
-        value: formatNumericComparison(
-          baseline.results.displacement_l,
-          result.results.displacement_l,
-          "L",
-          labels
-        ),
+        label: renderDiffLabel(t("displacementLLabel"), diffL),
+        value: renderDiffValue(diffL, percentL, "L"),
       },
       {
-        label: t("displacementCiLabel"),
-        value: formatNumericComparison(
-          baseline.results.displacement_ci,
-          result.results.displacement_ci,
-          "cu in",
-          labels
-        ),
-      },
-      {
-        label: t("geometryLabel"),
-        value: formatTextComparison(baseline.results.geometry, result.results.geometry, labels),
+        label: renderDiffLabel(t("displacementCiLabel"), diffCi),
+        value: renderDiffValue(diffCi, percentCi, "cu in"),
       },
     ];
   }, [baseline, result, t]);
@@ -243,8 +282,8 @@ export default function DisplacementNewWidget() {
         )}
         <Card className="ptp-stack">
           <div className="ptp-section-header">
-            <div className="ptp-section-title">{t("newSection")}</div>
-            <UnitToggleButton value={unitSystem} onChange={setUnitSystem} />
+            <div className="ptp-section-title">{t("newAssemblySection")}</div>
+            <UnitToggleButton value={unitSystem} onChange={handleUnitChange} />
           </div>
           {error ? <ErrorBanner message={error} /> : null}
           {retryHint ? <div className="ptp-field__helper">{retryHint}</div> : null}
@@ -277,24 +316,26 @@ export default function DisplacementNewWidget() {
             />
           </div>
           <div className="ptp-actions ptp-actions--between ptp-actions--spaced">
-            {!baseline && !result ? (
-              <div className="ptp-field__helper">{t("compareHintWidget")}</div>
-            ) : (
-              <span />
-            )}
+            <div className="ptp-actions__left">
+              {!baseline && !result ? (
+                <span className="ptp-actions__hint">{t("compareHintWidget")}</span>
+              ) : null}
+            </div>
             <Button type="button" onClick={handleSubmit} disabled={loading}>
               {loading ? t("loading") : t("calculate")}
             </Button>
           </div>
-          {loading ? <LoadingState /> : null}
+          {loading ? <StatusPanel message={t("warmupMessage")} /> : null}
           {warmupNotice ? (
             <div className="ptp-card">
               <div className="ptp-field__helper">{warmupNotice}</div>
             </div>
           ) : null}
-          {result ? <ResultPanel title={t("newResultsTitle")} items={resultsList} /> : null}
+          {result ? (
+            <ResultPanel title={t("newAssemblyResultsTitle")} items={resultsList} />
+          ) : null}
           {comparisonItems.length > 0 ? (
-            <ResultPanel title={t("comparisonNewTitle")} items={comparisonItems} />
+            <ResultPanel title={t("comparisonAssemblyTitle")} items={comparisonItems} />
           ) : null}
         </Card>
       </div>
