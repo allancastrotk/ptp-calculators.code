@@ -192,11 +192,12 @@ export default function DisplacementNewWidget() {
     if (!baseline || !result) return [];
     const originalCc = baseline.results.displacement_cc;
     if (!originalCc) return [];
-    const diffPercent = ((result.results.displacement_cc - originalCc) / originalCc) * 100;
+    const diffCc = result.results.displacement_cc - originalCc;
+    const diffPercent = (diffCc / originalCc) * 100;
     return [
       {
         label: "Diff vs Original (%)",
-        value: `${diffPercent.toFixed(2)}%`,
+        value: `${diffCc.toFixed(2)} cc (${diffPercent.toFixed(2)}%)`,
       },
     ];
   }, [baseline, result]);

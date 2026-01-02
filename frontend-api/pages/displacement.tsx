@@ -191,11 +191,12 @@ export default function DisplacementPage() {
     if (!originalResult || !newResult) return [];
     const originalCc = originalResult.results.displacement_cc;
     if (!originalCc) return [];
-    const diffPercent = ((newResult.results.displacement_cc - originalCc) / originalCc) * 100;
+    const diffCc = newResult.results.displacement_cc - originalCc;
+    const diffPercent = (diffCc / originalCc) * 100;
     return [
       {
         label: "Diff vs Original (%)",
-        value: `${diffPercent.toFixed(2)}%`,
+        value: `${diffCc.toFixed(2)} cc (${diffPercent.toFixed(2)}%)`,
       },
     ];
   }, [originalResult, newResult]);
