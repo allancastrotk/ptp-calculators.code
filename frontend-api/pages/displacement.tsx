@@ -321,7 +321,7 @@ export default function DisplacementPage() {
           {loadingNew ? <LoadingState /> : null}
           {newResult ? <ResultPanel title={t("newResultsTitle")} items={newResultsList} /> : null}
           {comparisonItems.length > 0 ? (
-            <ResultPanel title={t("comparisonTitle")} items={comparisonItems} />
+            <ResultPanel title={t("comparisonNewTitle")} items={comparisonItems} />
           ) : null}
         </Card>
       </div>

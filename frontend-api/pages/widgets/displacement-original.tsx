@@ -253,7 +253,7 @@ export default function DisplacementOriginalWidget() {
           ) : null}
           {result ? <ResultPanel title={t("originalResultsTitle")} items={resultsList} /> : null}
           {comparisonItems.length > 0 ? (
-            <ResultPanel title={t("comparisonTitle")} items={comparisonItems} />
+            <ResultPanel title={t("comparisonDeclaredTitle")} items={comparisonItems} />
           ) : null}
         </Card>
       </div>
