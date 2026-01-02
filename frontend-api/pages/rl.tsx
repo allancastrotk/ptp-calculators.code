@@ -87,7 +87,7 @@ export default function RLPage() {
   }, [result, t]);
 
   return (
-    <Layout title={t("rl")} subtitle={t("unitLocked")} variant="pilot">
+    <Layout title={t("rl")} subtitle={t("unitLocked")} variant="pilot" hideHeader hideFooter>
       <div className="ptp-stack">
         {error ? <ErrorBanner message={error} /> : null}
         <Card className="ptp-stack">
@@ -120,8 +120,8 @@ export default function RLPage() {
             </Button>
           </div>
           {loading ? <LoadingState /> : null}
+          {result ? <ResultPanel title={t("resultsTitle")} items={resultsList} /> : null}
         </Card>
-        {result ? <ResultPanel title={t("resultsTitle")} items={resultsList} /> : null}
       </div>
     </Layout>
   );

@@ -87,6 +87,12 @@ export default function TiresPage() {
       { label: t("tiresDiameterLabel"), value: result.results.diameter.toFixed(2) },
       { label: t("tiresWidthLabel"), value: result.results.width.toFixed(2) },
     ];
+    return items;
+  }, [result, t]);
+
+  const comparisonItems = useMemo(() => {
+    if (!result) return [];
+    const items = [];
     if (result.results.diff_diameter !== undefined && result.results.diff_diameter !== null) {
       items.push({
         label: t("tiresDiffDiameterLabel"),
@@ -118,7 +124,7 @@ export default function TiresPage() {
   }, [result, t]);
 
   return (
-    <Layout title={t("tires")} subtitle={t("unitLocked")} variant="pilot">
+    <Layout title={t("tires")} subtitle={t("unitLocked")} variant="pilot" hideHeader hideFooter>
       <div className="ptp-stack">
         {error ? <ErrorBanner message={error} /> : null}
         <Card className="ptp-stack">
@@ -149,8 +155,11 @@ export default function TiresPage() {
             </Button>
           </div>
           {loading ? <LoadingState /> : null}
+          {result ? <ResultPanel title={t("resultsTitle")} items={resultsList} /> : null}
+          {comparisonItems.length > 0 ? (
+            <ResultPanel title={t("comparisonNewTitle")} items={comparisonItems} />
+          ) : null}
         </Card>
-        {result ? <ResultPanel title={t("resultsTitle")} items={resultsList} /> : null}
       </div>
     </Layout>
   );

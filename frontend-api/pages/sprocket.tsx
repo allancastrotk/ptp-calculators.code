@@ -81,7 +81,12 @@ export default function SprocketPage() {
 
   const resultsList = useMemo(() => {
     if (!result) return [];
-    const items = [{ label: t("sprocketRatioLabel"), value: result.results.ratio.toFixed(2) }];
+    return [{ label: t("sprocketRatioLabel"), value: result.results.ratio.toFixed(2) }];
+  }, [result, t]);
+
+  const comparisonItems = useMemo(() => {
+    if (!result) return [];
+    const items = [];
     if (result.results.diff_ratio_percent !== undefined && result.results.diff_ratio_percent !== null) {
       items.push({
         label: t("sprocketDiffPercentLabel"),
@@ -98,7 +103,7 @@ export default function SprocketPage() {
   }, [result, t]);
 
   return (
-    <Layout title={t("sprocket")} subtitle={t("unitLocked")} variant="pilot">
+    <Layout title={t("sprocket")} subtitle={t("unitLocked")} variant="pilot" hideHeader hideFooter>
       <div className="ptp-stack">
         {error ? <ErrorBanner message={error} /> : null}
         <Card className="ptp-stack">
@@ -129,8 +134,11 @@ export default function SprocketPage() {
             </Button>
           </div>
           {loading ? <LoadingState /> : null}
+          {result ? <ResultPanel title={t("resultsTitle")} items={resultsList} /> : null}
+          {comparisonItems.length > 0 ? (
+            <ResultPanel title={t("comparisonNewTitle")} items={comparisonItems} />
+          ) : null}
         </Card>
-        {result ? <ResultPanel title={t("resultsTitle")} items={resultsList} /> : null}
       </div>
     </Layout>
   );
