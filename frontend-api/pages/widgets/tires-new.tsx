@@ -433,6 +433,7 @@ export default function TiresNewWidget() {
               <MeasureToggleButton
                 value={inputs.flotationEnabled}
                 onChange={toggleMeasure}
+                label={t("measureLabel")}
                 metricLabel={t("measureMetricLabel")}
                 flotationLabel={t("measureFlotationLabel")}
               />

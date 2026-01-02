@@ -459,6 +459,7 @@ export default function TiresPage() {
               <MeasureToggleButton
                 value={originalInputs.flotationEnabled}
                 onChange={toggleOriginalMeasure}
+                label={t("measureLabel")}
                 metricLabel={t("measureMetricLabel")}
                 flotationLabel={t("measureFlotationLabel")}
               />
@@ -560,6 +561,7 @@ export default function TiresPage() {
               <MeasureToggleButton
                 value={newInputs.flotationEnabled}
                 onChange={toggleNewMeasure}
+                label={t("measureLabel")}
                 metricLabel={t("measureMetricLabel")}
                 flotationLabel={t("measureFlotationLabel")}
               />
