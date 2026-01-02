@@ -80,7 +80,7 @@ Request `inputs`:
 - `bore`: numero (mm ou in)
 - `stroke`: numero (mm ou in)
 - `cylinders`: inteiro positivo
-- `baseline` (opcional): objeto com os mesmos campos para comparacao original vs new
+- `baseline_cc` (opcional): numero (cc) para comparacao original vs new
 
 Regras e unidades:
 - Suporta entrada em mm ou inches quando `unit_system=imperial` ou `auto`.
@@ -89,18 +89,17 @@ Regras e unidades:
 
 Resultados recomendados:
 - `displacement_cc` (cm3)
-- `displacement_liters`
-- `displacement_cuin` (cubic inches) quando `unit_system=imperial` ou solicitado
+- `displacement_l`
+- `displacement_ci` (cubic inches) quando `unit_system=imperial` ou solicitado
 - `geometry` (square/oversquare/undersquare)
-- `diff_percent` (se `baseline` for informado)
+- `diff_percent` (se `baseline_cc` for informado)
 
 ### rl
 
 Request `inputs`:
-- `bore`: numero (mm ou in)
 - `stroke`: numero (mm ou in)
 - `rod_length`: numero (mm ou in)
-- `baseline` (opcional): objeto com os mesmos campos para comparacao original vs new
+- `bore` (opcional): numero (mm ou in), apenas para normalizacao
 
 Regras e unidades:
 - `rl_ratio` e `rod_stroke_ratio` sao adimensionais.
@@ -109,10 +108,6 @@ Regras e unidades:
 Resultados obrigatorios:
 - `rl_ratio` (engineering): `(stroke / 2) / rod_length`
 - `rod_stroke_ratio` (US): `rod_length / stroke`
-- `smoothness` (rough/normal/smooth)
-- `geometry` (square/oversquare/undersquare)
-- `displacement_cc` (compatibilidade legado)
-- `diff_percent` (se `baseline` for informado) para RL e displacement
 
 ### sprocket
 
@@ -132,7 +127,9 @@ Resultados recomendados:
 - `ratio`
 - `chain_length_mm` e `chain_length_in` (quando aplicavel)
 - `center_distance_mm` e `center_distance_in` (quando aplicavel)
-- `diff_percent` e `diff_absolute` (quando `baseline` for informado)
+- `diff_ratio_percent` e `diff_ratio_absolute` (quando `baseline` for informado)
+- `diff_chain_length_percent` e `diff_chain_length_absolute` (quando `baseline` for informado)
+- `diff_center_distance_percent` e `diff_center_distance_absolute` (quando `baseline` for informado)
 
 ### tires
 
@@ -151,10 +148,10 @@ Regras e unidades:
 - `unit_system=imperial` permite retornar inches; `metric` retorna mm.
 
 Resultados recomendados:
-- `diameter_mm` e `diameter_in`
-- `width_mm` e `width_in` (largura do conjunto)
-- `circumference_mm` e `circumference_in` (quando aplicavel)
-- `diff_percent` e `diff_absolute` (quando `baseline` for informado)
+- `diameter` (mm ou in, conforme `unit_system`)
+- `width` (mm ou in, conforme `unit_system`)
+- `diff_diameter` e `diff_diameter_percent` (quando `baseline` for informado)
+- `diff_width` e `diff_width_percent` (quando `baseline` for informado)
 
 ## Compatibilidade com legado
 

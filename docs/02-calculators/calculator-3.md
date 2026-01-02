@@ -84,6 +84,10 @@ Comparacao original vs new:
 - No modo "new", se existir valor salvo, calcula variacoes percentuais e absolutas.
 - Variacoes de comprimento e distancia so aparecem se ambos os valores (novo e original) existirem e `chainLinks > 0`.
 
+
+Implementacao atual (API v1):
+- A resposta exposta utiliza campos `diff_ratio_percent`/`diff_ratio_absolute`, `diff_chain_length_percent`/`diff_chain_length_absolute` e `diff_center_distance_percent`/`diff_center_distance_absolute` quando `baseline` e informado.
+- Os demais resultados seguem `ratio`, `chain_length_mm`/`chain_length_in` e `center_distance_mm`/`center_distance_in`.
 ## 6) Sistema de unidades
 
 - A relacao e adimensional.

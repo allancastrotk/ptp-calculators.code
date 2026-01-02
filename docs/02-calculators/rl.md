@@ -79,6 +79,11 @@ Comportamento do ponto de vista do usuario:
 - O usuario precisa clicar em "Calcular" para obter resultados.
 - A comparacao do modo "new" depende de ter executado a versao "original" antes (mesmo browser/localStorage).
 
+
+Implementacao atual (API v1):
+- A resposta exposta atualmente inclui apenas `rl_ratio` e `rod_stroke_ratio`.
+- Nao ha comparacao original vs new no backend; o BFF apenas repassa os resultados.
+- Saidas de deslocamento, geometria, smoothness e variacoes do legado nao estao expostas na API v1.
 ## 6) Sistema de unidades
 
 - As relacoes R/L e Rod/Stroke sao adimensionais e independem do sistema de unidades.

@@ -55,3 +55,14 @@ What to check:
 - Render logs:
   - Expect POST `/v1/calc/*` only when BFF requests succeed.
   - No direct browser calls should appear.
+## 401 missing internal auth header
+
+Symptoms:
+- BFF responds with 401 and backend returns "Missing internal authentication header."
+
+What to check:
+- Confirm the BFF is sending both headers:
+  - `X-PTP-Internal-Key`
+  - `Authorization: Bearer <key>`
+- Vercel function logs should include `internal key present: true`.
+- After changing env vars, redeploy Vercel and restart Render to apply them.

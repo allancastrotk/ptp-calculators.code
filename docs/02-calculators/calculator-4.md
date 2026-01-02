@@ -85,6 +85,11 @@ Comparacao original vs new:
   - Percentuais: `diff / original * 100`, com `toFixed(2)`.
 - Se nao existir valor salvo, exibe `errorOriginalFirst` e nao calcula variacoes.
 
+
+Implementacao atual (API v1):
+- A resposta exposta inclui `diameter` e `width` (sem sufixo de unidade), alem de `diff_diameter`, `diff_diameter_percent`, `diff_width` e `diff_width_percent` quando `baseline` e informado.
+- As unidades de `diameter`/`width` seguem o `unit_system` resolvido (metric -> mm, imperial -> in).
+- Nao ha circunferencia na resposta v1.
 ## 6) Sistema de unidades
 
 - Entradas sao mistas: aro e tala em polegadas; largura em mm; perfil em %.
