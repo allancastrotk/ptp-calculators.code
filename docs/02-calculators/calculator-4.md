@@ -11,18 +11,18 @@ Tabela de parametros e restricoes observadas no legado:
 
 | Parametro | Campo | Unidade | Restricoes | Observacoes |
 | --- | --- | --- | --- | --- |
-| Tipo de veiculo | `select` | enum | obrigatorio | Opcoes: Car, Motorcycle, Utility (populadas do banco) |
+| Tipo de veiculo | `select` | enum | obrigatorio | Opcoes: Car, Motorcycle, LightTruck, TruckCommercial (populadas do banco) |
 | Aro (rim) | `select` | pol (in) | obrigatorio | Opcoes dependem do veiculo |
 | Largura (width) | `select` | mm | obrigatorio (padrao) | Opcoes dependem de veiculo e aro |
 | Perfil (aspect) | `select` | % | obrigatorio (padrao) | Opcoes dependem de veiculo, aro e largura |
-| Flotation | `checkbox` + `select` | polegadas | opcional | Disponivel apenas para Utility; UI oculta por padrao |
+| Flotation | `checkbox` + `select` | polegadas | opcional | Disponivel apenas para LightTruck |
 | Tala do aro (rim width) | `input type="number"` | pol (in) | opcional | `step=0.5`, `min=0` |
 
 Dependencias de selecao (legado):
 - Selecao de veiculo habilita opcoes de aro.
 - Selecao de aro habilita opcoes de largura.
 - Selecao de largura habilita opcoes de perfil.
-- Para Utility com flotation ativo, a largura/perfil sao ocultados e o select de flotation e populado a partir do banco.
+- Para LightTruck com flotation ativo, a largura/perfil sao ocultados e o select de flotation e populado a partir do banco.
 
 Modo:
 - Modo "original": armazena resultados em `localStorage` com chave `tireCalcOriginal`.
@@ -55,7 +55,7 @@ Calculo padrao (sem flotation):
 - `rimWidthMM = rimWidthIn * 25.4` (se informado)
 - `assemblyWidthMM = max(widthMM, rimWidthMM)` quando rimWidth informado; caso contrario `widthMM`
 
-Calculo com flotation (Utility):
+Calculo com flotation (LightTruck):
 - Parse de string `NNxWWRZZ` (ex.: `31x10.5R15`):
   - `overallIn = NN`
   - `widthIn = WW`
@@ -104,6 +104,9 @@ Compatibilidade obrigatoria:
 - Chave `tireCalcOriginal` e formato `{ diameterMM, assemblyWidthMM }`.
 - Arredondamento com `toFixed(2)` em todas as saidas numericas.
 - Bases de selecao de medidas devem respeitar o banco `TIRES_DB`.
+
+Pontos pendentes de confirmacao:
+- Formatos comerciais alternativos (ex.: `11R22.5`) ainda nao estao expostos; manter como pendente ate definicao futura.
 
 Comportamentos implicitos:
 - O checkbox de flotation esta oculto no HTML (`display: none`), mas o JS suporta o fluxo completo.

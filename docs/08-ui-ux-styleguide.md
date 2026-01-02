@@ -17,14 +17,14 @@ Ele serve como referencia tecnica para manter consistencia visual e evitar perda
 - Texto secundario: `--ptp-muted` [#B7ACA2]
 - Superficie: `--ptp-surface` [#1B1612]
 - Superficie alternativa: `--ptp-surface-alt` [#231C16]
-- Borda (sutil): `--ptp-border` [#C9783A]
-- Foco: `--ptp-focus` [#C7783A]
+- Borda (sutil): `--ptp-border` [#C9783A3D]
+- Foco: `--ptp-focus` [#C7783A59]
 - Azul blueprint (detalhes): [#285A82]
 - Metrico (accent): `--ptp-metric` [#6DA0C7]
 
 ## Backgrounds e embed
 
-- Pagina standalone usa gradiente radial escuro.
+- Pagina standalone usa gradiente radial escuro de [#1C2130] para [#14110E].
 - Em embed (iframe), o `body` e `html` ficam transparentes (`ptp-embed`),
   para que o host controle o fundo.
 
@@ -33,7 +33,7 @@ Ele serve como referencia tecnica para manter consistencia visual e evitar perda
 - Cards sao o "bloco principal" do conteudo.
 - Estilo "pilot":
   - Gradiente diagonal (135deg) com azul blueprint [#285A82] no canto superior/esquerdo
-    e azul bem escuro [#05060A] no canto inferior/direito.
+    e azul bem escuro [#0B0F1A] no canto inferior/direito.
   - Sombra suave para profundidade.
   - Sem borda explicita.
 

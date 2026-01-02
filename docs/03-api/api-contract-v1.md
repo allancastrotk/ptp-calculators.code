@@ -140,11 +140,11 @@ Resultados recomendados:
 ### tires
 
 Request `inputs`:
-- `vehicle_type`: `Car | Motorcycle | Utility`
+- `vehicle_type`: `Car | Motorcycle | LightTruck | TruckCommercial`
 - `rim_in`: numero (polegadas)
 - `width_mm`: numero (mm) ou `flotation` quando aplicavel
 - `aspect_percent`: numero (%) quando aplicavel
-- `flotation` (opcional): string `NNxWWRZZ` quando `vehicle_type=Utility`
+- `flotation` (opcional): string `NNxWWRZZ` quando `vehicle_type=LightTruck`
 - `rim_width_in` (opcional): numero (polegadas)
 - `baseline` (opcional): objeto com os mesmos campos para comparacao original vs new
 
