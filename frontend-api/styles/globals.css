@@ -365,6 +365,18 @@ body.ptp-embed .ptp-subtitle {
   color: var(--ptp-muted);
 }
 
+.ptp-smoothness--smooth {
+  color: #56B17A;
+}
+
+.ptp-smoothness--normal {
+  color: var(--ptp-muted);
+}
+
+.ptp-smoothness--rough {
+  color: #D0645C;
+}
+
 .ptp-result__value {
   font-weight: 700;
   font-size: 18px;

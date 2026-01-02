@@ -199,9 +199,10 @@ export default function RLPage() {
     return t(key);
   };
 
-  const formatSmoothness = (value: string) => {
+  const renderSmoothness = (value: string) => {
     const key = `smoothness_${value}` as const;
-    return t(key);
+    const className = `ptp-smoothness--${value}`;
+    return <span className={className}>{t(key)}</span>;
   };
 
   const buildResults = (result: RLResponse | null, baseUnit: UnitSystem | null) => {
@@ -219,10 +220,14 @@ export default function RLPage() {
       },
       {
         label: t("rlRatioLabel"),
-        value: `${result.results.rl_ratio.toFixed(2)} (${formatSmoothness(result.results.smoothness)})`,
+        value: (
+          <span>
+            {result.results.rl_ratio.toFixed(2)} ({renderSmoothness(result.results.smoothness)})
+          </span>
+        ),
       },
-      { label: t("rodStrokeLabel"), value: result.results.rod_stroke_ratio.toFixed(2) },
       { label: t("geometryLabel"), value: formatGeometry(result.results.geometry) },
+      { label: t("rodStrokeLabel"), value: result.results.rod_stroke_ratio.toFixed(2) },
     ];
   };
 
@@ -299,16 +304,16 @@ export default function RLPage() {
 
     return [
       {
+        label: renderDiffLabel(t("displacementLabel"), displacementDiff),
+        value: renderDiffValue(displacementDiff, displacementPercent, displacementUnit),
+      },
+      {
         label: renderDiffLabel(t("rlRatioLabel"), rlDiff),
         value: renderDiffValue(rlDiff, rlPercent),
       },
       {
         label: renderDiffLabel(t("rodStrokeLabel"), rodDiff),
         value: renderDiffValue(rodDiff, rodPercent),
-      },
-      {
-        label: renderDiffLabel(t("displacementLabel"), displacementDiff),
-        value: renderDiffValue(displacementDiff, displacementPercent, displacementUnit),
       },
     ];
   }, [newResult, originalResult, originalResultUnit, newResultUnit, unitSystem, t]);
