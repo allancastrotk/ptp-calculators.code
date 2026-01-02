@@ -117,7 +117,7 @@ export default function DisplacementNewWidget() {
     } catch (err) {
       if ((err as Error).name === "AbortError") return;
       const apiError = err as ApiError;
-      setError(apiError.message || t("errorTitle"));
+      setError(apiError.message || "Request failed");
       if (apiError.field_errors) {
         const mapped: Record<string, string> = {};
         apiError.field_errors.forEach((fieldError) => {
@@ -157,6 +157,11 @@ export default function DisplacementNewWidget() {
   return (
     <Layout title={t("displacement")} unitSystem={unitSystem} onUnitChange={setUnitSystem}>
       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        {pageId ? null : (
+          <div className="card">
+            <div className="subtitle">{t("pageIdMissing")}</div>
+          </div>
+        )}
         <div className="card">
           <div style={{ fontWeight: 600, marginBottom: 8 }}>{t("newSection")}</div>
           {error ? <ErrorBanner message={error} /> : null}
@@ -167,6 +172,7 @@ export default function DisplacementNewWidget() {
               placeholder={unitSystem === "imperial" ? "2.52" : "64.0"}
               value={bore}
               onChange={setBore}
+              inputMode="decimal"
               error={fieldErrors.bore}
             />
             <InputField
@@ -175,6 +181,7 @@ export default function DisplacementNewWidget() {
               placeholder={unitSystem === "imperial" ? "2.13" : "54.0"}
               value={stroke}
               onChange={setStroke}
+              inputMode="decimal"
               error={fieldErrors.stroke}
             />
             <InputField
@@ -182,10 +189,10 @@ export default function DisplacementNewWidget() {
               placeholder={"4"}
               value={cylinders}
               onChange={setCylinders}
+              inputMode="numeric"
               error={fieldErrors.cylinders}
             />
           </div>
-          {!baseline ? <div className="subtitle">{t("compareHint")}</div> : null}
           <button className="button" type="button" onClick={handleSubmit} disabled={loading}>
             {loading ? t("loading") : t("calculateNew")}
           </button>
@@ -194,7 +201,12 @@ export default function DisplacementNewWidget() {
         </div>
         {comparisonItems.length > 0 ? (
           <ResultPanel title={t("comparisonTitle")} items={comparisonItems} />
-        ) : null}
+        ) : (
+          <ResultPanel
+            title={t("comparisonTitle")}
+            items={[{ label: t("comparisonStatusLabel"), value: t("compareHintWidget") }]}
+          />
+        )}
       </div>
     </Layout>
   );

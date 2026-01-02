@@ -105,7 +105,7 @@ export default function DisplacementOriginalWidget() {
     } catch (err) {
       if ((err as Error).name === "AbortError") return;
       const apiError = err as ApiError;
-      setError(apiError.message || t("errorTitle"));
+      setError(apiError.message || "Request failed");
       if (apiError.field_errors) {
         const mapped: Record<string, string> = {};
         apiError.field_errors.forEach((fieldError) => {
@@ -142,6 +142,7 @@ export default function DisplacementOriginalWidget() {
               placeholder={unitSystem === "imperial" ? "2.28" : "58.0"}
               value={bore}
               onChange={setBore}
+              inputMode="decimal"
               error={fieldErrors.bore}
             />
             <InputField
@@ -150,6 +151,7 @@ export default function DisplacementOriginalWidget() {
               placeholder={unitSystem === "imperial" ? "1.97" : "50.0"}
               value={stroke}
               onChange={setStroke}
+              inputMode="decimal"
               error={fieldErrors.stroke}
             />
             <InputField
@@ -157,14 +159,17 @@ export default function DisplacementOriginalWidget() {
               placeholder={"4"}
               value={cylinders}
               onChange={setCylinders}
+              inputMode="numeric"
               error={fieldErrors.cylinders}
             />
             <InputField
               label={t("compareDeclaredLabel")}
               unitLabel="cc"
               placeholder={"528.4"}
+              helper={t("compareDeclaredHelp")}
               value={baselineCc}
               onChange={setBaselineCc}
+              inputMode="decimal"
               error={fieldErrors.baseline_cc}
             />
           </div>
