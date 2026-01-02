@@ -62,6 +62,10 @@ export default function TiresPage() {
   const [fieldErrorsNew, setFieldErrorsNew] = useState<Record<string, string>>({});
   const [originalResult, setOriginalResult] = useState<TiresResponse | null>(null);
   const [newResult, setNewResult] = useState<TiresResponse | null>(null);
+  const [originalResultUnit, setOriginalResultUnit] = useState<"metric" | "imperial" | null>(
+    null
+  );
+  const [newResultUnit, setNewResultUnit] = useState<"metric" | "imperial" | null>(null);
   const abortOriginalRef = useRef<AbortController | null>(null);
   const abortNewRef = useRef<AbortController | null>(null);
 
@@ -98,7 +102,7 @@ export default function TiresPage() {
 
   const getFlotation = (vehicleType: VehicleType | "", rim: string) => {
     if (!vehicleType || !rim) return [];
-    if (!["LightTruck", "Kart", "Kartcross"].includes(vehicleType)) return [];
+    if (!["LightTruck", "Kart", "Kartcross", "Motorcycle"].includes(vehicleType)) return [];
     const options: string[] = [];
     const rimData = getRimData(vehicleType, rim);
     (rimData?.widths || []).forEach((width: string) => {
@@ -114,7 +118,10 @@ export default function TiresPage() {
   const updateNew = (next: Partial<TireInputs>) =>
     setNewInputs((current) => ({ ...current, ...next }));
   const hasFlotation = (vehicleType: VehicleType | "") =>
-    vehicleType === "LightTruck" || vehicleType === "Kart" || vehicleType === "Kartcross";
+    vehicleType === "LightTruck" ||
+    vehicleType === "Kart" ||
+    vehicleType === "Kartcross" ||
+    vehicleType === "Motorcycle";
 
   const resetDependent = (
     current: TireInputs,
@@ -192,6 +199,7 @@ export default function TiresPage() {
         controller.signal
       );
       setOriginalResult(response);
+      setOriginalResultUnit(response.unit_system || unitSystem);
     } catch (err) {
       if ((err as Error).name === "AbortError") return;
       const apiError = err as ApiError;
@@ -253,6 +261,7 @@ export default function TiresPage() {
         controller.signal
       );
       setNewResult(response);
+      setNewResultUnit(response.unit_system || unitSystem);
     } catch (err) {
       if ((err as Error).name === "AbortError") return;
       const apiError = err as ApiError;
@@ -270,11 +279,15 @@ export default function TiresPage() {
     }
   };
 
-  const buildResultsList = (result: TiresResponse | null, inputs: TireInputs) => {
+  const buildResultsList = (
+    result: TiresResponse | null,
+    inputs: TireInputs,
+    baseUnit: "metric" | "imperial" | null
+  ) => {
     if (!result) return [];
-    const baseUnit = result.unit_system;
-    const diameterOut = convertValue(result.results.diameter, baseUnit);
-    const widthOut = convertValue(result.results.width, baseUnit);
+    const resolvedUnit = baseUnit || result.unit_system || "metric";
+    const diameterOut = convertValue(result.results.diameter, resolvedUnit);
+    const widthOut = convertValue(result.results.width, resolvedUnit);
     const items = [
       {
         label: t("tiresDiameterLabel"),
@@ -330,8 +343,8 @@ export default function TiresPage() {
 
   const buildComparisonItems = (newResultValue: TiresResponse | null) => {
     if (!originalResult || !newResultValue) return [];
-    const newUnit = newResultValue.unit_system;
-    const originalUnit = originalResult.unit_system;
+    const newUnit = newResultUnit || newResultValue.unit_system || "metric";
+    const originalUnit = originalResultUnit || originalResult.unit_system || "metric";
     const originalDiameter = convertValue(originalResult.results.diameter, originalUnit);
     const newDiameter = convertValue(newResultValue.results.diameter, newUnit);
     const originalWidth = convertValue(originalResult.results.width, originalUnit);
@@ -354,16 +367,16 @@ export default function TiresPage() {
   };
 
   const originalResultsList = useMemo(
-    () => buildResultsList(originalResult, originalInputs),
-    [originalResult, unitLabel, originalInputs]
+    () => buildResultsList(originalResult, originalInputs, originalResultUnit),
+    [originalResult, unitLabel, originalInputs, originalResultUnit]
   );
   const newResultsList = useMemo(
-    () => buildResultsList(newResult, newInputs),
-    [newResult, unitLabel, newInputs]
+    () => buildResultsList(newResult, newInputs, newResultUnit),
+    [newResult, unitLabel, newInputs, newResultUnit]
   );
   const comparisonItems = useMemo(
     () => buildComparisonItems(newResult),
-    [newResult, originalResult, unitLabel, t]
+    [newResult, originalResult, originalResultUnit, newResultUnit, unitLabel, t]
   );
 
   const originalOptions = buildOptions(originalInputs.vehicleType);

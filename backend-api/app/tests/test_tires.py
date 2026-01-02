@@ -2,7 +2,11 @@ import pytest
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
-from app.calculators.tires import parse_flotation, calculate_diameter_mm
+from app.calculators.tires import (
+    parse_flotation,
+    parse_motorcycle_flotation,
+    calculate_diameter_mm,
+)
 from app.main import app
 from app.schemas.tires import TiresInputs, TiresResults
 
@@ -12,10 +16,13 @@ def test_flotation_parse_valid():
     assert parsed == (31.0, 10.5, 15.0)
     parsed_dash = parse_flotation("10x4.50-5")
     assert parsed_dash == (10.0, 4.5, 5.0)
+    moto_parsed = parse_motorcycle_flotation("3.00-18")
+    assert moto_parsed == (3.0, 18.0)
 
 
 def test_flotation_parse_invalid():
     assert parse_flotation("31x10.5-15") is None
+    assert parse_motorcycle_flotation("31x10.5R15") is None
 
 
 def test_tires_metric_calculation():
@@ -65,6 +72,14 @@ def test_tires_valid_categories(client):
                 "rim_in": 17,
                 "width_mm": 120,
                 "aspect_percent": 70,
+            },
+        },
+        {
+            "unit_system": "metric",
+            "inputs": {
+                "vehicle_type": "Motorcycle",
+                "rim_in": 18,
+                "flotation": "3.00-18",
             },
         },
         {
@@ -157,6 +172,14 @@ def test_tires_invalid_combinations(client):
             "inputs": {
                 "vehicle_type": "LightTruck",
                 "rim_in": 17,
+                "flotation": "31x10.5R15",
+            },
+        },
+        {
+            "unit_system": "metric",
+            "inputs": {
+                "vehicle_type": "Motorcycle",
+                "rim_in": 18,
                 "flotation": "31x10.5R15",
             },
         },

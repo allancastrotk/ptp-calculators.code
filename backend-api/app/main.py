@@ -19,6 +19,7 @@ from app.calculators.tires import (
     calculate_assembly_width_mm,
     calculate_diameter_mm,
     parse_flotation,
+    parse_motorcycle_flotation,
 )
 from app.data.tires_db import TIRES_DB
 from app.core.security import require_internal_key
@@ -381,15 +382,23 @@ def calc_tires(payload: TiresRequest):
             issues.append({"field": f"{prefix}aspect_percent", "reason": "invalid aspect"})
         return issues
 
-    if inputs.flotation and inputs.vehicle_type not in {"LightTruck", "Kart", "Kartcross"}:
+    if inputs.flotation and inputs.vehicle_type not in {"LightTruck", "Kart", "Kartcross", "Motorcycle"}:
         errors.append(
-            {"field": "inputs.flotation", "reason": "flotation allowed only for LightTruck/Kart/Kartcross"}
+            {
+                "field": "inputs.flotation",
+                "reason": "flotation allowed only for LightTruck/Kart/Kartcross/Motorcycle",
+            }
         )
 
     if inputs.flotation:
-        parsed = parse_flotation(inputs.flotation)
-        if not parsed:
-            errors.append({"field": "inputs.flotation", "reason": "invalid flotation format"})
+        if inputs.vehicle_type == "Motorcycle":
+            parsed = parse_motorcycle_flotation(inputs.flotation)
+            if not parsed:
+                errors.append({"field": "inputs.flotation", "reason": "invalid flotation format"})
+        else:
+            parsed = parse_flotation(inputs.flotation)
+            if not parsed:
+                errors.append({"field": "inputs.flotation", "reason": "invalid flotation format"})
 
     errors.extend(validate_against_db(inputs, "inputs."))
 
@@ -405,9 +414,14 @@ def calc_tires(payload: TiresRequest):
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=response.model_dump())
 
     if inputs.flotation:
-        overall_in, width_in, _rim_in = parse_flotation(inputs.flotation)  # type: ignore[misc]
-        diameter_mm = inches_to_mm(overall_in)
-        width_mm = inches_to_mm(width_in)
+        if inputs.vehicle_type == "Motorcycle":
+            width_in, rim_in = parse_motorcycle_flotation(inputs.flotation)  # type: ignore[misc]
+            width_mm = inches_to_mm(width_in)
+            diameter_mm = calculate_diameter_mm(rim_in, width_mm, 100.0)
+        else:
+            overall_in, width_in, _rim_in = parse_flotation(inputs.flotation)  # type: ignore[misc]
+            diameter_mm = inches_to_mm(overall_in)
+            width_mm = inches_to_mm(width_in)
     else:
         diameter_mm = calculate_diameter_mm(inputs.rim_in, inputs.width_mm, inputs.aspect_percent)  # type: ignore[arg-type]
         width_mm = inputs.width_mm  # type: ignore[assignment]
@@ -422,17 +436,31 @@ def calc_tires(payload: TiresRequest):
     if inputs.baseline:
         base_inputs = inputs.baseline
         base_errors = []
-        if base_inputs.flotation and base_inputs.vehicle_type not in {"LightTruck", "Kart", "Kartcross"}:
+        if base_inputs.flotation and base_inputs.vehicle_type not in {
+            "LightTruck",
+            "Kart",
+            "Kartcross",
+            "Motorcycle",
+        }:
             base_errors.append(
                 {
                     "field": "inputs.baseline.flotation",
-                    "reason": "flotation allowed only for LightTruck/Kart/Kartcross",
+                    "reason": "flotation allowed only for LightTruck/Kart/Kartcross/Motorcycle",
                 }
             )
         if base_inputs.flotation:
-            base_parsed = parse_flotation(base_inputs.flotation)
-            if not base_parsed:
-                base_errors.append({"field": "inputs.baseline.flotation", "reason": "invalid flotation format"})
+            if base_inputs.vehicle_type == "Motorcycle":
+                base_parsed = parse_motorcycle_flotation(base_inputs.flotation)
+                if not base_parsed:
+                    base_errors.append(
+                        {"field": "inputs.baseline.flotation", "reason": "invalid flotation format"}
+                    )
+            else:
+                base_parsed = parse_flotation(base_inputs.flotation)
+                if not base_parsed:
+                    base_errors.append(
+                        {"field": "inputs.baseline.flotation", "reason": "invalid flotation format"}
+                    )
 
         base_errors.extend(validate_against_db(base_inputs, "inputs.baseline."))
 
@@ -445,9 +473,14 @@ def calc_tires(payload: TiresRequest):
             return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=response.model_dump())
 
         if base_inputs.flotation:
-            overall_in, width_in, _rim_in = parse_flotation(base_inputs.flotation)  # type: ignore[misc]
-            baseline_diameter_mm = inches_to_mm(overall_in)
-            baseline_width_mm = inches_to_mm(width_in)
+            if base_inputs.vehicle_type == "Motorcycle":
+                width_in, rim_in = parse_motorcycle_flotation(base_inputs.flotation)  # type: ignore[misc]
+                baseline_width_mm = inches_to_mm(width_in)
+                baseline_diameter_mm = calculate_diameter_mm(rim_in, baseline_width_mm, 100.0)
+            else:
+                overall_in, width_in, _rim_in = parse_flotation(base_inputs.flotation)  # type: ignore[misc]
+                baseline_diameter_mm = inches_to_mm(overall_in)
+                baseline_width_mm = inches_to_mm(width_in)
         else:
             baseline_diameter_mm = calculate_diameter_mm(
                 base_inputs.rim_in, base_inputs.width_mm, base_inputs.aspect_percent  # type: ignore[arg-type]

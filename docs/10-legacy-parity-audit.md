@@ -59,10 +59,12 @@ Paridade OK
 
 Diferencas encontradas
 - O modelo atual expande categorias (LightTruck, TruckCommercial, Kart, Kartcross), inexistentes no legado.
-- O modelo atual expande o parser de flotation para aceitar `NNxWW-ZZ` (além de `NNxWWRZZ`), o que nao existe no legado.
+- O modelo atual expande o parser de flotation para aceitar `NNxWW-ZZ` (alem de `NNxWWRZZ`), o que nao existe no legado.
+- O modelo atual adiciona flotation para Motorcycle (`NN.NN-ZZ`), inexistente no legado.
 
 Correcoes aplicadas
 - UI/UX ajustada para manter logica de selects e comparacao identica ao fluxo do legado.
+- Validacao de flotation para Motorcycle adicionada apenas no modelo novo, mantendo o legado intacto.
 
 Pontos ambiguos do legado
 - O checkbox de flotation aparece oculto no HTML, mas o JS suporta o fluxo completo (comportamento implicito).
@@ -71,3 +73,4 @@ Pontos ambiguos do legado
 
 - Paridade funcional mantida para regras, formulas e arredondamentos do legado.
 - Divergencias atuais sao extensoes documentadas (categorias adicionais e formato de flotation).
+- Flotation para Motorcycle e extensao documentada do modelo novo.

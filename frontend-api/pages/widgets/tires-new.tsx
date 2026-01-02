@@ -88,6 +88,7 @@ export default function TiresNewWidget() {
   const [warmupNotice, setWarmupNotice] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [result, setResult] = useState<TiresResponse | null>(null);
+  const [resultUnit, setResultUnit] = useState<"metric" | "imperial" | null>(null);
   const [baseline, setBaseline] = useState<TiresResponse | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
@@ -98,7 +99,10 @@ export default function TiresNewWidget() {
     return from === "metric" ? value / 25.4 : value * 25.4;
   };
   const hasFlotation = (vehicleType: VehicleType | "") =>
-    vehicleType === "LightTruck" || vehicleType === "Kart" || vehicleType === "Kartcross";
+    vehicleType === "LightTruck" ||
+    vehicleType === "Kart" ||
+    vehicleType === "Kartcross" ||
+    vehicleType === "Motorcycle";
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -231,6 +235,7 @@ export default function TiresNewWidget() {
 
       const response = await postWithRetry(payload, controller.signal);
       setResult(response);
+      setResultUnit(response.unit_system || unitSystem);
     } catch (err) {
       if ((err as Error).name === "AbortError") return;
       if (isRetriable(err)) {
@@ -253,9 +258,9 @@ export default function TiresNewWidget() {
 
   const resultsList = useMemo((): ResultItem[] => {
     if (!result) return [];
-    const baseUnit = result.unit_system;
-    const diameterOut = convertValue(result.results.diameter, baseUnit);
-    const widthOut = convertValue(result.results.width, baseUnit);
+    const resolvedUnit = resultUnit || result.unit_system || "metric";
+    const diameterOut = convertValue(result.results.diameter, resolvedUnit);
+    const widthOut = convertValue(result.results.width, resolvedUnit);
     const items = [
       {
         label: t("tiresDiameterLabel"),
@@ -276,7 +281,7 @@ export default function TiresNewWidget() {
     }
 
     return items;
-  }, [inputs, result, t, unitLabel, unitSystem]);
+  }, [inputs, result, resultUnit, t, unitLabel, unitSystem]);
 
   const renderDiffLabel = (label: string, diff: number) => {
     let state = "no-change";
@@ -311,12 +316,12 @@ export default function TiresNewWidget() {
 
   const comparisonItems = useMemo((): ResultItem[] => {
     if (!baseline || !result) return [];
-    const baselineUnit = baseline.unit_system;
-    const resultUnit = result.unit_system;
+    const baselineUnit = baseline.unit_system || "metric";
+    const resolvedUnit = resultUnit || result.unit_system || "metric";
     const baselineDiameter = convertValue(baseline.results.diameter, baselineUnit);
-    const resultDiameter = convertValue(result.results.diameter, resultUnit);
+    const resultDiameter = convertValue(result.results.diameter, resolvedUnit);
     const baselineWidth = convertValue(baseline.results.width, baselineUnit);
-    const resultWidth = convertValue(result.results.width, resultUnit);
+    const resultWidth = convertValue(result.results.width, resolvedUnit);
 
     const diameterDiff = resultDiameter - baselineDiameter;
     const diameterPercent = baselineDiameter
@@ -336,7 +341,7 @@ export default function TiresNewWidget() {
         value: renderDiffValue(widthDiff, widthPercent),
       },
     ];
-  }, [baseline, result, t, unitLabel]);
+  }, [baseline, result, resultUnit, t, unitLabel]);
 
   const options = buildOptions(inputs.vehicleType);
 

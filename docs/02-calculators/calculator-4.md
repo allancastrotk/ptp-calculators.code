@@ -15,14 +15,14 @@ Tabela de parametros e restricoes observadas no legado:
 | Aro (rim) | `select` | pol (in) | obrigatorio | Opcoes dependem do veiculo |
 | Largura (width) | `select` | mm | obrigatorio (padrao) | Opcoes dependem de veiculo e aro |
 | Perfil (aspect) | `select` | % | obrigatorio (padrao) | Opcoes dependem de veiculo, aro e largura |
-| Flotation | `checkbox` + `select` | polegadas | opcional | Disponivel para LightTruck, Kart e Kartcross |
+| Flotation | `checkbox` + `select` | polegadas | opcional | Disponivel para LightTruck, Kart, Kartcross e Motorcycle |
 | Tala do aro (rim width) | `input type="number"` | pol (in) | opcional | `step=0.5`, `min=0` |
 
 Dependencias de selecao (legado):
 - Selecao de veiculo habilita opcoes de aro.
 - Selecao de aro habilita opcoes de largura.
 - Selecao de largura habilita opcoes de perfil.
-- Para LightTruck/Kart/Kartcross com flotation ativo, a largura/perfil sao ocultados e o select de flotation e populado a partir do banco.
+- Para LightTruck/Kart/Kartcross/Motorcycle com flotation ativo, a largura/perfil sao ocultados e o select de flotation e populado a partir do banco.
 
 Observacao de catalogo:
 - Kart e Kartcross usam principalmente flotation. As opcoes metricas existem apenas como subset representativo.
@@ -66,6 +66,12 @@ Calculo com flotation (LightTruck/Kart/Kartcross):
  - Para Kart/Kartcross, o formato comercial usa `NNxWW-ZZ` (ex.: `10x4.50-5`).
 - `diameterMM = overallIn * 25.4`
 - `widthMM = widthIn * 25.4`
+
+Calculo com flotation (Motorcycle):
+- Formato `NN.NN-ZZ` (ex.: `3.00-18`).
+- Interpretacao: `widthIn = NN.NN`, `rimIn = ZZ`, com aspect ratio implicito de 100%.
+- `widthMM = widthIn * 25.4`
+- `diameterMM = rimIn * 25.4 + 2 * widthMM` (aspect 100%).
 
 Conversao de unidade para exibicao:
 - Se idioma `en_US`: `mm -> in` usando `/ 25.4`

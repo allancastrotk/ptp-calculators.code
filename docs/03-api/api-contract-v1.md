@@ -144,7 +144,9 @@ Request `inputs`:
 - `rim_in`: numero (polegadas)
 - `width_mm`: numero (mm) ou `flotation` quando aplicavel
 - `aspect_percent`: numero (%) quando aplicavel
-- `flotation` (opcional): string `NNxWWRZZ` ou `NNxWW-ZZ` quando `vehicle_type=LightTruck|Kart|Kartcross`
+- `flotation` (opcional):
+  - `NNxWWRZZ` ou `NNxWW-ZZ` quando `vehicle_type=LightTruck|Kart|Kartcross`
+  - `NN.NN-ZZ` quando `vehicle_type=Motorcycle`
 - `rim_width_in` (opcional): numero (polegadas)
 - `baseline` (opcional): objeto com os mesmos campos para comparacao original vs new
 
@@ -152,6 +154,7 @@ Regras e unidades:
 - Aceita medidas metricas e flotacao (quando aplicavel), mantendo o legado.
 - `normalized_inputs` deve incluir equivalente metrico de todas as entradas.
 - `unit_system=imperial` permite retornar inches; `metric` retorna mm.
+- Para Motorcycle em flotation, assume aspect ratio implicito de 100% (diametro = rim + 2 * width).
 
 Resultados recomendados:
 - `diameter` (mm ou in, conforme `unit_system`)

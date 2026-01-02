@@ -87,6 +87,7 @@ export default function TiresOriginalWidget() {
   const [warmupNotice, setWarmupNotice] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [result, setResult] = useState<TiresResponse | null>(null);
+  const [resultUnit, setResultUnit] = useState<"metric" | "imperial" | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
   const unitLabel = unitSystem === "imperial" ? "in" : "mm";
@@ -96,7 +97,10 @@ export default function TiresOriginalWidget() {
     return from === "metric" ? value / 25.4 : value * 25.4;
   };
   const hasFlotation = (vehicleType: VehicleType | "") =>
-    vehicleType === "LightTruck" || vehicleType === "Kart" || vehicleType === "Kartcross";
+    vehicleType === "LightTruck" ||
+    vehicleType === "Kart" ||
+    vehicleType === "Kartcross" ||
+    vehicleType === "Motorcycle";
 
   const buildOptions = (vehicleType: VehicleType | "") => {
     if (!vehicleType) return { rims: [] };
@@ -214,6 +218,7 @@ export default function TiresOriginalWidget() {
 
       const response = await postWithRetry(payload, controller.signal);
       setResult(response);
+      setResultUnit(response.unit_system || unitSystem);
       const message: OriginalMessage = {
         type: "ptp:calc:tires:originalResult",
         pageId,
@@ -242,9 +247,9 @@ export default function TiresOriginalWidget() {
 
   const resultsList = useMemo((): ResultItem[] => {
     if (!result) return [];
-    const baseUnit = result.unit_system;
-    const diameterOut = convertValue(result.results.diameter, baseUnit);
-    const widthOut = convertValue(result.results.width, baseUnit);
+    const resolvedUnit = resultUnit || result.unit_system || "metric";
+    const diameterOut = convertValue(result.results.diameter, resolvedUnit);
+    const widthOut = convertValue(result.results.width, resolvedUnit);
     const items = [
       {
         label: t("tiresDiameterLabel"),
@@ -265,7 +270,7 @@ export default function TiresOriginalWidget() {
     }
 
     return items;
-  }, [inputs, result, t, unitLabel, unitSystem]);
+  }, [inputs, result, resultUnit, t, unitLabel, unitSystem]);
 
   const options = buildOptions(inputs.vehicleType);
 

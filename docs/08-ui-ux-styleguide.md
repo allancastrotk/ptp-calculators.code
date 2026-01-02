@@ -46,7 +46,7 @@ Ele serve como referencia tecnica para manter consistencia visual e evitar perda
 
 ## Botoes
 
-- Primario com cobre queimado.
+- Primario com cobre queimado [#C7783A].
 - Hover: leve brilho (`brightness`) + contorno com `--ptp-focus`.
 - Estado desabilitado: opacidade reduzida.
 

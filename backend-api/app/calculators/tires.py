@@ -3,6 +3,7 @@ import re
 from app.core.units import inches_to_mm
 
 FLOTATION_PATTERN = re.compile(r"^([0-9.]+)x([0-9.]+)(?:R|-)([0-9.]+)$", re.IGNORECASE)
+MOTORCYCLE_FLOTATION_PATTERN = re.compile(r"^([0-9.]+)-([0-9.]+)$", re.IGNORECASE)
 
 
 def parse_flotation(value: str) -> tuple[float, float, float] | None:
@@ -13,6 +14,18 @@ def parse_flotation(value: str) -> tuple[float, float, float] | None:
     width_in = float(match.group(2))
     rim_in = float(match.group(3))
     return overall_in, width_in, rim_in
+
+
+def parse_motorcycle_flotation(value: str) -> tuple[float, float] | None:
+    cleaned = value.strip()
+    if "x" in cleaned.lower() or "r" in cleaned.lower():
+        return None
+    match = MOTORCYCLE_FLOTATION_PATTERN.match(cleaned)
+    if not match:
+        return None
+    width_in = float(match.group(1))
+    rim_in = float(match.group(2))
+    return width_in, rim_in
 
 
 def calculate_diameter_mm(rim_in: float, width_mm: float, aspect_percent: float) -> float:
