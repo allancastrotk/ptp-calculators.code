@@ -72,129 +72,20 @@ window.addEventListener('message', (event) => {
 
 Testing directly on Vercel uses origin https://ptp-calculators.vercel.app and must be allowlisted by the BFF.
 
-## Production snippets
+## Production snippets (widgets)
 
-The host must allowlist only the Vercel UI domain and never call Render directly. Use https://ptp-calculators.vercel.app as the Vercel UI domain.
+O padrao correto para embed e sempre usar widgets separados (Original + New). As paginas `/displacement`, `/rl`, `/sprocket` e `/tires` continuam existindo para uso standalone, mas nao devem ser usadas em embed.
 
-Displacement
+O host deve allowlistar apenas o dominio da UI do Vercel e nunca chamar o Render diretamente. Use https://ptp-calculators.vercel.app como dominio da UI.
 
-```html
-<iframe
-  id="ptp-displacement"
-  src="https://ptp-calculators.vercel.app/displacement?lang=pt_BR"
-  width="100%"
-  style="border:0;"
-  loading="lazy"
-  referrerpolicy="no-referrer"
-></iframe>
-<script>
-  const iframe = document.getElementById('ptp-displacement');
-  iframe.addEventListener('load', () => {
-    iframe.contentWindow.postMessage({ language: 'pt_BR' }, 'https://ptp-calculators.vercel.app');
-  });
-  window.addEventListener('message', (event) => {
-    if (event.origin !== 'https://ptp-calculators.vercel.app') return;
-    if (event.data?.type === 'ptp:resize') {
-      iframe.style.height = `${event.data.height}px`;
-    }
-    if (event.data?.type === 'ptp:lang:ack') {
-      // optional: confirm applied language
-    }
-  });
-</script>
-```
-
-RL
-
-```html
-<iframe
-  id="ptp-rl"
-  src="https://ptp-calculators.vercel.app/rl?lang=pt_BR"
-  width="100%"
-  style="border:0;"
-  loading="lazy"
-  referrerpolicy="no-referrer"
-></iframe>
-<script>
-  const iframe = document.getElementById('ptp-rl');
-  iframe.addEventListener('load', () => {
-    iframe.contentWindow.postMessage({ language: 'pt_BR' }, 'https://ptp-calculators.vercel.app');
-  });
-  window.addEventListener('message', (event) => {
-    if (event.origin !== 'https://ptp-calculators.vercel.app') return;
-    if (event.data?.type === 'ptp:resize') {
-      iframe.style.height = `${event.data.height}px`;
-    }
-    if (event.data?.type === 'ptp:lang:ack') {
-      // optional: confirm applied language
-    }
-  });
-</script>
-```
-
-Sprocket
-
-```html
-<iframe
-  id="ptp-sprocket"
-  src="https://ptp-calculators.vercel.app/sprocket?lang=pt_BR"
-  width="100%"
-  style="border:0;"
-  loading="lazy"
-  referrerpolicy="no-referrer"
-></iframe>
-<script>
-  const iframe = document.getElementById('ptp-sprocket');
-  iframe.addEventListener('load', () => {
-    iframe.contentWindow.postMessage({ language: 'pt_BR' }, 'https://ptp-calculators.vercel.app');
-  });
-  window.addEventListener('message', (event) => {
-    if (event.origin !== 'https://ptp-calculators.vercel.app') return;
-    if (event.data?.type === 'ptp:resize') {
-      iframe.style.height = `${event.data.height}px`;
-    }
-    if (event.data?.type === 'ptp:lang:ack') {
-      // optional: confirm applied language
-    }
-  });
-</script>
-```
-
-Tires
-
-```html
-<iframe
-  id="ptp-tires"
-  src="https://ptp-calculators.vercel.app/tires?lang=pt_BR"
-  width="100%"
-  style="border:0;"
-  loading="lazy"
-  referrerpolicy="no-referrer"
-></iframe>
-<script>
-  const iframe = document.getElementById('ptp-tires');
-  iframe.addEventListener('load', () => {
-    iframe.contentWindow.postMessage({ language: 'pt_BR' }, 'https://ptp-calculators.vercel.app');
-  });
-  window.addEventListener('message', (event) => {
-    if (event.origin !== 'https://ptp-calculators.vercel.app') return;
-    if (event.data?.type === 'ptp:resize') {
-      iframe.style.height = `${event.data.height}px`;
-    }
-    if (event.data?.type === 'ptp:lang:ack') {
-      // optional: confirm applied language
-    }
-  });
-</script>
-```
 ## Displacement widgets (Original/New)
 
-Use two separate iframes when you want Original and New on the same host page. The host generates a shared `pageId` and bridges the result from the Original widget to the New widget.
+Use dois iframes. O host gera um `pageId` compartilhado e faz bridge do resultado do Original para o New.
 
 ```html
 <div id="ptp-displacement-widgets">
   <iframe
-    id="ptp-displacement-original"
+    id="ptp-iframe-displacement-original"
     src="https://ptp-calculators.vercel.app/widgets/displacement-original?lang=pt_BR&pageId=ptp-displacement-123"
     width="100%"
     style="border:0;"
@@ -202,7 +93,7 @@ Use two separate iframes when you want Original and New on the same host page. T
     referrerpolicy="no-referrer"
   ></iframe>
   <iframe
-    id="ptp-displacement-new"
+    id="ptp-iframe-displacement-new"
     src="https://ptp-calculators.vercel.app/widgets/displacement-new?lang=pt_BR&pageId=ptp-displacement-123"
     width="100%"
     style="border:0;"
@@ -213,8 +104,8 @@ Use two separate iframes when you want Original and New on the same host page. T
 <script>
   const uiOrigin = "https://ptp-calculators.vercel.app";
   const pageId = `ptp-displacement-${Math.random().toString(36).slice(2)}`;
-  const originalIframe = document.getElementById("ptp-displacement-original");
-  const newIframe = document.getElementById("ptp-displacement-new");
+  const originalIframe = document.getElementById("ptp-iframe-displacement-original");
+  const newIframe = document.getElementById("ptp-iframe-displacement-new");
 
   originalIframe.src = `${uiOrigin}/widgets/displacement-original?lang=pt_BR&pageId=${pageId}`;
   newIframe.src = `${uiOrigin}/widgets/displacement-new?lang=pt_BR&pageId=${pageId}`;
@@ -255,3 +146,192 @@ Use two separate iframes when you want Original and New on the same host page. T
 </script>
 ```
 Nota: o `pageId` e recomendado para evitar colisao quando houver multiplos pares de widgets na mesma pagina. Sem `pageId`, os widgets ainda funcionam, mas a comparacao entre Original e New nao e habilitada.
+
+## RL widgets (Original/New)
+
+```html
+<div id="ptp-rl-widgets">
+  <iframe
+    id="ptp-iframe-rl-original"
+    src="https://ptp-calculators.vercel.app/widgets/rl-original?lang=pt_BR&pageId=ptp-rl-123"
+    width="100%"
+    style="border:0;"
+    loading="lazy"
+    referrerpolicy="no-referrer"
+  ></iframe>
+  <iframe
+    id="ptp-iframe-rl-new"
+    src="https://ptp-calculators.vercel.app/widgets/rl-new?lang=pt_BR&pageId=ptp-rl-123"
+    width="100%"
+    style="border:0;"
+    loading="lazy"
+    referrerpolicy="no-referrer"
+  ></iframe>
+</div>
+<script>
+  const uiOrigin = "https://ptp-calculators.vercel.app";
+  const pageId = `ptp-rl-${Math.random().toString(36).slice(2)}`;
+  const originalIframe = document.getElementById("ptp-iframe-rl-original");
+  const newIframe = document.getElementById("ptp-iframe-rl-new");
+
+  originalIframe.src = `${uiOrigin}/widgets/rl-original?lang=pt_BR&pageId=${pageId}`;
+  newIframe.src = `${uiOrigin}/widgets/rl-new?lang=pt_BR&pageId=${pageId}`;
+
+  originalIframe.addEventListener("load", () => {
+    originalIframe.contentWindow.postMessage({ language: "pt_BR" }, uiOrigin);
+  });
+  newIframe.addEventListener("load", () => {
+    newIframe.contentWindow.postMessage({ language: "pt_BR" }, uiOrigin);
+  });
+
+  window.addEventListener("message", (event) => {
+    if (event.origin !== uiOrigin) return;
+
+    if (event.data?.type === "ptp:resize") {
+      if (event.source === originalIframe.contentWindow) {
+        originalIframe.style.height = `${event.data.height}px`;
+      }
+      if (event.source === newIframe.contentWindow) {
+        newIframe.style.height = `${event.data.height}px`;
+      }
+    }
+
+    if (event.data?.type === "ptp:calc:rl:originalResult" && event.data?.pageId === pageId) {
+      newIframe.contentWindow.postMessage(
+        {
+          type: "ptp:calc:rl:baseline",
+          pageId,
+          payload: event.data.payload,
+        },
+        uiOrigin
+      );
+    }
+  });
+</script>
+```
+
+## Sprocket widgets (Original/New)
+
+```html
+<div id="ptp-sprocket-widgets">
+  <iframe
+    id="ptp-iframe-sprocket-original"
+    src="https://ptp-calculators.vercel.app/widgets/sprocket-original?lang=pt_BR&pageId=ptp-sprocket-123"
+    width="100%"
+    style="border:0;"
+    loading="lazy"
+    referrerpolicy="no-referrer"
+  ></iframe>
+  <iframe
+    id="ptp-iframe-sprocket-new"
+    src="https://ptp-calculators.vercel.app/widgets/sprocket-new?lang=pt_BR&pageId=ptp-sprocket-123"
+    width="100%"
+    style="border:0;"
+    loading="lazy"
+    referrerpolicy="no-referrer"
+  ></iframe>
+</div>
+<script>
+  const uiOrigin = "https://ptp-calculators.vercel.app";
+  const pageId = `ptp-sprocket-${Math.random().toString(36).slice(2)}`;
+  const originalIframe = document.getElementById("ptp-iframe-sprocket-original");
+  const newIframe = document.getElementById("ptp-iframe-sprocket-new");
+
+  originalIframe.src = `${uiOrigin}/widgets/sprocket-original?lang=pt_BR&pageId=${pageId}`;
+  newIframe.src = `${uiOrigin}/widgets/sprocket-new?lang=pt_BR&pageId=${pageId}`;
+
+  originalIframe.addEventListener("load", () => {
+    originalIframe.contentWindow.postMessage({ language: "pt_BR" }, uiOrigin);
+  });
+  newIframe.addEventListener("load", () => {
+    newIframe.contentWindow.postMessage({ language: "pt_BR" }, uiOrigin);
+  });
+
+  window.addEventListener("message", (event) => {
+    if (event.origin !== uiOrigin) return;
+
+    if (event.data?.type === "ptp:resize") {
+      if (event.source === originalIframe.contentWindow) {
+        originalIframe.style.height = `${event.data.height}px`;
+      }
+      if (event.source === newIframe.contentWindow) {
+        newIframe.style.height = `${event.data.height}px`;
+      }
+    }
+
+    if (event.data?.type === "ptp:calc:sprocket:originalResult" && event.data?.pageId === pageId) {
+      newIframe.contentWindow.postMessage(
+        {
+          type: "ptp:calc:sprocket:baseline",
+          pageId,
+          payload: event.data.payload,
+        },
+        uiOrigin
+      );
+    }
+  });
+</script>
+```
+
+## Tires widgets (Original/New)
+
+```html
+<div id="ptp-tires-widgets">
+  <iframe
+    id="ptp-iframe-tires-original"
+    src="https://ptp-calculators.vercel.app/widgets/tires-original?lang=pt_BR&pageId=ptp-tires-123"
+    width="100%"
+    style="border:0;"
+    loading="lazy"
+    referrerpolicy="no-referrer"
+  ></iframe>
+  <iframe
+    id="ptp-iframe-tires-new"
+    src="https://ptp-calculators.vercel.app/widgets/tires-new?lang=pt_BR&pageId=ptp-tires-123"
+    width="100%"
+    style="border:0;"
+    loading="lazy"
+    referrerpolicy="no-referrer"
+  ></iframe>
+</div>
+<script>
+  const uiOrigin = "https://ptp-calculators.vercel.app";
+  const pageId = `ptp-tires-${Math.random().toString(36).slice(2)}`;
+  const originalIframe = document.getElementById("ptp-iframe-tires-original");
+  const newIframe = document.getElementById("ptp-iframe-tires-new");
+
+  originalIframe.src = `${uiOrigin}/widgets/tires-original?lang=pt_BR&pageId=${pageId}`;
+  newIframe.src = `${uiOrigin}/widgets/tires-new?lang=pt_BR&pageId=${pageId}`;
+
+  originalIframe.addEventListener("load", () => {
+    originalIframe.contentWindow.postMessage({ language: "pt_BR" }, uiOrigin);
+  });
+  newIframe.addEventListener("load", () => {
+    newIframe.contentWindow.postMessage({ language: "pt_BR" }, uiOrigin);
+  });
+
+  window.addEventListener("message", (event) => {
+    if (event.origin !== uiOrigin) return;
+
+    if (event.data?.type === "ptp:resize") {
+      if (event.source === originalIframe.contentWindow) {
+        originalIframe.style.height = `${event.data.height}px`;
+      }
+      if (event.source === newIframe.contentWindow) {
+        newIframe.style.height = `${event.data.height}px`;
+      }
+    }
+
+    if (event.data?.type === "ptp:calc:tires:originalResult" && event.data?.pageId === pageId) {
+      newIframe.contentWindow.postMessage(
+        {
+          type: "ptp:calc:tires:baseline",
+          pageId,
+          payload: event.data.payload,
+        },
+        uiOrigin
+      );
+    }
+  });
+</script>
+```

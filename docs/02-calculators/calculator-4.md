@@ -11,18 +11,21 @@ Tabela de parametros e restricoes observadas no legado:
 
 | Parametro | Campo | Unidade | Restricoes | Observacoes |
 | --- | --- | --- | --- | --- |
-| Tipo de veiculo | `select` | enum | obrigatorio | Opcoes: Car, Motorcycle, LightTruck, TruckCommercial (populadas do banco) |
+| Tipo de veiculo | `select` | enum | obrigatorio | Opcoes: Car, Motorcycle, LightTruck, TruckCommercial, Kart, Kartcross (populadas do banco) |
 | Aro (rim) | `select` | pol (in) | obrigatorio | Opcoes dependem do veiculo |
 | Largura (width) | `select` | mm | obrigatorio (padrao) | Opcoes dependem de veiculo e aro |
 | Perfil (aspect) | `select` | % | obrigatorio (padrao) | Opcoes dependem de veiculo, aro e largura |
-| Flotation | `checkbox` + `select` | polegadas | opcional | Disponivel apenas para LightTruck |
+| Flotation | `checkbox` + `select` | polegadas | opcional | Disponivel para LightTruck, Kart e Kartcross |
 | Tala do aro (rim width) | `input type="number"` | pol (in) | opcional | `step=0.5`, `min=0` |
 
 Dependencias de selecao (legado):
 - Selecao de veiculo habilita opcoes de aro.
 - Selecao de aro habilita opcoes de largura.
 - Selecao de largura habilita opcoes de perfil.
-- Para LightTruck com flotation ativo, a largura/perfil sao ocultados e o select de flotation e populado a partir do banco.
+- Para LightTruck/Kart/Kartcross com flotation ativo, a largura/perfil sao ocultados e o select de flotation e populado a partir do banco.
+
+Observacao de catalogo:
+- Kart e Kartcross usam principalmente flotation. As opcoes metricas existem apenas como subset representativo.
 
 Modo:
 - Modo "original": armazena resultados em `localStorage` com chave `tireCalcOriginal`.
@@ -55,11 +58,12 @@ Calculo padrao (sem flotation):
 - `rimWidthMM = rimWidthIn * 25.4` (se informado)
 - `assemblyWidthMM = max(widthMM, rimWidthMM)` quando rimWidth informado; caso contrario `widthMM`
 
-Calculo com flotation (LightTruck):
+Calculo com flotation (LightTruck/Kart/Kartcross):
 - Parse de string `NNxWWRZZ` (ex.: `31x10.5R15`):
   - `overallIn = NN`
   - `widthIn = WW`
   - `rimIn = ZZ` (nao usado no calculo)
+ - Para Kart/Kartcross, o formato comercial usa `NNxWW-ZZ` (ex.: `10x4.50-5`).
 - `diameterMM = overallIn * 25.4`
 - `widthMM = widthIn * 25.4`
 
