@@ -1,6 +1,11 @@
+export type WidthEntry = {
+  aspects?: number[];
+  flotation?: string[];
+};
+
 export type RimData = {
   widths: string[];
-  [width: string]: { aspects?: number[]; flotation?: string[] } | string[];
+  [width: string]: WidthEntry | string[];
 };
 
 export type VehicleData = {
@@ -142,4 +147,11 @@ export function getRimData(vehicleType: VehicleType, rim: string): RimData | und
   if (!data || Array.isArray(data)) return undefined;
   if ("widths" in data) return data as RimData;
   return undefined;
+}
+
+export function getWidthEntry(rimData: RimData | undefined, width: string): WidthEntry | undefined {
+  if (!rimData) return undefined;
+  const entry = rimData[width];
+  if (!entry || Array.isArray(entry)) return undefined;
+  return entry as WidthEntry;
 }
