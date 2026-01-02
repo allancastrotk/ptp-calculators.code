@@ -9,6 +9,7 @@
   --ptp-border: rgba(255, 255, 255, 0.08);
   --ptp-primary: #f1b84b;
   --ptp-primary-contrast: #1a1410;
+  --ptp-metric: #6fb0f4;
   --ptp-focus: rgba(241, 184, 75, 0.4);
   --ptp-error: #ff6b6b;
   --ptp-warning: #f6c356;
@@ -34,7 +35,7 @@ body {
 }
 
 body.ptp-embed {
-  background: var(--ptp-bg);
+  background: transparent;
 }
 
 a {
@@ -64,13 +65,14 @@ body.ptp-embed .ptp-shell {
   --ptp-primary: #c7783a;
   --ptp-primary-contrast: #24160e;
   --ptp-focus: rgba(199, 120, 58, 0.35);
-  --ptp-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+  --ptp-shadow: 0 14px 32px rgba(0, 0, 0, 0.35);
   --ptp-blueprint: #344a57;
+  --ptp-metric: #6da0c7;
 }
 
 .ptp-variant-pilot .ptp-card,
 .ptp-variant-pilot .card {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.02), rgba(0, 0, 0, 0.2));
+  background: transparent;
 }
 
 .ptp-container {
@@ -130,7 +132,7 @@ body.ptp-embed .ptp-subtitle {
 .ptp-card,
 .card {
   background: var(--ptp-surface);
-  border: 1px solid var(--ptp-border);
+  border: none;
   border-radius: var(--ptp-radius);
   padding: 20px;
   box-shadow: var(--ptp-shadow);
@@ -153,6 +155,7 @@ body.ptp-embed .ptp-subtitle {
   justify-content: space-between;
   gap: 12px;
   flex-wrap: nowrap;
+  padding-bottom: 8px;
 }
 
 .ptp-section-title {
@@ -207,17 +210,17 @@ body.ptp-embed .ptp-subtitle {
 .ptp-input {
   padding: 10px 12px;
   border-radius: 12px;
-  border: 1px solid var(--ptp-border);
+  border: none;
   background: var(--ptp-surface-alt);
   color: var(--ptp-text);
   font-size: 14px;
   outline: none;
   text-align: center;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.28);
 }
 
 .ptp-input:focus {
-  border-color: var(--ptp-primary);
-  box-shadow: 0 0 0 3px var(--ptp-focus);
+  box-shadow: 0 0 0 3px var(--ptp-focus), 0 10px 22px rgba(0, 0, 0, 0.28);
 }
 
 .ptp-button,
@@ -355,9 +358,9 @@ body.ptp-embed .ptp-subtitle {
 }
 
 .ptp-unit-toggle.is-metric {
-  background: var(--ptp-surface-alt);
-  border-color: var(--ptp-border);
-  color: var(--ptp-text);
+  background: rgba(111, 176, 244, 0.16);
+  border-color: rgba(111, 176, 244, 0.35);
+  color: var(--ptp-metric);
 }
 
 .ptp-unit-toggle__label {

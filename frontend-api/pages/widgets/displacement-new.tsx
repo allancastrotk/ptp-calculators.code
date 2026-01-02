@@ -81,6 +81,8 @@ export default function DisplacementNewWidget() {
   const [baseline, setBaseline] = useState<DisplacementResponse | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
+  const toNumber = (value: string) => Number(value.replace(",", "."));
+
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -148,9 +150,9 @@ export default function DisplacementNewWidget() {
       const payload = {
         unit_system: unitSystem,
         inputs: {
-          bore: Number(bore),
-          stroke: Number(stroke),
-          cylinders: Number(cylinders),
+          bore: toNumber(bore),
+          stroke: toNumber(stroke),
+          cylinders: toNumber(cylinders),
         },
       };
 
@@ -259,10 +261,10 @@ export default function DisplacementNewWidget() {
             </div>
           ) : null}
           {result ? <ResultPanel title={t("newResultsTitle")} items={resultsList} /> : null}
+          {comparisonItems.length > 0 ? (
+            <ResultPanel title={t("comparisonTitle")} items={comparisonItems} />
+          ) : null}
         </Card>
-        {comparisonItems.length > 0 ? (
-          <ResultPanel title={t("comparisonTitle")} items={comparisonItems} />
-        ) : null}
       </div>
     </Layout>
   );

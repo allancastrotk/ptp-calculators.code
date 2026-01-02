@@ -22,7 +22,7 @@ export function UnitToggleButton({
       onClick={() => onChange(nextValue)}
       aria-pressed={!isMetric}
     >
-      <span className="ptp-unit-toggle__label">Unit</span>
+      <span className="ptp-unit-toggle__label">{t("unitLabel")}</span>
       <span>{isMetric ? t("unitMetric") : t("unitImperial")}</span>
     </button>
   );

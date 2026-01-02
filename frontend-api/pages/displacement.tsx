@@ -54,6 +54,8 @@ export default function DisplacementPage() {
   const abortOriginalRef = useRef<AbortController | null>(null);
   const abortNewRef = useRef<AbortController | null>(null);
 
+  const toNumber = (value: string) => Number(value.replace(",", "."));
+
   const handleOriginalSubmit = async () => {
     setErrorOriginal(null);
     setFieldErrorsOriginal({});
@@ -79,10 +81,10 @@ export default function DisplacementPage() {
       const payload = {
         unit_system: unitSystem,
         inputs: {
-          bore: Number(originalBore),
-          stroke: Number(originalStroke),
-          cylinders: Number(originalCylinders),
-          baseline_cc: baselineCc ? Number(baselineCc) : undefined,
+          bore: toNumber(originalBore),
+          stroke: toNumber(originalStroke),
+          cylinders: toNumber(originalCylinders),
+          baseline_cc: baselineCc ? toNumber(baselineCc) : undefined,
         },
       };
 
@@ -134,9 +136,9 @@ export default function DisplacementPage() {
       const payload = {
         unit_system: unitSystem,
         inputs: {
-          bore: Number(newBore),
-          stroke: Number(newStroke),
-          cylinders: Number(newCylinders),
+          bore: toNumber(newBore),
+          stroke: toNumber(newStroke),
+          cylinders: toNumber(newCylinders),
         },
       };
 
@@ -317,10 +319,10 @@ export default function DisplacementPage() {
           </div>
           {loadingNew ? <LoadingState /> : null}
           {newResult ? <ResultPanel title={t("newResultsTitle")} items={newResultsList} /> : null}
+          {comparisonItems.length > 0 ? (
+            <ResultPanel title={t("comparisonTitle")} items={comparisonItems} />
+          ) : null}
         </Card>
-        {comparisonItems.length > 0 ? (
-          <ResultPanel title={t("comparisonTitle")} items={comparisonItems} />
-        ) : null}
       </div>
     </Layout>
   );

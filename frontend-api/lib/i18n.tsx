@@ -11,6 +11,7 @@ export type I18nContextValue = {
 const dictionaries: Record<Language, Record<string, string>> = {
   en_US: {
     appTitle: "PowerTunePro Calculators",
+    unitLabel: "Unit",
     unitMetric: "Metric",
     unitImperial: "Imperial",
     unitLocked: "Unit system not applicable",
@@ -59,6 +60,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
   },
   pt_BR: {
     appTitle: "PowerTunePro Calculators",
+    unitLabel: "Unidade",
     unitMetric: "Metrico",
     unitImperial: "Imperial",
     unitLocked: "Sistema nao aplicavel",
@@ -107,6 +109,7 @@ const dictionaries: Record<Language, Record<string, string>> = {
   },
   es_ES: {
     appTitle: "PowerTunePro Calculators",
+    unitLabel: "Unidad",
     unitMetric: "Metrico",
     unitImperial: "Imperial",
     unitLocked: "Sistema no aplicable",

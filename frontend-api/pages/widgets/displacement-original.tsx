@@ -77,6 +77,8 @@ export default function DisplacementOriginalWidget() {
   const [result, setResult] = useState<DisplacementResponse | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
+  const toNumber = (value: string) => Number(value.replace(",", "."));
+
   const postWithRetry = async (payload: unknown, signal: AbortSignal) => {
     for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt += 1) {
       try {
@@ -129,10 +131,10 @@ export default function DisplacementOriginalWidget() {
       const payload = {
         unit_system: unitSystem,
         inputs: {
-          bore: Number(bore),
-          stroke: Number(stroke),
-          cylinders: Number(cylinders),
-          baseline_cc: baselineCc ? Number(baselineCc) : undefined,
+          bore: toNumber(bore),
+          stroke: toNumber(stroke),
+          cylinders: toNumber(cylinders),
+          baseline_cc: baselineCc ? toNumber(baselineCc) : undefined,
         },
       };
 
