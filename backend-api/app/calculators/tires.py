@@ -2,7 +2,7 @@ import re
 
 from app.core.units import inches_to_mm
 
-FLOTATION_PATTERN = re.compile(r"^([0-9.]+)x([0-9.]+)R([0-9.]+)$", re.IGNORECASE)
+FLOTATION_PATTERN = re.compile(r"^([0-9.]+)x([0-9.]+)(?:R|-)([0-9.]+)$", re.IGNORECASE)
 
 
 def parse_flotation(value: str) -> tuple[float, float, float] | None:

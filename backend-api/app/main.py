@@ -398,8 +398,10 @@ def calc_tires(payload: TiresRequest):
             issues.append({"field": f"{prefix}aspect_percent", "reason": "invalid aspect"})
         return issues
 
-    if inputs.flotation and inputs.vehicle_type != "LightTruck":
-        errors.append({"field": "inputs.flotation", "reason": "flotation allowed only for LightTruck"})
+    if inputs.flotation and inputs.vehicle_type not in {"LightTruck", "Kart", "Kartcross"}:
+        errors.append(
+            {"field": "inputs.flotation", "reason": "flotation allowed only for LightTruck/Kart/Kartcross"}
+        )
 
     if inputs.flotation:
         parsed = parse_flotation(inputs.flotation)
@@ -437,9 +439,12 @@ def calc_tires(payload: TiresRequest):
     if inputs.baseline:
         base_inputs = inputs.baseline
         base_errors = []
-        if base_inputs.flotation and base_inputs.vehicle_type != "LightTruck":
+        if base_inputs.flotation and base_inputs.vehicle_type not in {"LightTruck", "Kart", "Kartcross"}:
             base_errors.append(
-                {"field": "inputs.baseline.flotation", "reason": "flotation allowed only for LightTruck"}
+                {
+                    "field": "inputs.baseline.flotation",
+                    "reason": "flotation allowed only for LightTruck/Kart/Kartcross",
+                }
             )
         if base_inputs.flotation:
             base_parsed = parse_flotation(base_inputs.flotation)

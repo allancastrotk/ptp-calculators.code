@@ -4,7 +4,7 @@ from pydantic import BaseModel, confloat, model_validator
 
 from app.schemas.common import RequestBase, ResponseBase
 
-VehicleType = Literal["Car", "Motorcycle", "LightTruck", "TruckCommercial"]
+VehicleType = Literal["Car", "Motorcycle", "LightTruck", "TruckCommercial", "Kart", "Kartcross"]
 
 
 class TiresBaselineInputs(BaseModel):

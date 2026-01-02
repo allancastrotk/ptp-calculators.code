@@ -85,7 +85,8 @@ export default function TiresPage() {
   };
 
   const getFlotation = (vehicleType: VehicleType | "", rim: string) => {
-    if (vehicleType !== "LightTruck" || !rim) return [];
+    if (!vehicleType || !rim) return [];
+    if (!["LightTruck", "Kart", "Kartcross"].includes(vehicleType)) return [];
     const options: string[] = [];
     const rimData = getRimData(vehicleType, rim);
     (rimData?.widths || []).forEach((width: string) => {
@@ -100,6 +101,8 @@ export default function TiresPage() {
     setOriginalInputs((current) => ({ ...current, ...next }));
   const updateNew = (next: Partial<TireInputs>) =>
     setNewInputs((current) => ({ ...current, ...next }));
+  const hasFlotation = (vehicleType: VehicleType | "") =>
+    vehicleType === "LightTruck" || vehicleType === "Kart" || vehicleType === "Kartcross";
 
   const resetDependent = (
     current: TireInputs,
@@ -332,7 +335,7 @@ export default function TiresPage() {
                 />
               </>
             ) : null}
-            {originalInputs.vehicleType === "LightTruck" ? (
+            {hasFlotation(originalInputs.vehicleType) ? (
               <label className="ptp-field">
                 <span className="ptp-field__label">{t("flotationLabel")}</span>
                 <input
@@ -436,7 +439,7 @@ export default function TiresPage() {
                 />
               </>
             ) : null}
-            {newInputs.vehicleType === "LightTruck" ? (
+            {hasFlotation(newInputs.vehicleType) ? (
               <label className="ptp-field">
                 <span className="ptp-field__label">{t("flotationLabel")}</span>
                 <input

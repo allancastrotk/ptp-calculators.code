@@ -95,6 +95,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
     Motorcycle: "Motorcycle",
     LightTruck: "Light Truck",
     TruckCommercial: "Truck (Commercial)",
+    Kart: "Kart",
+    Kartcross: "Kartcross",
     required: "Required",
   },
   pt_BR: {
@@ -183,6 +185,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
     Motorcycle: "Moto",
     LightTruck: "SUV/Picape/Van",
     TruckCommercial: "Caminhao Comercial",
+    Kart: "Kart",
+    Kartcross: "Kartcross",
     required: "Obrigatorio",
   },
   es_ES: {
@@ -271,6 +275,8 @@ const dictionaries: Record<Language, Record<string, string>> = {
     Motorcycle: "Moto",
     LightTruck: "SUV/Pickup/Van",
     TruckCommercial: "Camion Comercial",
+    Kart: "Kart",
+    Kartcross: "Kartcross",
     required: "Requerido",
   },
 };
