@@ -244,7 +244,7 @@ export default function DisplacementNewWidget() {
               error={fieldErrors.cylinders}
             />
           </div>
-          <div className="ptp-actions ptp-actions--between">
+          <div className="ptp-actions ptp-actions--between ptp-actions--spaced">
             {!baseline && !result ? (
               <div className="ptp-field__helper">{t("compareHintWidget")}</div>
             ) : (
