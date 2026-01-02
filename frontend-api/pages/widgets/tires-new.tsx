@@ -85,7 +85,6 @@ export default function TiresNewWidget() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [retryHint, setRetryHint] = useState<string | null>(null);
-  const [warmupNotice, setWarmupNotice] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [result, setResult] = useState<TiresResponse | null>(null);
   const [resultUnit, setResultUnit] = useState<"metric" | "imperial" | null>(null);
@@ -188,10 +187,9 @@ export default function TiresNewWidget() {
     for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt += 1) {
       try {
         if (attempt > 0) {
-          setWarmupNotice(t("warmupMessage"));
+          // StatusPanel already shows warmupMessage while loading.
         }
         const response = await postJson<TiresResponse>("/api/v1/calc/tires", payload, signal);
-        setWarmupNotice(null);
         return response;
       } catch (err) {
         if ((err as Error).name === "AbortError") throw err;
@@ -208,7 +206,6 @@ export default function TiresNewWidget() {
   const handleSubmit = async () => {
     setError(null);
     setRetryHint(null);
-    setWarmupNotice(null);
     const errors = validateInputs(inputs);
     setFieldErrors(errors);
     if (Object.keys(errors).length > 0) return;
@@ -453,7 +450,6 @@ export default function TiresNewWidget() {
             </Button>
           </div>
           {loading ? <StatusPanel message={t("warmupMessage")} /> : null}
-          {warmupNotice ? <div className="ptp-card">{warmupNotice}</div> : null}
           {result ? (
             <ResultPanel title={t("newAssemblyResultsTitle")} items={resultsList} />
           ) : null}
