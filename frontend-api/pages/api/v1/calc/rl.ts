@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { isAllowedHost, isAllowedOrigin } from "@/lib/origin";
-
+import { getInternalAuthHeaders } from "@/lib/internalAuth";
 function applyCors(req: NextApiRequest, res: NextApiResponse) {
   const origin = req.headers.origin;
   if (origin && isAllowedOrigin(origin)) {
@@ -35,10 +35,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   const renderBase = process.env.RENDER_API_BASE || "";
-  const internalKey = process.env.PTP_INTERNAL_KEY;
-  const internalKeyPresent = Boolean(internalKey);
-  console.info("internal key present: " + internalKeyPresent);
-  if (!renderBase || !internalKey) {
+  const auth = getInternalAuthHeaders();
+  if (!renderBase || "error" in auth) {
     return res.status(500).json({ error: "server_misconfigured" });
   }
 
@@ -49,8 +47,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-PTP-Internal-Key": internalKey,
-        "Authorization": `Bearer ${internalKey}`,
+        ...auth.headers,
       },
       body: JSON.stringify(req.body),
     });
