@@ -81,16 +81,19 @@ export default function RLPage() {
   const resultsList = useMemo(() => {
     if (!result) return [];
     return [
-      { label: "R/L", value: result.results.rl_ratio.toFixed(2) },
-      { label: "Rod/Stroke", value: result.results.rod_stroke_ratio.toFixed(2) },
+      { label: t("rlRatioLabel"), value: result.results.rl_ratio.toFixed(2) },
+      { label: t("rodStrokeLabel"), value: result.results.rod_stroke_ratio.toFixed(2) },
     ];
-  }, [result]);
+  }, [result, t]);
 
   return (
-    <Layout title={t("rl")} subtitle={t("unitLocked")}>
+    <Layout title={t("rl")} subtitle={t("unitLocked")} variant="pilot">
       <div className="ptp-stack">
         {error ? <ErrorBanner message={error} /> : null}
         <Card className="ptp-stack">
+          <div className="ptp-section-header">
+            <div className="ptp-section-title">{t("rl")}</div>
+          </div>
           <div className="grid">
             <InputField
               label={t("strokeLabel")}
@@ -111,12 +114,14 @@ export default function RLPage() {
               error={fieldErrors.rod_length}
             />
           </div>
-          <Button type="button" onClick={handleSubmit} disabled={loading}>
-            {loading ? t("loading") : t("calculate")}
-          </Button>
+          <div className="ptp-actions">
+            <Button type="button" onClick={handleSubmit} disabled={loading}>
+              {loading ? t("loading") : t("calculate")}
+            </Button>
+          </div>
           {loading ? <LoadingState /> : null}
         </Card>
-        {result ? <ResultPanel title="Results" items={resultsList} /> : null}
+        {result ? <ResultPanel title={t("resultsTitle")} items={resultsList} /> : null}
       </div>
     </Layout>
   );

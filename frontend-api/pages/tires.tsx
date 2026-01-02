@@ -84,12 +84,12 @@ export default function TiresPage() {
   const resultsList = useMemo(() => {
     if (!result) return [];
     const items = [
-      { label: "Diameter", value: result.results.diameter.toFixed(2) },
-      { label: "Width", value: result.results.width.toFixed(2) },
+      { label: t("tiresDiameterLabel"), value: result.results.diameter.toFixed(2) },
+      { label: t("tiresWidthLabel"), value: result.results.width.toFixed(2) },
     ];
     if (result.results.diff_diameter !== undefined && result.results.diff_diameter !== null) {
       items.push({
-        label: "Diff diameter",
+        label: t("tiresDiffDiameterLabel"),
         value: result.results.diff_diameter.toFixed(2),
       });
     }
@@ -98,30 +98,33 @@ export default function TiresPage() {
       result.results.diff_diameter_percent !== null
     ) {
       items.push({
-        label: "Diff diameter (%)",
+        label: t("tiresDiffDiameterPercentLabel"),
         value: `${result.results.diff_diameter_percent.toFixed(2)}%`,
       });
     }
     if (result.results.diff_width !== undefined && result.results.diff_width !== null) {
       items.push({
-        label: "Diff width",
+        label: t("tiresDiffWidthLabel"),
         value: result.results.diff_width.toFixed(2),
       });
     }
     if (result.results.diff_width_percent !== undefined && result.results.diff_width_percent !== null) {
       items.push({
-        label: "Diff width (%)",
+        label: t("tiresDiffWidthPercentLabel"),
         value: `${result.results.diff_width_percent.toFixed(2)}%`,
       });
     }
     return items;
-  }, [result]);
+  }, [result, t]);
 
   return (
-    <Layout title={t("tires")} subtitle={t("unitLocked")}>
+    <Layout title={t("tires")} subtitle={t("unitLocked")} variant="pilot">
       <div className="ptp-stack">
         {error ? <ErrorBanner message={error} /> : null}
         <Card className="ptp-stack">
+          <div className="ptp-section-header">
+            <div className="ptp-section-title">{t("tires")}</div>
+          </div>
           <div className="grid">
             <InputField
               label={t("tires")}
@@ -140,12 +143,14 @@ export default function TiresPage() {
               error={fieldErrors.baseline_tire_size}
             />
           </div>
-          <Button type="button" onClick={handleSubmit} disabled={loading}>
-            {loading ? t("loading") : t("calculate")}
-          </Button>
+          <div className="ptp-actions">
+            <Button type="button" onClick={handleSubmit} disabled={loading}>
+              {loading ? t("loading") : t("calculate")}
+            </Button>
+          </div>
           {loading ? <LoadingState /> : null}
         </Card>
-        {result ? <ResultPanel title="Results" items={resultsList} /> : null}
+        {result ? <ResultPanel title={t("resultsTitle")} items={resultsList} /> : null}
       </div>
     </Layout>
   );

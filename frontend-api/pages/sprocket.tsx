@@ -81,24 +81,30 @@ export default function SprocketPage() {
 
   const resultsList = useMemo(() => {
     if (!result) return [];
-    const items = [{ label: "Ratio", value: result.results.ratio.toFixed(2) }];
+    const items = [{ label: t("sprocketRatioLabel"), value: result.results.ratio.toFixed(2) }];
     if (result.results.diff_ratio_percent !== undefined && result.results.diff_ratio_percent !== null) {
       items.push({
-        label: "Diff (%)",
+        label: t("sprocketDiffPercentLabel"),
         value: `${result.results.diff_ratio_percent.toFixed(2)}%`,
       });
     }
     if (result.results.diff_ratio_absolute !== undefined && result.results.diff_ratio_absolute !== null) {
-      items.push({ label: "Diff", value: result.results.diff_ratio_absolute.toFixed(2) });
+      items.push({
+        label: t("sprocketDiffLabel"),
+        value: result.results.diff_ratio_absolute.toFixed(2),
+      });
     }
     return items;
-  }, [result]);
+  }, [result, t]);
 
   return (
-    <Layout title={t("sprocket")} subtitle={t("unitLocked")}>
+    <Layout title={t("sprocket")} subtitle={t("unitLocked")} variant="pilot">
       <div className="ptp-stack">
         {error ? <ErrorBanner message={error} /> : null}
         <Card className="ptp-stack">
+          <div className="ptp-section-header">
+            <div className="ptp-section-title">{t("sprocket")}</div>
+          </div>
           <div className="grid">
             <InputField
               label={t("sprocketLabel")}
@@ -117,12 +123,14 @@ export default function SprocketPage() {
               error={fieldErrors.crown_teeth}
             />
           </div>
-          <Button type="button" onClick={handleSubmit} disabled={loading}>
-            {loading ? t("loading") : t("calculate")}
-          </Button>
+          <div className="ptp-actions">
+            <Button type="button" onClick={handleSubmit} disabled={loading}>
+              {loading ? t("loading") : t("calculate")}
+            </Button>
+          </div>
           {loading ? <LoadingState /> : null}
         </Card>
-        {result ? <ResultPanel title="Results" items={resultsList} /> : null}
+        {result ? <ResultPanel title={t("resultsTitle")} items={resultsList} /> : null}
       </div>
     </Layout>
   );
