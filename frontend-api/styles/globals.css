@@ -137,7 +137,8 @@ body.ptp-embed .ptp-subtitle {
 
 .ptp-variant-pilot .ptp-card,
 .ptp-variant-pilot .card {
-  background: linear-gradient(135deg, rgba(52, 74, 87, 0.06), rgba(0, 0, 0, 0.1));
+  background: linear-gradient(135deg, rgba(52, 74, 87, 0.14), rgba(0, 0, 0, 0.22)),
+    var(--ptp-surface);
 }
 
 .ptp-card__title {
