@@ -181,10 +181,13 @@ export default function DisplacementOriginalWidget() {
     if (result.results.diff_percent === undefined || result.results.diff_percent === null) {
       return [];
     }
+    const baseCc = result.normalized_inputs.baseline_cc;
+    if (!baseCc) return [];
+    const diffCc = result.results.displacement_cc - baseCc;
     return [
       {
         label: "Diff (%)",
-        value: `${result.results.diff_percent.toFixed(2)}%`,
+        value: `${diffCc.toFixed(2)} cc (${result.results.diff_percent.toFixed(2)}%)`,
       },
     ];
   }, [result]);
