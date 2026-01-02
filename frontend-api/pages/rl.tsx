@@ -1,5 +1,7 @@
 import React, { useMemo, useRef, useState } from "react";
 
+import { Button } from "../components/Button";
+import { Card } from "../components/Card";
 import { ErrorBanner } from "../components/ErrorBanner";
 import { InputField } from "../components/InputField";
 import { Layout } from "../components/Layout";
@@ -86,30 +88,34 @@ export default function RLPage() {
 
   return (
     <Layout title={t("rl")} subtitle={t("unitLocked")}>
-      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <div className="ptp-stack">
         {error ? <ErrorBanner message={error} /> : null}
-        <div className="grid">
-          <InputField
-            label={t("strokeLabel")}
-            unitLabel="mm"
-            placeholder="50.0"
-            value={stroke}
-            onChange={setStroke}
-            error={fieldErrors.stroke}
-          />
-          <InputField
-            label={t("rodLengthLabel")}
-            unitLabel="mm"
-            placeholder="100.0"
-            value={rodLength}
-            onChange={setRodLength}
-            error={fieldErrors.rod_length}
-          />
-        </div>
-        <button className="button" type="button" onClick={handleSubmit} disabled={loading}>
-          {loading ? t("loading") : t("calculate")}
-        </button>
-        {loading ? <LoadingState /> : null}
+        <Card className="ptp-stack">
+          <div className="grid">
+            <InputField
+              label={t("strokeLabel")}
+              unitLabel="mm"
+              placeholder="50.0"
+              value={stroke}
+              onChange={setStroke}
+              inputMode="decimal"
+              error={fieldErrors.stroke}
+            />
+            <InputField
+              label={t("rodLengthLabel")}
+              unitLabel="mm"
+              placeholder="100.0"
+              value={rodLength}
+              onChange={setRodLength}
+              inputMode="decimal"
+              error={fieldErrors.rod_length}
+            />
+          </div>
+          <Button type="button" onClick={handleSubmit} disabled={loading}>
+            {loading ? t("loading") : t("calculate")}
+          </Button>
+          {loading ? <LoadingState /> : null}
+        </Card>
         {result ? <ResultPanel title="Results" items={resultsList} /> : null}
       </div>
     </Layout>

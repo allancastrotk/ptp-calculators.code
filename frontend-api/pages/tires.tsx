@@ -1,11 +1,12 @@
 import React, { useMemo, useRef, useState } from "react";
 
+import { Button } from "../components/Button";
+import { Card } from "../components/Card";
 import { ErrorBanner } from "../components/ErrorBanner";
 import { InputField } from "../components/InputField";
 import { Layout } from "../components/Layout";
 import { LoadingState } from "../components/LoadingState";
 import { ResultPanel } from "../components/ResultPanel";
-import { UnitSystem } from "../components/UnitSystemSwitch";
 import { postJson, ApiError } from "../lib/api";
 import { useI18n } from "../lib/i18n";
 
@@ -22,35 +23,20 @@ type TiresResponse = {
 
 export default function TiresPage() {
   const { t } = useI18n();
-  const [unitSystem, setUnitSystem] = useState<UnitSystem>("metric");
-  const [vehicleType, setVehicleType] = useState("Car");
-  const [rimIn, setRimIn] = useState("");
-  const [widthMm, setWidthMm] = useState("");
-  const [aspectPercent, setAspectPercent] = useState("");
-  const [rimWidthIn, setRimWidthIn] = useState("");
-  const [flotation, setFlotation] = useState("");
+  const [tireSize, setTireSize] = useState("");
+  const [baseline, setBaseline] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [result, setResult] = useState<TiresResponse | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
-  const useFlotation = vehicleType === "Utility" && flotation.trim().length > 0;
-
   const handleSubmit = async () => {
     setError(null);
     setFieldErrors({});
 
     const nextErrors: Record<string, string> = {};
-    if (!rimIn) nextErrors.rim_in = t("required");
-    if (!vehicleType) nextErrors.vehicle_type = t("required");
-    if (!useFlotation) {
-      if (!widthMm) nextErrors.width_mm = t("required");
-      if (!aspectPercent) nextErrors.aspect_percent = t("required");
-    } else {
-      if (!flotation.trim()) nextErrors.flotation = t("required");
-    }
-
+    if (!tireSize) nextErrors.tire_size = t("required");
     if (Object.keys(nextErrors).length > 0) {
       setFieldErrors(nextErrors);
       return;
@@ -65,14 +51,10 @@ export default function TiresPage() {
     setLoading(true);
     try {
       const payload = {
-        unit_system: unitSystem,
+        unit_system: "metric",
         inputs: {
-          vehicle_type: vehicleType,
-          rim_in: Number(rimIn),
-          width_mm: useFlotation ? undefined : Number(widthMm),
-          aspect_percent: useFlotation ? undefined : Number(aspectPercent),
-          flotation: useFlotation ? flotation : undefined,
-          rim_width_in: rimWidthIn ? Number(rimWidthIn) : undefined,
+          tire_size: tireSize,
+          baseline_tire_size: baseline || undefined,
         },
       };
 
@@ -101,94 +83,68 @@ export default function TiresPage() {
 
   const resultsList = useMemo(() => {
     if (!result) return [];
-    const unit = unitSystem === "imperial" ? "in" : "mm";
-    return [
-      { label: `Diameter (${unit})`, value: result.results.diameter.toFixed(2) },
-      { label: `Width (${unit})`, value: result.results.width.toFixed(2) },
-      result.results.diff_diameter != null
-        ? { label: `Diff diameter (${unit})`, value: result.results.diff_diameter.toFixed(2) }
-        : null,
-      result.results.diff_diameter_percent != null
-        ? { label: "Diff diameter (%)", value: `${result.results.diff_diameter_percent.toFixed(2)}%` }
-        : null,
-      result.results.diff_width != null
-        ? { label: `Diff width (${unit})`, value: result.results.diff_width.toFixed(2) }
-        : null,
-      result.results.diff_width_percent != null
-        ? { label: "Diff width (%)", value: `${result.results.diff_width_percent.toFixed(2)}%` }
-        : null,
-    ].filter(Boolean) as { label: string; value: string }[];
-  }, [result, unitSystem]);
+    const items = [
+      { label: "Diameter", value: result.results.diameter.toFixed(2) },
+      { label: "Width", value: result.results.width.toFixed(2) },
+    ];
+    if (result.results.diff_diameter !== undefined && result.results.diff_diameter !== null) {
+      items.push({
+        label: "Diff diameter",
+        value: result.results.diff_diameter.toFixed(2),
+      });
+    }
+    if (
+      result.results.diff_diameter_percent !== undefined &&
+      result.results.diff_diameter_percent !== null
+    ) {
+      items.push({
+        label: "Diff diameter (%)",
+        value: `${result.results.diff_diameter_percent.toFixed(2)}%`,
+      });
+    }
+    if (result.results.diff_width !== undefined && result.results.diff_width !== null) {
+      items.push({
+        label: "Diff width",
+        value: result.results.diff_width.toFixed(2),
+      });
+    }
+    if (result.results.diff_width_percent !== undefined && result.results.diff_width_percent !== null) {
+      items.push({
+        label: "Diff width (%)",
+        value: `${result.results.diff_width_percent.toFixed(2)}%`,
+      });
+    }
+    return items;
+  }, [result]);
 
   return (
-    <Layout title={t("tires")} unitSystem={unitSystem} onUnitChange={setUnitSystem}>
-      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-        {unitSystem === "imperial" ? <div className="subtitle">{t("unitOutputImperial")}</div> : null}
+    <Layout title={t("tires")} subtitle={t("unitLocked")}>
+      <div className="ptp-stack">
         {error ? <ErrorBanner message={error} /> : null}
-        <div className="grid">
-          <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <span style={{ fontWeight: 600 }}>{t("vehicleTypeLabel")}</span>
-            <select
-              value={vehicleType}
-              onChange={(event) => setVehicleType(event.target.value)}
-              style={{
-                padding: "10px 12px",
-                borderRadius: 10,
-                border: "1px solid var(--border)",
-                fontSize: 14,
-              }}
-            >
-              <option value="Car">Car</option>
-              <option value="Motorcycle">Motorcycle</option>
-              <option value="Utility">Utility</option>
-            </select>
-          </label>
-          <InputField
-            label={t("rimLabel")}
-            unitLabel="in"
-            placeholder="17"
-            value={rimIn}
-            onChange={setRimIn}
-            error={fieldErrors.rim_in}
-          />
-          <InputField
-            label={t("widthLabel")}
-            unitLabel="mm"
-            placeholder="190"
-            value={widthMm}
-            onChange={setWidthMm}
-            error={fieldErrors.width_mm}
-          />
-          <InputField
-            label={t("aspectLabel")}
-            unitLabel="%"
-            placeholder="55"
-            value={aspectPercent}
-            onChange={setAspectPercent}
-            error={fieldErrors.aspect_percent}
-          />
-          <InputField
-            label={t("rimWidthLabel")}
-            unitLabel="in"
-            placeholder="7.0"
-            value={rimWidthIn}
-            onChange={setRimWidthIn}
-            error={fieldErrors.rim_width_in}
-          />
-          {vehicleType === "Utility" ? (
+        <Card className="ptp-stack">
+          <div className="grid">
             <InputField
-              label={t("flotationLabel")}
-              placeholder="31x10.5R15"
-              value={flotation}
-              onChange={setFlotation}
-              error={fieldErrors.flotation}
+              label={t("tires")}
+              placeholder="190/55-17"
+              value={tireSize}
+              onChange={setTireSize}
+              type="text"
+              error={fieldErrors.tire_size}
             />
-          ) : null}
-        </div>
-        <button className="button" type="button" onClick={handleSubmit} disabled={loading}>
-          {loading ? t("loading") : t("calculate")}
-        </button>
-        {loading ? <LoadingState /> : null}
+            <InputField
+              label={t("baselineLabel")}
+              placeholder="180/55-17"
+              value={baseline}
+              onChange={setBaseline}
+              type="text"
+              error={fieldErrors.baseline_tire_size}
+            />
+          </div>
+          <Button type="button" onClick={handleSubmit} disabled={loading}>
+            {loading ? t("loading") : t("calculate")}
+          </Button>
+          {loading ? <LoadingState /> : null}
+        </Card>
         {result ? <ResultPanel title="Results" items={resultsList} /> : null}
       </div>
     </Layout>
