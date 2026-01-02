@@ -73,7 +73,7 @@ body.ptp-embed .ptp-shell {
 
 .ptp-variant-pilot .ptp-card,
 .ptp-variant-pilot .card {
-  background: linear-gradient(135deg, rgba(52, 74, 87, 0.12), rgba(0, 0, 0, 0.16));
+  background: linear-gradient(135deg, rgba(52, 74, 87, 0.06), rgba(0, 0, 0, 0.1));
 }
 
 .ptp-container {
@@ -169,6 +169,7 @@ body.ptp-embed .ptp-subtitle {
 
 .ptp-actions {
   margin-top: 16px;
+  margin-bottom: 14px;
   display: flex;
   justify-content: flex-end;
 }
