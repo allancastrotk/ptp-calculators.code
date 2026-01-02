@@ -3,7 +3,8 @@ import React from "react";
 
 import { useI18n } from "../lib/i18n";
 import { HeaderBar } from "./HeaderBar";
-import { UnitSystemSwitch, UnitSystem } from "./UnitSystemSwitch";
+import { UnitToggleButton } from "./UnitToggleButton";
+import { UnitSystem } from "./UnitSystemSwitch";
 
 export function Layout({
   title,
@@ -32,7 +33,7 @@ export function Layout({
             subtitle={subtitle || t("appTitle")}
             rightSlot={
               unitSystem && onUnitChange ? (
-                <UnitSystemSwitch value={unitSystem} onChange={onUnitChange} />
+                <UnitToggleButton value={unitSystem} onChange={onUnitChange} />
               ) : null
             }
           />
