@@ -2,22 +2,15 @@
 
 This repository is a workspace/monorepo for the PowerTunePro calculator services.
 
-Purpose
-- Prepare a clean workspace for future implementation of PowerTunePro calculators.
-- This step is only environment/workspace preparation — no calculator logic implemented.
-
 Structure
-- `backend-api/` — Minimal FastAPI service intended to be deployed to Render (contains a `/health` endpoint).
-- `frontend-api/` — Minimal Next.js + TypeScript app intended to be deployed to Vercel (contains a placeholder index page).
+- `backend-api/` - FastAPI service deployed to Render (internal-only).
+- `frontend-api/` - Next.js + TypeScript app deployed to Vercel (UI + BFF).
 
-Notes
-- Backend and frontend are intentionally minimal and kept separate.
-- Do NOT implement calculator logic, databases, or authentication at this stage.
-- Future steps will add calculator endpoints and UI components in separate iterations.
+Deployment and access model: Render is internal-only and accepts requests only from Vercel (BFF). The site embeds the Vercel UI via iframe. The four calculators remain permanently free.
 
-Deployment and access model: Render is internal-only and accepts requests only from Vercel (BFF), the site embeds the Vercel UI via iframe, and the four calculators are permanently free.
-
-UI routes (Vercel): /displacement, /rl, /sprocket, /tires. BFF routes: /api/v1/calc/* (browser -> Vercel only). Embed guidance: see docs/05-embed-model.md.
+UI routes (Vercel): `/displacement`, `/rl`, `/sprocket`, `/tires`.
+Widget routes (Vercel): `/widgets/displacement-original|new`, `/widgets/rl-original|new`, `/widgets/sprocket-original|new`, `/widgets/tires-original|new`.
+BFF routes (Vercel): `/api/v1/calc/*` (browser -> Vercel only). Embed guidance: see `docs/05-embed-model.md`.
 
 Repository
 - This repository is already versioned with Git.
