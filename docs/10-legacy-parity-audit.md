@@ -20,7 +20,7 @@ Diferencas encontradas
 - Legado nao possui sistema de unidades (somente mm); o modelo novo aceita `unit_system` na API.
 
 Correcoes aplicadas
-- UI/UX ajustada para manter mm como unidade principal (sem toggle no RL).
+- UI/UX expande para `unit_system` (metric/imperial) mantendo calculo adimensional; legado continua em mm.
 
 Pontos ambiguos do legado
 - Nenhuma ambiguidade adicional observada no JS/HTML.
