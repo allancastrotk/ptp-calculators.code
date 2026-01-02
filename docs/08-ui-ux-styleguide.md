@@ -30,9 +30,12 @@ Ele serve como referencia tecnica para manter consistencia visual e evitar perda
 
 ## Cards
 
+## Cards
+
 - Cards sao o "bloco principal" do conteudo.
 - Estilo "pilot":
-  - Gradiente diagonal com azul blueprint + azul escuro (quase preto).
+  - Gradiente diagonal (135deg) com azul blueprint no canto superior/esquerdo
+    e azul bem escuro no canto inferior/direito.
   - Sombra suave para profundidade.
   - Sem borda explicita.
 

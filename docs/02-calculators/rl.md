@@ -31,8 +31,9 @@ Tabela de resultados exibidos:
 | --- | --- | --- | --- |
 | Deslocamento | `cc` | `toFixed(2)` | Calculado sem numero de cilindros |
 | RL (engineering) | adimensional | `toFixed(2)` | Exibido como `RL: {valor} (smoothness)` |
-| Rod/Stroke (US) | adimensional | `toFixed(2)` | Pendente de confirmacao (nao exibido no legado) |
+| Rod/Stroke (US) | adimensional | `toFixed(2)` | Deve ser exibido em conjunto com RL |
 | Geometria | texto | nome localizavel | Quadrado, Superquadrado, Subquadrado |
+| Suavidade | texto | nome localizavel | Rough, Normal, Smooth |
 | Variacao RL | `%` | `toFixed(2)` | Apenas no modo "new" |
 | Variacao Deslocamento | `%` | `toFixed(2)` | Apenas no modo "new" |
 
@@ -81,14 +82,14 @@ Comportamento do ponto de vista do usuario:
 
 
 Implementacao atual (API v1):
-- A resposta exposta atualmente inclui apenas `rl_ratio` e `rod_stroke_ratio`.
-- Nao ha comparacao original vs new no backend; o BFF apenas repassa os resultados.
-- Saidas de deslocamento, geometria, smoothness e variacoes do legado nao estao expostas na API v1.
+- A resposta exposta inclui `rl_ratio`, `rod_stroke_ratio`, `displacement_cc`, `geometry` e `smoothness`.
+- A comparacao original vs new e feita via `inputs.baseline`, retornando `diff_rl_percent` e `diff_displacement_percent`.
 ## 6) Sistema de unidades
 
 - As relacoes R/L e Rod/Stroke sao adimensionais e independem do sistema de unidades.
 - O legado usa mm para entrada, mas qualquer unidade consistente preserva o resultado.
 - A exibicao de deslocamento usa `cc` e presume entrada em mm.
+- A API v1 aceita `unit_system=metric|imperial`; conversoes sao feitas no backend.
 
 ## 7) Observacoes de legado e compatibilidade
 

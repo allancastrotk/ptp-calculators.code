@@ -76,6 +76,7 @@ Validacao:
 
 Banco de dados:
 - Se `TIRES_DB` nao carregar, exibe `errorDatabase` e mostra o box de resultados.
+- A API v1 valida veiculo/aro/largura/perfil e flotation contra a mesma base do legado (sem banco externo).
 
 Comparacao original vs new:
 - No modo "original", salva `{ diameterMM, assemblyWidthMM }` no `localStorage`.

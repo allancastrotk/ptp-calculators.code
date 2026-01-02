@@ -97,9 +97,10 @@ Resultados recomendados:
 ### rl
 
 Request `inputs`:
+- `bore`: numero (mm ou in)
 - `stroke`: numero (mm ou in)
 - `rod_length`: numero (mm ou in)
-- `bore` (opcional): numero (mm ou in), apenas para normalizacao
+- `baseline` (opcional): objeto com os mesmos campos para comparacao original vs new
 
 Regras e unidades:
 - `rl_ratio` e `rod_stroke_ratio` sao adimensionais.
@@ -108,6 +109,11 @@ Regras e unidades:
 Resultados obrigatorios:
 - `rl_ratio` (engineering): `(stroke / 2) / rod_length`
 - `rod_stroke_ratio` (US): `rod_length / stroke`
+- `displacement_cc`
+- `geometry` (square/oversquare/undersquare)
+- `smoothness` (rough/normal/smooth)
+- `diff_rl_percent` (quando `baseline` for informado)
+- `diff_displacement_percent` (quando `baseline` for informado)
 
 ### sprocket
 
