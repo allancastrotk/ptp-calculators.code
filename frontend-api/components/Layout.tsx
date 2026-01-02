@@ -2,6 +2,7 @@ import Head from "next/head";
 import React from "react";
 
 import { useI18n } from "../lib/i18n";
+import { HeaderBar } from "./HeaderBar";
 import { UnitSystemSwitch, UnitSystem } from "./UnitSystemSwitch";
 
 export function Layout({
@@ -26,15 +27,15 @@ export function Layout({
       </Head>
       <main className="ptp-shell">
         <div className="ptp-container">
-          <header className="ptp-header">
-            <div>
-              <div className="ptp-title">{title}</div>
-              <div className="ptp-subtitle">{subtitle || t("appTitle")}</div>
-            </div>
-            {unitSystem && onUnitChange ? (
-              <UnitSystemSwitch value={unitSystem} onChange={onUnitChange} />
-            ) : null}
-          </header>
+          <HeaderBar
+            title={title}
+            subtitle={subtitle || t("appTitle")}
+            rightSlot={
+              unitSystem && onUnitChange ? (
+                <UnitSystemSwitch value={unitSystem} onChange={onUnitChange} />
+              ) : null
+            }
+          />
           <section className="ptp-content">{children}</section>
           <footer className="ptp-footer">{t("footer")}</footer>
         </div>

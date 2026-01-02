@@ -51,7 +51,7 @@ a {
 }
 
 body.ptp-embed .ptp-shell {
-  padding: 20px 12px 28px;
+  padding: 18px 12px 24px;
 }
 
 .ptp-container {
@@ -70,15 +70,31 @@ body.ptp-embed .ptp-shell {
   flex-wrap: wrap;
 }
 
+.ptp-header__text {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ptp-header__slot {
+  display: flex;
+  align-items: center;
+}
+
 .ptp-title {
   font-size: 28px;
   font-weight: 700;
   letter-spacing: -0.02em;
+  margin: 0;
 }
 
 .ptp-subtitle {
   color: var(--ptp-muted);
   font-size: 14px;
+}
+
+body.ptp-embed .ptp-subtitle {
+  font-size: 13px;
 }
 
 .ptp-content {
@@ -162,13 +178,19 @@ body.ptp-embed .ptp-shell {
   padding: 10px 16px;
   font-weight: 600;
   cursor: pointer;
-  transition: transform 0.1s ease, opacity 0.2s ease;
+  transition: transform 0.12s ease, opacity 0.2s ease;
+}
+
+.ptp-button:hover,
+.button:hover {
+  transform: translateY(-1px);
 }
 
 .ptp-button:disabled,
 .button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  transform: none;
 }
 
 .ptp-button--primary {
@@ -254,6 +276,45 @@ body.ptp-embed .ptp-shell {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+.ptp-unit-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--ptp-border);
+  background: var(--ptp-surface-alt);
+  color: var(--ptp-text);
+  font-size: 13px;
+  font-weight: 600;
+  transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease,
+    color 0.18s ease;
+}
+
+.ptp-unit-toggle:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--ptp-focus);
+}
+
+.ptp-unit-toggle.is-imperial {
+  background: rgba(241, 184, 75, 0.15);
+  border-color: rgba(241, 184, 75, 0.45);
+  color: var(--ptp-primary);
+}
+
+.ptp-unit-toggle.is-metric {
+  background: var(--ptp-surface-alt);
+  border-color: var(--ptp-border);
+  color: var(--ptp-text);
+}
+
+.ptp-unit-toggle__label {
+  color: var(--ptp-muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 
 .subtitle {
