@@ -50,6 +50,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       headers: {
         "Content-Type": "application/json",
         "X-PTP-Internal-Key": internalKey,
+        "Authorization": `Bearer ${internalKey}`,
       },
       body: JSON.stringify(req.body),
     });

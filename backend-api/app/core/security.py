@@ -17,6 +17,7 @@ def _unauthorized(detail: str) -> HTTPException:
 
 def require_internal_key(
     x_ptp_internal_key: Optional[str] = Header(None, convert_underscores=False),
+    authorization: Optional[str] = Header(None),
 ) -> None:
     expected = os.getenv("PTP_INTERNAL_KEY")
     if not expected:
@@ -28,7 +29,12 @@ def require_internal_key(
                 "field_errors": [],
             },
         )
-    if not x_ptp_internal_key:
+    token = x_ptp_internal_key
+    if not token and authorization:
+        parts = authorization.split(" ", 1)
+        if len(parts) == 2 and parts[0].lower() == "bearer":
+            token = parts[1]
+    if not token:
         raise _unauthorized("Missing internal authentication header.")
-    if x_ptp_internal_key != expected:
+    if token != expected:
         raise _unauthorized("Invalid internal authentication header.")
