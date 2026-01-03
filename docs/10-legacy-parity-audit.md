@@ -13,7 +13,7 @@ Paridade OK
 - Outputs: deslocamento (cc), geometria (square/oversquare/undersquare), RL ratio + suavidade.
 - Regras: smoothness por thresholds (>=0.30 rough, >=0.25 normal, else smooth).
 - Geometria com tolerancia 0.03 sobre (bore vs stroke).
-- Fluxo original/new com baseline (localStorage no legado).
+- Fluxo original/new com baseline (localStorage no legado; bridge por `pageId` no modelo novo).
 
 Diferencas encontradas
 - Legado nao exibe rod/stroke ratio; o modelo novo expoe `rod_stroke_ratio`.
@@ -23,6 +23,7 @@ Diferencas encontradas
 
 Correcoes aplicadas
 - UI/UX expande para `unit_system` (metric/imperial) mantendo calculo adimensional; legado continua em mm.
+- Comparacao no modelo novo usa baseline enviado pelo host (sem `localStorage`).
 
 Pontos ambiguos do legado
 - Nenhuma ambiguidade adicional observada no JS/HTML.
@@ -37,7 +38,7 @@ Paridade OK
 - Diffs: percentuais e absolutos por item quando baseline existe.
 - Regras: passo da corrente mapeado por codigo (415/420/428/520/525/530/630).
 - Centro de eixos calculado iterativamente e clampado entre 620 e 680 mm.
-- Unidade exibida: cm para pt/es e in para en_US.
+- Unidade exibida: mm para pt/es e in para en_US.
 
 Diferencas encontradas
 - Nenhuma divergencia funcional relevante.

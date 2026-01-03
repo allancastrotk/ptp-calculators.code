@@ -11,9 +11,9 @@ Tabela de parametros e restricoes observadas no legado:
 
 | Parametro | Campo | Unidade | Restricoes | Observacoes |
 | --- | --- | --- | --- | --- |
-| Bore (diametro) | `input type="number"` | mm | `min=0`, `step=0.1`, validacao exige valor finito e > 0 | Placeholder `58.0` |
-| Stroke (curso) | `input type="number"` | mm | `min=0`, `step=0.1`, validacao exige valor finito e > 0 | Placeholder `50.0` |
-| Rod length (comprimento da biela) | `input type="number"` | mm | `min=0`, `step=0.1`, validacao exige valor finito e > 0 | Placeholder `100.0` |
+| Bore (diametro) | `input type="number"` | mm (ou in) | `min=0`, `step=0.1`, validacao exige valor finito e > 0 | Placeholder `58.0` |
+| Stroke (curso) | `input type="number"` | mm (ou in) | `min=0`, `step=0.1`, validacao exige valor finito e > 0 | Placeholder `50.0` |
+| Rod length (comprimento da biela) | `input type="number"` | mm (ou in) | `min=0`, `step=0.1`, validacao exige valor finito e > 0 | Placeholder `100.0` |
 
 Taxa de compressao (extensao v1, opcional):
 
@@ -29,9 +29,10 @@ Taxa de compressao (extensao v1, opcional):
 | Transfer port height | `compression.transfer_port_height` | mm (ou in) | opcional | Se informado junto/sozinho, ativa modo 2T |
 | Crankcase volume | `compression.crankcase_volume` | cc (ou cu in) | opcional | Usado para taxa do carter (2T) |
 
-Detalhes de modo:
-- Modo "original": armazena resultados em `localStorage` com chave `rodstrokeCalcOriginal`.
-- Modo "new": nao armazena resultados; usa o valor salvo do modo "original" para calcular variacoes percentuais.
+Detalhes de modo (modelo atual):
+- O fluxo original/new e feito via dois widgets separados (Original e New).
+- O widget New recebe o baseline via `postMessage` do host (bridge por `pageId`).
+- A API v1 aceita `inputs.baseline` para calcular variacoes; nao ha `localStorage` no modelo novo.
 
 Idioma e UI:
 - Idioma pode ser definido por `?lang=pt_BR|en_US|es_ES` ou por `postMessage` com `{ language }`.
@@ -43,7 +44,7 @@ Tabela de resultados exibidos:
 
 | Saida | Unidade | Formato | Observacoes |
 | --- | --- | --- | --- |
-| Deslocamento | `cc` | `toFixed(2)` | Calculado sem numero de cilindros |
+| Deslocamento | `cc` ou `cu in` | `toFixed(2)` | Calculado sem numero de cilindros |
 | RL (engineering) | adimensional | `toFixed(2)` | Exibido como `RL: {valor} (smoothness)` |
 | Rod/Stroke (US) | adimensional | `toFixed(2)` | Deve ser exibido em conjunto com RL |
 | Geometria | texto | nome localizavel | Quadrado, Superquadrado, Subquadrado |
@@ -63,7 +64,7 @@ Taxa de compressao (extensao v1, opcional):
 
 Detalhes adicionais:
 - As linhas de variacao usam classes visuais `increase`, `decrease`, `no-change`.
-- Se nao houver valor "original", o modo "new" mostra a mensagem "Calcule o conjunto original primeiro!".
+- Sem baseline, o widget New mostra um aviso leve para calcular o Original.
 
 ## 4) Formulas matematicas
 
@@ -96,11 +97,9 @@ Taxa de compressao (extensao v1):
 ## 5) Regras de negocio
 
 Comparacao original vs new:
-- No modo "original", salva `{ rodRatio, displacement, geometry, smoothness }` no `localStorage`.
-- No modo "new", se existir valor salvo, calcula:
-  - `% diff RL = (new - original) / original * 100`
-  - `% diff displacement = (new - original) / original * 100`
-- Se nao existir valor salvo, exibe mensagem de erro e nao calcula comparacoes.
+- O backend calcula `diff_rl_percent` e `diff_displacement_percent` quando `baseline` e informado.
+- O frontend exibe delta absoluto e percentual (em linha com a UI padrao das calculadoras).
+- O baseline e transportado pelo host (bridge entre widgets).
 
 Valores invalidos:
 - Se qualquer campo estiver vazio, nao numerico, ou <= 0, a calculadora exibe a mensagem de erro e mostra o box de resultado.
@@ -108,7 +107,7 @@ Valores invalidos:
 
 Comportamento do ponto de vista do usuario:
 - O usuario precisa clicar em "Calcular" para obter resultados.
-- A comparacao do modo "new" depende de ter executado a versao "original" antes (mesmo browser/localStorage).
+- A comparacao do widget New depende do baseline enviado pelo widget Original (via host).
 
 
 Implementacao atual (API v1):
@@ -121,16 +120,17 @@ Implementacao atual (API v1):
 
 - As relacoes R/L e Rod/Stroke sao adimensionais e independem do sistema de unidades.
 - O legado usa mm para entrada, mas qualquer unidade consistente preserva o resultado.
-- A exibicao de deslocamento usa `cc` e presume entrada em mm.
+- A exibicao de deslocamento usa `cc` no modo metrico e `cu in` no modo imperial.
 - A API v1 aceita `unit_system=metric|imperial`; conversoes sao feitas no backend.
+- A UI converte entradas/saidas quando o usuario alterna a unidade (sem alterar a fonte de verdade no backend).
 
 ## 7) Observacoes de legado e compatibilidade
 
 Compatibilidade obrigatoria:
-- Chave de armazenamento `rodstrokeCalcOriginal` e formato `{ rodRatio, displacement, geometry, smoothness }`.
+- No legado, o modo "original" armazena em `localStorage` com chave `rodstrokeCalcOriginal` e formato `{ rodRatio, displacement, geometry, smoothness }`.
+- No modelo novo, o baseline e trafegado via `postMessage` entre widgets; nao ha persistencia no browser.
 - Arredondamento com `toFixed(2)` para deslocamento, RL e variacoes percentuais.
 - Tolerancia de 3% para classificacao de geometria.
-- Mensagem "Calcule o conjunto original primeiro!" quando o modo "new" nao encontra dados salvos.
 
 Comportamentos implicitos:
 - Se `stroke` for zero, o calculo de geometria teria divisao por zero, mas o legado bloqueia `stroke <= 0`, evitando isso.

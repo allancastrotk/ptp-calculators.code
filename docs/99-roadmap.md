@@ -11,7 +11,8 @@ Status
 - Fase 2 (Core gratuito + BFF): concluida
 - Fase 3 (UI funcional): concluida (sem alinhamento visual final)
 - Free Calculators - Migration Closed
-- Proximos passos: Integracao no site via iframe (host snippets) e alinhamento visual final (tokens/cores).
+- Correcao das calculadoras gratuitas (paridade + UX): concluida
+- Proximos passos: Ferramenta paga (modelos 2T/4T avancados) e alinhamento visual final do site.
 
 Smoke test (manual) - Displacement (Browser -> Vercel -> Render)
 - Endpoint publico (BFF): POST /api/v1/calc/displacement
@@ -36,17 +37,24 @@ Estrutura esperada de resposta (sem valores exatos):
 {
   "calculator": "displacement",
   "unit_system": "metric|imperial",
-  "normalized_inputs": { "bore_mm": 0, "stroke_mm": 0, "cylinders": 0, "baseline_cc": null },
-  "results": { "displacement_cc": 0, "displacement_l": 0, "displacement_ci": 0, "geometry": "square|oversquare|undersquare" },
+  "normalized_inputs": {
+    "bore_mm": 0,
+    "stroke_mm": 0,
+    "cylinders": 0,
+    "baseline_cc": null,
+    "compression": null
+  },
+  "results": {
+    "displacement_cc": 0,
+    "displacement_l": 0,
+    "displacement_ci": 0,
+    "geometry": "square|oversquare|undersquare",
+    "diff_percent": null,
+    "compression": null
+  },
   "warnings": [],
   "meta": { "version": "v1", "timestamp": "...", "source": "legacy-compatible" }
 }
-
-TODO tecnico (proxima calculadora: RL)
-- Resultados devem incluir rl_ratio e rod_stroke_ratio.
-- Calculo e adimensional (unit_system nao altera).
-- Compatibilidade total com legado e arredondamentos.
-- Reutilizar core de validacao existente.
 
 Smoke test (manual) - RL (Browser -> Vercel only)
 - Endpoint publico (BFF): POST /api/v1/calc/rl
@@ -71,8 +79,23 @@ Estrutura esperada de resposta (sem valores exatos):
 {
   "calculator": "rl",
   "unit_system": "metric|imperial",
-  "normalized_inputs": { "bore_mm": 0, "stroke_mm": 0, "rod_length_mm": 0 },
-  "results": { "rl_ratio": 0, "rod_stroke_ratio": 0 },
+  "normalized_inputs": {
+    "bore_mm": 0,
+    "stroke_mm": 0,
+    "rod_length_mm": 0,
+    "baseline": null,
+    "compression": null
+  },
+  "results": {
+    "rl_ratio": 0,
+    "rod_stroke_ratio": 0,
+    "displacement_cc": 0,
+    "geometry": "square|oversquare|undersquare",
+    "smoothness": "rough|normal|smooth",
+    "diff_rl_percent": null,
+    "diff_displacement_percent": null,
+    "compression": null
+  },
   "warnings": [],
   "meta": { "version": "v1", "timestamp": "...", "source": "legacy-compatible" }
 }

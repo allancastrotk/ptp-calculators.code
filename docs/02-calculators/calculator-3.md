@@ -17,9 +17,10 @@ Tabela de parametros e restricoes observadas no legado:
 | Passo da corrente | `select` | codigo (415, 420, 428, 520, 525, 530, 630) | opcional; deve estar na lista | Se invalido -> erro |
 | Numero de elos | `input type="number"` | elos | opcional; inteiro positivo e par | Se impar -> erro |
 
-Detalhes de modo:
-- Modo "original": armazena resultados em `localStorage` com chave `sprocketCalcOriginal`.
-- Modo "new": nao armazena resultados; usa o valor salvo do modo "original" para calcular variacoes.
+Detalhes de modo (modelo atual):
+- O fluxo original/new e feito via dois widgets separados (Original e New).
+- O widget New recebe o baseline via `postMessage` do host (bridge por `pageId`).
+- A API v1 aceita `inputs.baseline` para calcular variacoes; nao ha `localStorage` no modelo novo.
 
 Idioma e UI:
 - Idioma pode ser definido por `?lang=pt_BR|en_US|es_ES` ou por `postMessage` com `{ language }`.
@@ -32,8 +33,8 @@ Tabela de resultados exibidos:
 | Saida | Unidade | Formato | Observacoes |
 | --- | --- | --- | --- |
 | Relacao (ratio) | adimensional | `toFixed(2)` | `crown / sprocket` |
-| Comprimento da corrente | `cm` ou `in` | `toFixed(2)` | `-` se inputs opcionais ausentes |
-| Distancia entre eixos | `cm` ou `in` | `toFixed(2)` | `-` se inputs opcionais ausentes |
+| Comprimento da corrente | `mm` ou `in` | `toFixed(2)` | `-` se inputs opcionais ausentes |
+| Distancia entre eixos | `mm` ou `in` | `toFixed(2)` | `-` se inputs opcionais ausentes |
 | Variacao de relacao | `%` e absoluto | `toFixed(2)` | Apenas no modo "new" |
 | Variacao de comprimento | `%` e absoluto | `toFixed(2)` | Apenas no modo "new" |
 | Variacao de distancia | `%` e absoluto | `toFixed(2)` | Apenas no modo "new" |
@@ -80,23 +81,19 @@ Calculo condicional:
 - Comprimento da corrente e distancia entre eixos so sao calculados se passo e elos forem informados e validos; caso contrario exibem `-`.
 
 Comparacao original vs new:
-- No modo "original", salva `{ ratio, chainLengthMM, centerDistanceMM }` no `localStorage`.
-- No modo "new", se existir valor salvo, calcula variacoes percentuais e absolutas.
+- A API v1 aceita `inputs.baseline` e retorna diffs absolutos e percentuais.
+- O frontend exibe os deltas no formato padrao (valor + percentual).
 - Variacoes de comprimento e distancia so aparecem se ambos os valores (novo e original) existirem e `chainLinks > 0`.
 
 Implementacao atual (API v1):
 - A comparacao e feita via `inputs.baseline` (objeto com os campos do conjunto original).
 - O backend retorna `diff_ratio_percent`/`diff_ratio_absolute`, `diff_chain_length_percent`/`diff_chain_length_absolute` e `diff_center_distance_percent`/`diff_center_distance_absolute`.
-
-
-Implementacao atual (API v1):
-- A resposta exposta utiliza campos `diff_ratio_percent`/`diff_ratio_absolute`, `diff_chain_length_percent`/`diff_chain_length_absolute` e `diff_center_distance_percent`/`diff_center_distance_absolute` quando `baseline` e informado.
 - Os demais resultados seguem `ratio`, `chain_length_mm`/`chain_length_in` e `center_distance_mm`/`center_distance_in`.
 ## 6) Sistema de unidades
 
 - A relacao e adimensional.
 - O legado calcula tudo em mm e converte para exibicao.
-- `pt_BR` e `es_ES` exibem `cm`; `en_US` exibe `in`.
+- No modelo novo, a UI permite alternar `unit_system` (metric/imperial) para exibir mm ou in.
 - A unidade exibida nao altera os calculos.
 
 ## 7) Observacoes de legado

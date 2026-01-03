@@ -11,8 +11,8 @@ Tabela de parametros e restricoes observadas no legado:
 
 | Parametro | Campo | Unidade | Restricoes | Observacoes |
 | --- | --- | --- | --- | --- |
-| Bore (diametro) | `input type="number"` | mm | `min=0`, `step=0.1`, validacao exige valor finito e > 0 | Placeholder muda por modo |
-| Stroke (curso) | `input type="number"` | mm | `min=0`, `step=0.1`, validacao exige valor finito e > 0 | Placeholder muda por modo |
+| Bore (diametro) | `input type="number"` | mm (ou in) | `min=0`, `step=0.1`, validacao exige valor finito e > 0 | Placeholder muda por modo |
+| Stroke (curso) | `input type="number"` | mm (ou in) | `min=0`, `step=0.1`, validacao exige valor finito e > 0 | Placeholder muda por modo |
 | Cylinders (numero de cilindros) | `select` | adimensional | opcoes fixas 1..6; valor vazio invalido | Opcao inicial "Selecione" |
 
 Taxa de compressao (extensao v1, opcional):
@@ -29,9 +29,10 @@ Taxa de compressao (extensao v1, opcional):
 | Transfer port height | `compression.transfer_port_height` | mm (ou in) | opcional | Se informado junto/sozinho, ativa modo 2T |
 | Crankcase volume | `compression.crankcase_volume` | cc (ou cu in) | opcional | Usado para taxa do carter (2T) |
 
-Detalhes de modo:
-- Modo "original": armazena resultados em `localStorage` com chave `displacementCalcOriginal`.
-- Modo "new": nao armazena resultados; usa o valor salvo do modo "original" para calcular variacao percentual.
+Detalhes de modo (modelo atual):
+- O fluxo original/new e feito via dois widgets separados (Original e New).
+- O widget New recebe o baseline via `postMessage` do host (bridge por `pageId`).
+- A API v1 aceita `inputs.baseline_cc` para comparar com o valor informado; nao ha `localStorage` no modelo novo.
 
 Detalhes de placeholder:
 - Original: bore `58.0`, stroke `50.0`.
@@ -47,9 +48,11 @@ Tabela de resultados exibidos:
 
 | Saida | Unidade | Formato | Observacoes |
 | --- | --- | --- | --- |
-| Cilindrada | `cm3` | `toFixed(2)` | Renderizado como `cm3` |
+| Displacement (cc) | `cc` | `toFixed(2)` | `displacement_cc` |
+| Displacement (L) | `L` | `toFixed(2)` | `displacement_l` |
+| Displacement (cu in) | `cu in` | `toFixed(2)` | `displacement_ci` (quando `unit_system=imperial`) |
 | Geometria | texto | nome localizavel | Quadrado, Superquadrado, Subquadrado |
-| Variacao percentual | `%` | `toFixed(2)` | Apenas no modo "new" |
+| Variacao percentual | `%` | `toFixed(2)` | Apenas quando baseline existe |
 
 Taxa de compressao (extensao v1, opcional):
 
@@ -63,7 +66,7 @@ Taxa de compressao (extensao v1, opcional):
 
 Detalhes adicionais:
 - Variacao percentual usa classes visuais `increase`, `decrease`, `no-change`.
-- Se nao houver valor "original", o modo "new" mostra mensagem de comparacao.
+- Sem baseline, o widget New mostra um aviso leve para calcular o Original.
 
 ## 4) Formulas matematicas
 
@@ -85,9 +88,9 @@ Taxa de compressao (extensao v1):
 ## 5) Regras de negocio
 
 Comparacao original vs new:
-- No modo "original", salva `{ displacement, geometry }` no `localStorage`.
-- No modo "new", se existir valor salvo, calcula `% diff = (new - original) / original * 100` e exibe com 2 casas decimais.
-- Se nao existir valor salvo, exibe a mensagem "Calcule primeiro a versao Original para comparar.".
+- O backend calcula `diff_percent` quando `baseline_cc` e informado.
+- O frontend exibe delta absoluto + percentual (padrao das calculadoras).
+- O baseline entre widgets e transportado pelo host (bridge por `pageId`).
 
 Valores invalidos:
 - Se qualquer campo estiver vazio, nao numerico, ou <= 0, a calculadora exibe a mensagem de erro e mostra o box de resultado.
@@ -95,10 +98,10 @@ Valores invalidos:
 
 Comportamento do ponto de vista do usuario:
 - O usuario precisa clicar em "Calcular" para obter resultados.
-- A comparacao do modo "new" depende de ter executado a versao "original" antes (mesmo browser/localStorage).
+- A comparacao do widget New depende do baseline enviado pelo widget Original (via host).
 
 Implementacao atual:
-- A comparacao Original vs New e feita no frontend (estado local + sessionStorage por aba).
+- A comparacao Original vs New e feita no frontend (estado local).
 - Nao ha persistencia server-side no backend ou no BFF.
 
 Taxa de compressao:
@@ -109,7 +112,8 @@ Taxa de compressao:
 ## 6) Observacoes de legado
 
 Compatibilidade obrigatoria:
-- Chave de armazenamento `displacementCalcOriginal` e formato `{ displacement, geometry }`.
+- No legado, o modo "original" armazena em `localStorage` com chave `displacementCalcOriginal` e formato `{ displacement, geometry }`.
+- No modelo novo, o baseline e trafegado via `postMessage` entre widgets; nao ha persistencia no browser.
 - Prefixo literal `"? "` antes de "Cilindrada" na linha de variacao no modo "new".
 - Tolerancia de 3% para classificacao de geometria.
 - Arredondamento com `toFixed(2)` tanto para cilindrada quanto para variacao percentual.

@@ -27,9 +27,10 @@ Dependencias de selecao (legado):
 Observacao de catalogo:
 - Kart e Kartcross usam principalmente flotation. As opcoes metricas existem apenas como subset representativo.
 
-Modo:
-- Modo "original": armazena resultados em `localStorage` com chave `tireCalcOriginal`.
-- Modo "new": nao armazena resultados; usa o valor salvo do modo "original" para calcular variacoes.
+Modo (modelo atual):
+- O fluxo original/new e feito via dois widgets separados (Original e New).
+- O widget New recebe o baseline via `postMessage` do host (bridge por `pageId`).
+- A API v1 aceita `inputs.baseline` para calcular variacoes; nao ha `localStorage` no modelo novo.
 
 Idioma e UI:
 - Idioma pode ser definido por `?lang=pt_BR|en_US|es_ES` ou por `postMessage` com `{ language }`.
@@ -43,12 +44,15 @@ Tabela de resultados exibidos:
 | --- | --- | --- | --- |
 | Diametro | `mm` ou `in` | `toFixed(2)` | Baseado em rim/width/aspect ou flotation |
 | Largura do conjunto | `mm` ou `in` | `toFixed(2)` | Usa max(width, rimWidth) quando rimWidth informado |
-| Variacao de diametro | `mm` ou `in` + `%` | `toFixed(2)` | Apenas no modo "new" |
-| Variacao de largura | `mm` ou `in` + `%` | `toFixed(2)` | Apenas no modo "new" |
+| Variacao de diametro | `mm` ou `in` + `%` | `toFixed(2)` | Apenas quando baseline existe |
+| Variacao de largura | `mm` ou `in` + `%` | `toFixed(2)` | Apenas quando baseline existe |
+
+Saida auxiliar (UI):
+- Diferenca pneu/aro: `width - rimWidth` (convertida para a unidade exibida). Nao e retornada pela API.
 
 Detalhes adicionais:
 - Linhas de variacao usam classes visuais `increase`, `decrease`, `no-change`.
-- Se nao houver valor "original", o modo "new" mostra mensagem de erro e nao calcula variacoes.
+- Sem baseline, o widget New mostra um aviso leve para calcular o Original.
 
 ## 4) Formulas matematicas
 
@@ -89,12 +93,9 @@ Banco de dados:
 - A API v1 valida veiculo/aro/largura/perfil e flotation contra a mesma base do legado (sem banco externo).
 
 Comparacao original vs new:
-- No modo "original", salva `{ diameterMM, assemblyWidthMM }` no `localStorage`.
-- No modo "new", se existir valor salvo, calcula:
-  - `diffDiameterMM = new - original`
-  - `diffWidthMM = new - original`
-  - Percentuais: `diff / original * 100`, com `toFixed(2)`.
-- Se nao existir valor salvo, exibe `errorOriginalFirst` e nao calcula variacoes.
+- O backend calcula `diff_diameter`/`diff_width` e percentuais quando `baseline` e informado.
+- O frontend exibe apenas o delta absoluto + percentual (sem repetir resultados acima).
+- O baseline e transportado pelo host (bridge entre widgets).
 
 
 Implementacao atual (API v1):
@@ -105,13 +106,14 @@ Implementacao atual (API v1):
 
 - Entradas sao mistas: aro e tala em polegadas; largura em mm; perfil em %.
 - Calculos internos usam mm.
-- Saidas: `pt_BR` e `es_ES` mostram `mm`; `en_US` mostra `in`.
+- No modelo novo, a UI permite alternar `unit_system` para exibir resultados em mm ou in.
 - As relacoes sao independentes de unidades quando conversao e aplicada corretamente.
 
 ## 7) Observacoes de legado
 
 Compatibilidade obrigatoria:
-- Chave `tireCalcOriginal` e formato `{ diameterMM, assemblyWidthMM }`.
+- No legado, o modo "original" usa `localStorage` com chave `tireCalcOriginal`.
+- No modelo novo, o baseline e trafegado via `postMessage` entre widgets; nao ha persistencia no browser.
 - Arredondamento com `toFixed(2)` em todas as saidas numericas.
 - Bases de selecao de medidas devem respeitar o banco `TIRES_DB`.
 
