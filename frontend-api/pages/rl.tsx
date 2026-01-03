@@ -636,6 +636,7 @@ export default function RLPage() {
             <InputField
               label={t("boreLabel")}
               unitLabel={unitLabel}
+              hint={t("hintBore")}
               placeholder={unitSystem === "imperial" ? "2.28" : "58.0"}
               value={originalBore}
               onChange={setOriginalBore}
@@ -645,6 +646,7 @@ export default function RLPage() {
             <InputField
               label={t("strokeLabel")}
               unitLabel={unitLabel}
+              hint={t("hintStroke")}
               placeholder={unitSystem === "imperial" ? "1.97" : "50.0"}
               value={originalStroke}
               onChange={setOriginalStroke}
@@ -654,6 +656,7 @@ export default function RLPage() {
             <InputField
               label={t("rodLengthLabel")}
               unitLabel={unitLabel}
+              hint={t("hintRodLength")}
               placeholder={unitSystem === "imperial" ? "3.94" : "100.0"}
               value={originalRod}
               onChange={setOriginalRod}
@@ -670,6 +673,7 @@ export default function RLPage() {
                 <InputField
                   label={t("chamberVolumeLabel")}
                   unitLabel={displacementUnit}
+                  hint={t("hintChamberVolume")}
                   placeholder={unitSystem === "imperial" ? "2.40" : "39.3"}
                   value={originalCompression.chamberVolume}
                   onChange={(value) =>
@@ -683,6 +687,7 @@ export default function RLPage() {
                     <InputField
                       label={t("gasketThicknessLabel")}
                       unitLabel={unitLabel}
+                      hint={t("hintGasketThickness")}
                       placeholder={unitSystem === "imperial" ? "0.04" : "1.0"}
                       value={originalCompression.gasketThickness}
                       onChange={(value) =>
@@ -697,6 +702,7 @@ export default function RLPage() {
                     <InputField
                       label={t("gasketBoreLabel")}
                       unitLabel={unitLabel}
+                      hint={t("hintGasketBore")}
                       placeholder={unitSystem === "imperial" ? "2.72" : "69.0"}
                       value={originalCompression.gasketBore}
                       onChange={(value) =>
@@ -711,6 +717,7 @@ export default function RLPage() {
                     <InputField
                       label={t("deckHeightLabel")}
                       unitLabel={unitLabel}
+                      hint={t("hintDeckHeight")}
                       placeholder={unitSystem === "imperial" ? "0.00" : "0.0"}
                       value={originalCompression.deckHeight}
                       onChange={(value) =>
@@ -725,6 +732,7 @@ export default function RLPage() {
                     <InputField
                       label={t("pistonVolumeLabel")}
                       unitLabel={displacementUnit}
+                      hint={t("hintPistonVolume")}
                       placeholder={unitSystem === "imperial" ? "-0.12" : "-2.0"}
                       value={originalCompression.pistonVolume}
                       onChange={(value) =>
@@ -744,6 +752,7 @@ export default function RLPage() {
                 <InputField
                   label={t("exhaustPortHeightLabel")}
                   unitLabel={unitLabel}
+                  hint={t("hintExhaustPortHeight")}
                   placeholder={unitSystem === "imperial" ? "1.57" : "40.0"}
                   value={originalCompression.exhaustPortHeight}
                   onChange={(value) =>
@@ -758,6 +767,7 @@ export default function RLPage() {
                 <InputField
                   label={t("transferPortHeightLabel")}
                   unitLabel={unitLabel}
+                  hint={t("hintTransferPortHeight")}
                   placeholder={unitSystem === "imperial" ? "1.89" : "48.0"}
                   value={originalCompression.transferPortHeight}
                   onChange={(value) =>
@@ -772,6 +782,7 @@ export default function RLPage() {
                 <InputField
                   label={t("crankcaseVolumeLabel")}
                   unitLabel={displacementUnit}
+                  hint={t("hintCrankcaseVolume")}
                   placeholder={unitSystem === "imperial" ? "2.44" : "40.0"}
                   value={originalCompression.crankcaseVolume}
                   onChange={(value) =>
@@ -823,6 +834,7 @@ export default function RLPage() {
             <InputField
               label={t("boreLabel")}
               unitLabel={unitLabel}
+              hint={t("hintBore")}
               placeholder={unitSystem === "imperial" ? "2.52" : "64.0"}
               value={newBore}
               onChange={setNewBore}
@@ -832,6 +844,7 @@ export default function RLPage() {
             <InputField
               label={t("strokeLabel")}
               unitLabel={unitLabel}
+              hint={t("hintStroke")}
               placeholder={unitSystem === "imperial" ? "2.13" : "54.0"}
               value={newStroke}
               onChange={setNewStroke}
@@ -841,6 +854,7 @@ export default function RLPage() {
             <InputField
               label={t("rodLengthLabel")}
               unitLabel={unitLabel}
+              hint={t("hintRodLength")}
               placeholder={unitSystem === "imperial" ? "4.13" : "105.0"}
               value={newRod}
               onChange={setNewRod}
@@ -857,6 +871,7 @@ export default function RLPage() {
                 <InputField
                   label={t("chamberVolumeLabel")}
                   unitLabel={displacementUnit}
+                  hint={t("hintChamberVolume")}
                   placeholder={unitSystem === "imperial" ? "2.40" : "39.3"}
                   value={newCompression.chamberVolume}
                   onChange={(value) =>
@@ -870,6 +885,7 @@ export default function RLPage() {
                     <InputField
                       label={t("gasketThicknessLabel")}
                       unitLabel={unitLabel}
+                      hint={t("hintGasketThickness")}
                       placeholder={unitSystem === "imperial" ? "0.04" : "1.0"}
                       value={newCompression.gasketThickness}
                       onChange={(value) =>
@@ -881,6 +897,7 @@ export default function RLPage() {
                     <InputField
                       label={t("gasketBoreLabel")}
                       unitLabel={unitLabel}
+                      hint={t("hintGasketBore")}
                       placeholder={unitSystem === "imperial" ? "2.72" : "69.0"}
                       value={newCompression.gasketBore}
                       onChange={(value) =>
@@ -892,6 +909,7 @@ export default function RLPage() {
                     <InputField
                       label={t("deckHeightLabel")}
                       unitLabel={unitLabel}
+                      hint={t("hintDeckHeight")}
                       placeholder={unitSystem === "imperial" ? "0.00" : "0.0"}
                       value={newCompression.deckHeight}
                       onChange={(value) =>
@@ -903,6 +921,7 @@ export default function RLPage() {
                     <InputField
                       label={t("pistonVolumeLabel")}
                       unitLabel={displacementUnit}
+                      hint={t("hintPistonVolume")}
                       placeholder={unitSystem === "imperial" ? "-0.12" : "-2.0"}
                       value={newCompression.pistonVolume}
                       onChange={(value) =>
@@ -919,6 +938,7 @@ export default function RLPage() {
                 <InputField
                   label={t("exhaustPortHeightLabel")}
                   unitLabel={unitLabel}
+                  hint={t("hintExhaustPortHeight")}
                   placeholder={unitSystem === "imperial" ? "1.57" : "40.0"}
                   value={newCompression.exhaustPortHeight}
                   onChange={(value) =>
@@ -933,6 +953,7 @@ export default function RLPage() {
                 <InputField
                   label={t("transferPortHeightLabel")}
                   unitLabel={unitLabel}
+                  hint={t("hintTransferPortHeight")}
                   placeholder={unitSystem === "imperial" ? "1.89" : "48.0"}
                   value={newCompression.transferPortHeight}
                   onChange={(value) =>
@@ -947,6 +968,7 @@ export default function RLPage() {
                 <InputField
                   label={t("crankcaseVolumeLabel")}
                   unitLabel={displacementUnit}
+                  hint={t("hintCrankcaseVolume")}
                   placeholder={unitSystem === "imperial" ? "2.44" : "40.0"}
                   value={newCompression.crankcaseVolume}
                   onChange={(value) =>

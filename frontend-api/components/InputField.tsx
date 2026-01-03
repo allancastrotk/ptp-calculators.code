@@ -1,10 +1,13 @@
 import React from "react";
 
+import { InfoHint } from "./InfoHint";
+
 type InputMode = React.HTMLAttributes<HTMLInputElement>["inputMode"];
 
 export function InputField({
   label,
   unitLabel,
+  hint,
   placeholder,
   value,
   onChange,
@@ -15,6 +18,7 @@ export function InputField({
 }: {
   label: string;
   unitLabel?: string;
+  hint?: string;
   placeholder?: string;
   value: string | number;
   onChange: (value: string) => void;
@@ -27,6 +31,7 @@ export function InputField({
     <label className="ptp-field">
       <span className="ptp-field__label">
         {label} {unitLabel ? <span className="ptp-field__unit">({unitLabel})</span> : null}
+        {hint ? <InfoHint text={hint} /> : null}
       </span>
       <input
         className="ptp-input"

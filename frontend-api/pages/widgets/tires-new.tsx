@@ -360,6 +360,7 @@ export default function TiresNewWidget() {
           <div className="grid">
             <SelectField
               label={t("vehicleTypeLabel")}
+              hint={t("hintVehicleType")}
               value={inputs.vehicleType}
               onChange={(value) =>
                 setInputs(resetDependent({ ...inputs, vehicleType: value as VehicleType }, "vehicle"))
@@ -371,6 +372,7 @@ export default function TiresNewWidget() {
             <SelectField
               label={t("rimLabel")}
               unitLabel="in"
+              hint={t("hintRim")}
               value={inputs.rim}
               onChange={(value) => setInputs(resetDependent({ ...inputs, rim: value }, "rim"))}
               placeholder={t("selectPlaceholder")}
@@ -382,6 +384,7 @@ export default function TiresNewWidget() {
                 <SelectField
                   label={t("widthLabel")}
                   unitLabel="mm"
+                  hint={t("hintWidth")}
                   value={inputs.width}
                   onChange={(value) => setInputs(resetDependent({ ...inputs, width: value }, "width"))}
                   placeholder={t("selectPlaceholder")}
@@ -394,6 +397,7 @@ export default function TiresNewWidget() {
                 <SelectField
                   label={t("aspectLabel")}
                   unitLabel="%"
+                  hint={t("hintAspect")}
                   value={inputs.aspect}
                   onChange={(value) => setInputs({ ...inputs, aspect: value })}
                   placeholder={t("selectPlaceholder")}
@@ -408,6 +412,7 @@ export default function TiresNewWidget() {
             {inputs.flotationEnabled ? (
               <SelectField
                 label={t("flotationLabel")}
+                hint={t("hintFlotation")}
                 value={inputs.flotation}
                 onChange={(value) => setInputs({ ...inputs, flotation: value })}
                 placeholder={t("selectPlaceholder")}
@@ -421,6 +426,7 @@ export default function TiresNewWidget() {
             <InputField
               label={t("rimWidthLabel")}
               unitLabel="in"
+              hint={t("hintRimWidth")}
               placeholder="7.0"
               value={inputs.rimWidth}
               onChange={(value) => setInputs({ ...inputs, rimWidth: value })}

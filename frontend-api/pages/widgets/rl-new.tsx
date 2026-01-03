@@ -569,6 +569,7 @@ export default function RlNewWidget() {
             <InputField
               label={t("boreLabel")}
               unitLabel={unitLabel}
+              hint={t("hintBore")}
               placeholder={unitSystem === "imperial" ? "2.52" : "64.0"}
               value={bore}
               onChange={setBore}
@@ -578,6 +579,7 @@ export default function RlNewWidget() {
             <InputField
               label={t("strokeLabel")}
               unitLabel={unitLabel}
+              hint={t("hintStroke")}
               placeholder={unitSystem === "imperial" ? "2.13" : "54.0"}
               value={stroke}
               onChange={setStroke}
@@ -587,6 +589,7 @@ export default function RlNewWidget() {
             <InputField
               label={t("rodLengthLabel")}
               unitLabel={unitLabel}
+              hint={t("hintRodLength")}
               placeholder={unitSystem === "imperial" ? "4.13" : "105.0"}
               value={rodLength}
               onChange={setRodLength}
@@ -603,6 +606,7 @@ export default function RlNewWidget() {
                 <InputField
                   label={t("chamberVolumeLabel")}
                   unitLabel={displacementUnit}
+                  hint={t("hintChamberVolume")}
                   placeholder={unitSystem === "imperial" ? "2.40" : "39.3"}
                   value={compressionInputs.chamberVolume}
                   onChange={(value) =>
@@ -616,6 +620,7 @@ export default function RlNewWidget() {
                     <InputField
                       label={t("gasketThicknessLabel")}
                       unitLabel={unitLabel}
+                      hint={t("hintGasketThickness")}
                       placeholder={unitSystem === "imperial" ? "0.04" : "1.0"}
                       value={compressionInputs.gasketThickness}
                       onChange={(value) =>
@@ -630,6 +635,7 @@ export default function RlNewWidget() {
                     <InputField
                       label={t("gasketBoreLabel")}
                       unitLabel={unitLabel}
+                      hint={t("hintGasketBore")}
                       placeholder={unitSystem === "imperial" ? "2.72" : "69.0"}
                       value={compressionInputs.gasketBore}
                       onChange={(value) =>
@@ -641,6 +647,7 @@ export default function RlNewWidget() {
                     <InputField
                       label={t("deckHeightLabel")}
                       unitLabel={unitLabel}
+                      hint={t("hintDeckHeight")}
                       placeholder={unitSystem === "imperial" ? "0.00" : "0.0"}
                       value={compressionInputs.deckHeight}
                       onChange={(value) =>
@@ -652,6 +659,7 @@ export default function RlNewWidget() {
                     <InputField
                       label={t("pistonVolumeLabel")}
                       unitLabel={displacementUnit}
+                      hint={t("hintPistonVolume")}
                       placeholder={unitSystem === "imperial" ? "-0.12" : "-2.0"}
                       value={compressionInputs.pistonVolume}
                       onChange={(value) =>
@@ -668,6 +676,7 @@ export default function RlNewWidget() {
                 <InputField
                   label={t("exhaustPortHeightLabel")}
                   unitLabel={unitLabel}
+                  hint={t("hintExhaustPortHeight")}
                   placeholder={unitSystem === "imperial" ? "1.57" : "40.0"}
                   value={compressionInputs.exhaustPortHeight}
                   onChange={(value) =>
@@ -682,6 +691,7 @@ export default function RlNewWidget() {
                 <InputField
                   label={t("transferPortHeightLabel")}
                   unitLabel={unitLabel}
+                  hint={t("hintTransferPortHeight")}
                   placeholder={unitSystem === "imperial" ? "1.89" : "48.0"}
                   value={compressionInputs.transferPortHeight}
                   onChange={(value) =>
@@ -696,6 +706,7 @@ export default function RlNewWidget() {
                 <InputField
                   label={t("crankcaseVolumeLabel")}
                   unitLabel={displacementUnit}
+                  hint={t("hintCrankcaseVolume")}
                   placeholder={unitSystem === "imperial" ? "2.44" : "40.0"}
                   value={compressionInputs.crankcaseVolume}
                   onChange={(value) =>

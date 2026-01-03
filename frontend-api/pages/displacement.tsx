@@ -590,6 +590,7 @@ export default function DisplacementPage() {
             <InputField
               label={t("boreLabel")}
               unitLabel={lengthUnit}
+              hint={t("hintBore")}
               placeholder={unitSystem === "imperial" ? "2.28" : "58.0"}
               value={originalBore}
               onChange={setOriginalBore}
@@ -599,6 +600,7 @@ export default function DisplacementPage() {
             <InputField
               label={t("strokeLabel")}
               unitLabel={lengthUnit}
+              hint={t("hintStroke")}
               placeholder={unitSystem === "imperial" ? "1.97" : "50.0"}
               value={originalStroke}
               onChange={setOriginalStroke}
@@ -607,6 +609,7 @@ export default function DisplacementPage() {
             />
             <InputField
               label={t("cylindersLabel")}
+              hint={t("hintCylinders")}
               placeholder={"4"}
               value={originalCylinders}
               onChange={setOriginalCylinders}
@@ -616,6 +619,7 @@ export default function DisplacementPage() {
             <InputField
               label={t("compareDeclaredLabel")}
               unitLabel={volumeUnit}
+              hint={t("hintBaselineCc")}
               placeholder={"528.4"}
               helper={t("compareDeclaredHelp")}
               value={baselineCc}
@@ -633,6 +637,7 @@ export default function DisplacementPage() {
                 <InputField
                   label={t("chamberVolumeLabel")}
                   unitLabel={volumeUnit}
+                  hint={t("hintChamberVolume")}
                   placeholder={unitSystem === "imperial" ? "2.40" : "39.3"}
                   value={originalCompression.chamberVolume}
                   onChange={(value) =>
@@ -646,6 +651,7 @@ export default function DisplacementPage() {
                     <InputField
                       label={t("gasketThicknessLabel")}
                       unitLabel={lengthUnit}
+                      hint={t("hintGasketThickness")}
                       placeholder={unitSystem === "imperial" ? "0.04" : "1.0"}
                       value={originalCompression.gasketThickness}
                       onChange={(value) =>
@@ -660,6 +666,7 @@ export default function DisplacementPage() {
                     <InputField
                       label={t("gasketBoreLabel")}
                       unitLabel={lengthUnit}
+                      hint={t("hintGasketBore")}
                       placeholder={unitSystem === "imperial" ? "2.72" : "69.0"}
                       value={originalCompression.gasketBore}
                       onChange={(value) =>
@@ -674,6 +681,7 @@ export default function DisplacementPage() {
                     <InputField
                       label={t("deckHeightLabel")}
                       unitLabel={lengthUnit}
+                      hint={t("hintDeckHeight")}
                       placeholder={unitSystem === "imperial" ? "0.00" : "0.0"}
                       value={originalCompression.deckHeight}
                       onChange={(value) =>
@@ -688,6 +696,7 @@ export default function DisplacementPage() {
                     <InputField
                       label={t("pistonVolumeLabel")}
                       unitLabel={volumeUnit}
+                      hint={t("hintPistonVolume")}
                       placeholder={unitSystem === "imperial" ? "-0.12" : "-2.0"}
                       value={originalCompression.pistonVolume}
                       onChange={(value) =>
@@ -707,6 +716,7 @@ export default function DisplacementPage() {
                 <InputField
                   label={t("exhaustPortHeightLabel")}
                   unitLabel={lengthUnit}
+                  hint={t("hintExhaustPortHeight")}
                   placeholder={unitSystem === "imperial" ? "1.57" : "40.0"}
                   value={originalCompression.exhaustPortHeight}
                   onChange={(value) =>
@@ -721,6 +731,7 @@ export default function DisplacementPage() {
                 <InputField
                   label={t("transferPortHeightLabel")}
                   unitLabel={lengthUnit}
+                  hint={t("hintTransferPortHeight")}
                   placeholder={unitSystem === "imperial" ? "1.89" : "48.0"}
                   value={originalCompression.transferPortHeight}
                   onChange={(value) =>
@@ -735,6 +746,7 @@ export default function DisplacementPage() {
                 <InputField
                   label={t("crankcaseVolumeLabel")}
                   unitLabel={volumeUnit}
+                  hint={t("hintCrankcaseVolume")}
                   placeholder={unitSystem === "imperial" ? "2.44" : "40.0"}
                   value={originalCompression.crankcaseVolume}
                   onChange={(value) =>
@@ -792,6 +804,7 @@ export default function DisplacementPage() {
             <InputField
               label={t("boreLabel")}
               unitLabel={lengthUnit}
+              hint={t("hintBore")}
               placeholder={unitSystem === "imperial" ? "2.52" : "64.0"}
               value={newBore}
               onChange={setNewBore}
@@ -801,6 +814,7 @@ export default function DisplacementPage() {
             <InputField
               label={t("strokeLabel")}
               unitLabel={lengthUnit}
+              hint={t("hintStroke")}
               placeholder={unitSystem === "imperial" ? "2.13" : "54.0"}
               value={newStroke}
               onChange={setNewStroke}
@@ -809,6 +823,7 @@ export default function DisplacementPage() {
             />
             <InputField
               label={t("cylindersLabel")}
+              hint={t("hintCylinders")}
               placeholder={"4"}
               value={newCylinders}
               onChange={setNewCylinders}
@@ -825,6 +840,7 @@ export default function DisplacementPage() {
                 <InputField
                   label={t("chamberVolumeLabel")}
                   unitLabel={volumeUnit}
+                  hint={t("hintChamberVolume")}
                   placeholder={unitSystem === "imperial" ? "2.40" : "39.3"}
                   value={newCompression.chamberVolume}
                   onChange={(value) =>
@@ -838,6 +854,7 @@ export default function DisplacementPage() {
                     <InputField
                       label={t("gasketThicknessLabel")}
                       unitLabel={lengthUnit}
+                      hint={t("hintGasketThickness")}
                       placeholder={unitSystem === "imperial" ? "0.04" : "1.0"}
                       value={newCompression.gasketThickness}
                       onChange={(value) =>
@@ -849,6 +866,7 @@ export default function DisplacementPage() {
                     <InputField
                       label={t("gasketBoreLabel")}
                       unitLabel={lengthUnit}
+                      hint={t("hintGasketBore")}
                       placeholder={unitSystem === "imperial" ? "2.72" : "69.0"}
                       value={newCompression.gasketBore}
                       onChange={(value) =>
@@ -860,6 +878,7 @@ export default function DisplacementPage() {
                     <InputField
                       label={t("deckHeightLabel")}
                       unitLabel={lengthUnit}
+                      hint={t("hintDeckHeight")}
                       placeholder={unitSystem === "imperial" ? "0.00" : "0.0"}
                       value={newCompression.deckHeight}
                       onChange={(value) =>
@@ -871,6 +890,7 @@ export default function DisplacementPage() {
                     <InputField
                       label={t("pistonVolumeLabel")}
                       unitLabel={volumeUnit}
+                      hint={t("hintPistonVolume")}
                       placeholder={unitSystem === "imperial" ? "-0.12" : "-2.0"}
                       value={newCompression.pistonVolume}
                       onChange={(value) =>
@@ -887,6 +907,7 @@ export default function DisplacementPage() {
                 <InputField
                   label={t("exhaustPortHeightLabel")}
                   unitLabel={lengthUnit}
+                  hint={t("hintExhaustPortHeight")}
                   placeholder={unitSystem === "imperial" ? "1.57" : "40.0"}
                   value={newCompression.exhaustPortHeight}
                   onChange={(value) =>
@@ -901,6 +922,7 @@ export default function DisplacementPage() {
                 <InputField
                   label={t("transferPortHeightLabel")}
                   unitLabel={lengthUnit}
+                  hint={t("hintTransferPortHeight")}
                   placeholder={unitSystem === "imperial" ? "1.89" : "48.0"}
                   value={newCompression.transferPortHeight}
                   onChange={(value) =>
@@ -915,6 +937,7 @@ export default function DisplacementPage() {
                 <InputField
                   label={t("crankcaseVolumeLabel")}
                   unitLabel={volumeUnit}
+                  hint={t("hintCrankcaseVolume")}
                   placeholder={unitSystem === "imperial" ? "2.44" : "40.0"}
                   value={newCompression.crankcaseVolume}
                   onChange={(value) =>

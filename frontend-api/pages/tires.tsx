@@ -394,6 +394,7 @@ export default function TiresPage() {
           <div className="grid">
             <SelectField
               label={t("vehicleTypeLabel")}
+              hint={t("hintVehicleType")}
               value={originalInputs.vehicleType}
               onChange={(value) =>
                 updateOriginal(resetDependent({ ...originalInputs, vehicleType: value as VehicleType }, "vehicle"))
@@ -405,6 +406,7 @@ export default function TiresPage() {
             <SelectField
               label={t("rimLabel")}
               unitLabel="in"
+              hint={t("hintRim")}
               value={originalInputs.rim}
               onChange={(value) =>
                 updateOriginal(resetDependent({ ...originalInputs, rim: value }, "rim"))
@@ -418,6 +420,7 @@ export default function TiresPage() {
                 <SelectField
                   label={t("widthLabel")}
                   unitLabel="mm"
+                  hint={t("hintWidth")}
                   value={originalInputs.width}
                   onChange={(value) =>
                     updateOriginal(resetDependent({ ...originalInputs, width: value }, "width"))
@@ -432,6 +435,7 @@ export default function TiresPage() {
                 <SelectField
                   label={t("aspectLabel")}
                   unitLabel="%"
+                  hint={t("hintAspect")}
                   value={originalInputs.aspect}
                   onChange={(value) => updateOriginal({ aspect: value })}
                   placeholder={t("selectPlaceholder")}
@@ -447,6 +451,7 @@ export default function TiresPage() {
             {originalInputs.flotationEnabled ? (
               <SelectField
                 label={t("flotationLabel")}
+                hint={t("hintFlotation")}
                 value={originalInputs.flotation}
                 onChange={(value) => updateOriginal({ flotation: value })}
                 placeholder={t("selectPlaceholder")}
@@ -460,6 +465,7 @@ export default function TiresPage() {
             <InputField
               label={t("rimWidthLabel")}
               unitLabel="in"
+              hint={t("hintRimWidth")}
               placeholder="7.0"
               value={originalInputs.rimWidth}
               onChange={(value) => updateOriginal({ rimWidth: value })}
@@ -497,6 +503,7 @@ export default function TiresPage() {
           <div className="grid">
             <SelectField
               label={t("vehicleTypeLabel")}
+              hint={t("hintVehicleType")}
               value={newInputs.vehicleType}
               onChange={(value) =>
                 updateNew(resetDependent({ ...newInputs, vehicleType: value as VehicleType }, "vehicle"))
@@ -508,6 +515,7 @@ export default function TiresPage() {
             <SelectField
               label={t("rimLabel")}
               unitLabel="in"
+              hint={t("hintRim")}
               value={newInputs.rim}
               onChange={(value) =>
                 updateNew(resetDependent({ ...newInputs, rim: value }, "rim"))
@@ -521,6 +529,7 @@ export default function TiresPage() {
                 <SelectField
                   label={t("widthLabel")}
                   unitLabel="mm"
+                  hint={t("hintWidth")}
                   value={newInputs.width}
                   onChange={(value) =>
                     updateNew(resetDependent({ ...newInputs, width: value }, "width"))
@@ -535,6 +544,7 @@ export default function TiresPage() {
                 <SelectField
                   label={t("aspectLabel")}
                   unitLabel="%"
+                  hint={t("hintAspect")}
                   value={newInputs.aspect}
                   onChange={(value) => updateNew({ aspect: value })}
                   placeholder={t("selectPlaceholder")}
@@ -548,6 +558,7 @@ export default function TiresPage() {
             {newInputs.flotationEnabled ? (
               <SelectField
                 label={t("flotationLabel")}
+                hint={t("hintFlotation")}
                 value={newInputs.flotation}
                 onChange={(value) => updateNew({ flotation: value })}
                 placeholder={t("selectPlaceholder")}
@@ -561,6 +572,7 @@ export default function TiresPage() {
             <InputField
               label={t("rimWidthLabel")}
               unitLabel="in"
+              hint={t("hintRimWidth")}
               placeholder="7.0"
               value={newInputs.rimWidth}
               onChange={(value) => updateNew({ rimWidth: value })}

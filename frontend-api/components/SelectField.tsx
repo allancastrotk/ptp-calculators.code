@@ -1,5 +1,7 @@
 import React from "react";
 
+import { InfoHint } from "./InfoHint";
+
 type Option = {
   value: string;
   label: string;
@@ -9,6 +11,7 @@ type Option = {
 export function SelectField({
   label,
   unitLabel,
+  hint,
   value,
   onChange,
   options,
@@ -18,6 +21,7 @@ export function SelectField({
 }: {
   label: string;
   unitLabel?: string;
+  hint?: string;
   value: string;
   onChange: (value: string) => void;
   options: Option[];
@@ -29,6 +33,7 @@ export function SelectField({
     <label className="ptp-field">
       <span className="ptp-field__label">
         {label} {unitLabel ? <span className="ptp-field__unit">({unitLabel})</span> : null}
+        {hint ? <InfoHint text={hint} /> : null}
       </span>
       <select
         className="ptp-input"

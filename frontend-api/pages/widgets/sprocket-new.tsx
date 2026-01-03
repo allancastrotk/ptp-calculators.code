@@ -338,6 +338,7 @@ export default function SprocketNewWidget() {
           <div className="grid">
             <InputField
               label={t("sprocketLabel")}
+              hint={t("hintSprocketTeeth")}
               placeholder="14"
               value={sprocket}
               onChange={setSprocket}
@@ -346,6 +347,7 @@ export default function SprocketNewWidget() {
             />
             <InputField
               label={t("crownLabel")}
+              hint={t("hintCrownTeeth")}
               placeholder="42"
               value={crown}
               onChange={setCrown}
@@ -354,6 +356,7 @@ export default function SprocketNewWidget() {
             />
             <SelectField
               label={t("chainPitchLabel")}
+              hint={t("hintChainPitch")}
               placeholder={t("selectPlaceholder")}
               value={pitch}
               onChange={setPitch}
@@ -362,6 +365,7 @@ export default function SprocketNewWidget() {
             />
             <InputField
               label={t("chainLinksLabel")}
+              hint={t("hintChainLinks")}
               placeholder="110"
               value={links}
               onChange={setLinks}

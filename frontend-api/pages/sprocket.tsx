@@ -318,6 +318,7 @@ export default function SprocketPage() {
           <div className="grid">
             <InputField
               label={t("sprocketLabel")}
+              hint={t("hintSprocketTeeth")}
               placeholder="14"
               value={originalSprocket}
               onChange={setOriginalSprocket}
@@ -326,6 +327,7 @@ export default function SprocketPage() {
             />
             <InputField
               label={t("crownLabel")}
+              hint={t("hintCrownTeeth")}
               placeholder="38"
               value={originalCrown}
               onChange={setOriginalCrown}
@@ -334,6 +336,7 @@ export default function SprocketPage() {
             />
             <SelectField
               label={t("chainPitchLabel")}
+              hint={t("hintChainPitch")}
               value={originalPitch}
               onChange={setOriginalPitch}
               placeholder={t("chainPitchPlaceholder")}
@@ -342,6 +345,7 @@ export default function SprocketPage() {
             />
             <InputField
               label={t("chainLinksLabel")}
+              hint={t("hintChainLinks")}
               placeholder="108"
               value={originalLinks}
               onChange={setOriginalLinks}
@@ -370,6 +374,7 @@ export default function SprocketPage() {
           <div className="grid">
             <InputField
               label={t("sprocketLabel")}
+              hint={t("hintSprocketTeeth")}
               placeholder="14"
               value={newSprocket}
               onChange={setNewSprocket}
@@ -378,6 +383,7 @@ export default function SprocketPage() {
             />
             <InputField
               label={t("crownLabel")}
+              hint={t("hintCrownTeeth")}
               placeholder="38"
               value={newCrown}
               onChange={setNewCrown}
@@ -386,6 +392,7 @@ export default function SprocketPage() {
             />
             <SelectField
               label={t("chainPitchLabel")}
+              hint={t("hintChainPitch")}
               value={newPitch}
               onChange={setNewPitch}
               placeholder={t("chainPitchPlaceholder")}
@@ -394,6 +401,7 @@ export default function SprocketPage() {
             />
             <InputField
               label={t("chainLinksLabel")}
+              hint={t("hintChainLinks")}
               placeholder="108"
               value={newLinks}
               onChange={setNewLinks}
