@@ -1,6 +1,6 @@
 # Displacement Calculator
 
-Documentacao funcional e matematica baseada exclusivamente no legado HTML/JS em `zip/_displacement.zip`.
+Documentacao funcional e matematica baseada exclusivamente no legado HTML/JS em `legado/_displacement.zip`.
 
 ## 1) Objetivo da calculadora
 Calcula a cilindrada total do motor a partir de diametro (bore), curso (stroke) e numero de cilindros. E destinada a entusiastas avancados, tecnicos e profissionais automotivos, e e usada para comparar configuracoes de motor (original vs new) e classificar a geometria do conjunto (quadrado, superquadrado, subquadrado).

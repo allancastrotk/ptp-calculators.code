@@ -6,7 +6,7 @@ Escopo: somente RL, Sprocket e Tires. O legado e a fonte de verdade.
 
 ## RL (Rod/Stroke)
 
-Fontes: `zip/_rodstroke.zip` (`rodstroke.js`, `rodstroke-original.html`, `rodstroke-new.html`).
+Fontes: `legado/_rodstroke.zip` (`rodstroke.js`, `rodstroke-original.html`, `rodstroke-new.html`).
 
 Paridade OK
 - Inputs: diametro (bore), curso (stroke), biela (rod) em mm.
@@ -30,7 +30,7 @@ Pontos ambiguos do legado
 
 ## Sprocket (Coroa/Pinhao)
 
-Fontes: `zip/_sprocket.zip` (`sprocket.js`, `sprocket-original.html`, `sprocket-new.html`).
+Fontes: `legado/_sprocket.zip` (`sprocket.js`, `sprocket-original.html`, `sprocket-new.html`).
 
 Paridade OK
 - Inputs: pinhao (dentes), coroa (dentes), passo da corrente (opcional), numero de elos (opcional, par).
@@ -51,7 +51,7 @@ Pontos ambiguos do legado
 
 ## Tires (Aro/Pneu)
 
-Fontes: `zip/_tires.zip` (`tires.js`, `tires-original.html`, `tires-new.html`, `tires-database.js`).
+Fontes: `legado/_tires.zip` (`tires.js`, `tires-original.html`, `tires-new.html`, `tires-database.js`).
 
 Paridade OK
 - Inputs: tipo de veiculo, aro, largura, perfil, tala opcional.

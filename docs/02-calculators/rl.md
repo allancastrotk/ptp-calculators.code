@@ -1,6 +1,6 @@
 # RL Calculator
 
-Documentacao funcional e matematica baseada exclusivamente no legado HTML/JS em `zip/_rodstroke.zip`.
+Documentacao funcional e matematica baseada exclusivamente no legado HTML/JS em `legado/_rodstroke.zip`.
 
 ## 1) Objetivo da calculadora
 Calcula a relacao R/L do conjunto biela-virabrequim a partir de diametro (bore), curso (stroke) e comprimento de biela (rod length). E destinada a entusiastas avancados, tecnicos e profissionais automotivos para comparar conjuntos "original" vs "new", avaliar suavidade (rough/normal/smooth) e classificar geometria (quadrado, superquadrado, subquadrado).

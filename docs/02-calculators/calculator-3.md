@@ -1,6 +1,6 @@
 # Calculator 3 (Sprocket Ratio)
 
-Documentacao funcional e matematica baseada exclusivamente no legado HTML/JS em `zip/_sprocket.zip`.
+Documentacao funcional e matematica baseada exclusivamente no legado HTML/JS em `legado/_sprocket.zip`.
 Calculator-3 refere-se a calculadora de relacao coroa/pinhao (Sprocket Ratio).
 
 ## 1) Objetivo da calculadora

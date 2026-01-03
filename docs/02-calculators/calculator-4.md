@@ -1,6 +1,6 @@
 # Calculator 4 (Tire and Rim Comparator)
 
-Documentacao funcional e matematica baseada exclusivamente no legado HTML/JS em `zip/_tires.zip`.
+Documentacao funcional e matematica baseada exclusivamente no legado HTML/JS em `legado/_tires.zip`.
 
 ## 1) Objetivo da calculadora
 Compara conjuntos aro-pneu (original vs new) e retorna diametro total e largura do conjunto. Destina-se a entusiastas avancados, tecnicos e profissionais para avaliar compatibilidade de medidas.
